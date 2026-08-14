@@ -2,15 +2,6 @@
  {
   "docstatus": 0,
   "doctype": "Workflow State",
-  "icon": "question-sign",
-  "modified": "2026-05-14 15:44:47.358883",
-  "name": "Pending",
-  "style": "",
-  "workflow_state_name": "Pending"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
   "icon": "",
   "modified": "2026-06-16 10:59:51.501042",
   "name": "Send for Final Approval",
@@ -111,15 +102,6 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
-  "modified": "2026-06-26 13:49:13.047954",
-  "name": "Objectives Rejected",
-  "style": "",
-  "workflow_state_name": "Objectives Rejected"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
-  "icon": "",
   "modified": "2026-05-27 17:38:02.555329",
   "name": "Pending Finance Approval",
   "style": "Warning",
@@ -192,15 +174,6 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
-  "modified": "2026-06-26 13:48:03.689331",
-  "name": "Objective Review Pending",
-  "style": "",
-  "workflow_state_name": "Objective Review Pending"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
-  "icon": "",
   "modified": "2026-06-17 11:17:29.203722",
   "name": "Issued",
   "style": "",
@@ -255,24 +228,6 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
-  "modified": "2026-06-11 15:30:37.409536",
-  "name": "Pending Manager Review",
-  "style": "",
-  "workflow_state_name": "Pending Manager Review"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
-  "icon": "",
-  "modified": "2026-06-11 15:38:47.591154",
-  "name": "Completed",
-  "style": "",
-  "workflow_state_name": "Completed"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
-  "icon": "",
   "modified": "2026-06-17 11:16:42.901492",
   "name": "Pending Level 2 (Fin/HR/Legal)",
   "style": "",
@@ -286,15 +241,6 @@
   "name": "Internally Approved",
   "style": "",
   "workflow_state_name": "Internally Approved"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
-  "icon": "",
-  "modified": "2026-06-26 13:48:24.101501",
-  "name": "Objectives Approved",
-  "style": "",
-  "workflow_state_name": "Objectives Approved"
  },
  {
   "docstatus": 0,
@@ -336,9 +282,63 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
+  "modified": "2026-06-26 13:49:13.047954",
+  "name": "Objectives Rejected",
+  "style": "",
+  "workflow_state_name": "Objectives Rejected"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "question-sign",
+  "modified": "2026-05-14 15:44:47.358883",
+  "name": "Pending",
+  "style": "",
+  "workflow_state_name": "Pending"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-06-11 15:38:47.591154",
+  "name": "Completed",
+  "style": "",
+  "workflow_state_name": "Completed"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-06-26 13:48:24.101501",
+  "name": "Objectives Approved",
+  "style": "",
+  "workflow_state_name": "Objectives Approved"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-06-26 13:48:03.689331",
+  "name": "Objective Review Pending",
+  "style": "",
+  "workflow_state_name": "Objective Review Pending"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
   "modified": "2026-05-27 17:37:14.741433",
   "name": "Draft",
   "style": "Primary",
   "workflow_state_name": "Draft"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-06-11 15:30:37.409536",
+  "name": "Pending Manager Review",
+  "style": "",
+  "workflow_state_name": "Pending Manager Review"
  }
 ]

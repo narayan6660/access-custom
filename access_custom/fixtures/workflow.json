@@ -619,13 +619,13 @@
   "doctype": "Workflow",
   "document_type": "Appraisal",
   "is_active": 1,
-  "modified": "2026-06-26 15:32:03.436794",
+  "modified": "2026-08-12 16:44:19.844743",
   "name": "Employee Appraisal Cycle",
   "override_status": 0,
   "send_email_alert": 0,
   "states": [
    {
-    "allow_edit": "Employee",
+    "allow_edit": "All",
     "avoid_status_override": 0,
     "doc_status": "0",
     "is_optional_state": 0,
@@ -635,7 +635,7 @@
     "parentfield": "states",
     "parenttype": "Workflow",
     "send_email": 1,
-    "state": "Draft",
+    "state": "Pending",
     "update_field": null,
     "update_value": null,
     "workflow_builder_id": null
@@ -726,13 +726,13 @@
     "action": "Submit Objectives",
     "allow_self_approval": 1,
     "allowed": "Employee",
-    "condition": "frappe.session.user == doc.custom_employee_email",
+    "condition": "\"mid\" in (doc.appraisal_cycle or \"\").lower()",
     "next_state": "Objective Review Pending",
     "parent": "Employee Appraisal Cycle",
     "parentfield": "transitions",
     "parenttype": "Workflow",
     "send_email_to_creator": 0,
-    "state": "Draft",
+    "state": "Pending",
     "workflow_builder_id": null
    },
    {
@@ -798,6 +798,45 @@
     "parenttype": "Workflow",
     "send_email_to_creator": 0,
     "state": "Objectives Approved",
+    "workflow_builder_id": null
+   },
+   {
+    "action": "Submit Appraisal",
+    "allow_self_approval": 1,
+    "allowed": "HR Manager",
+    "condition": "",
+    "next_state": "Pending Manager Review",
+    "parent": "Employee Appraisal Cycle",
+    "parentfield": "transitions",
+    "parenttype": "Workflow",
+    "send_email_to_creator": 0,
+    "state": "Pending",
+    "workflow_builder_id": null
+   },
+   {
+    "action": "Submit Appraisal",
+    "allow_self_approval": 1,
+    "allowed": "System Manager",
+    "condition": "",
+    "next_state": "Pending Manager Review",
+    "parent": "Employee Appraisal Cycle",
+    "parentfield": "transitions",
+    "parenttype": "Workflow",
+    "send_email_to_creator": 0,
+    "state": "Pending",
+    "workflow_builder_id": null
+   },
+   {
+    "action": "Submit Appraisal",
+    "allow_self_approval": 1,
+    "allowed": "Employee",
+    "condition": "",
+    "next_state": "Pending Manager Review",
+    "parent": "Employee Appraisal Cycle",
+    "parentfield": "transitions",
+    "parenttype": "Workflow",
+    "send_email_to_creator": 0,
+    "state": "Pending",
     "workflow_builder_id": null
    }
   ],

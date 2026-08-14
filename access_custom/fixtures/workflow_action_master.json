@@ -65,34 +65,6 @@
  {
   "docstatus": 0,
   "doctype": "Workflow Action Master",
-  "modified": "2026-06-26 13:50:52.291981",
-  "name": "Reject Objectives",
-  "workflow_action_name": "Reject Objectives"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-06-26 13:52:19.317956",
-  "name": "Submit Appraisal",
-  "workflow_action_name": "Submit Appraisal"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-06-26 13:52:43.709257",
-  "name": "Submit Objectives",
-  "workflow_action_name": "Submit Objectives"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-06-26 13:53:49.613955",
-  "name": "Finalize & Complete",
-  "workflow_action_name": "Finalize & Complete"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
   "modified": "2026-07-19 22:36:32.153327",
   "name": "Submit to Dept Manager",
   "workflow_action_name": "Submit to Dept Manager"
@@ -177,13 +149,6 @@
  {
   "docstatus": 0,
   "doctype": "Workflow Action Master",
-  "modified": "2026-06-26 13:51:45.335677",
-  "name": "Resubmit Objectives",
-  "workflow_action_name": "Resubmit Objectives"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
   "modified": "2026-07-19 22:39:40.513546",
   "name": "Director Reject",
   "workflow_action_name": "Director Reject"
@@ -229,5 +194,40 @@
   "modified": "2026-05-14 15:44:47.385335",
   "name": "Reject",
   "workflow_action_name": "Reject"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-06-26 13:51:45.335677",
+  "name": "Resubmit Objectives",
+  "workflow_action_name": "Resubmit Objectives"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-06-26 13:52:43.709257",
+  "name": "Submit Objectives",
+  "workflow_action_name": "Submit Objectives"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-06-26 13:50:52.291981",
+  "name": "Reject Objectives",
+  "workflow_action_name": "Reject Objectives"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-06-26 13:53:49.613955",
+  "name": "Finalize & Complete",
+  "workflow_action_name": "Finalize & Complete"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-06-26 13:52:19.317956",
+  "name": "Submit Appraisal",
+  "workflow_action_name": "Submit Appraisal"
  }
 ]

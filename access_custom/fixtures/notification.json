@@ -1471,5 +1471,48 @@
   "slack_webhook_url": null,
   "subject": "Action Required: Achievements Section Now Open!",
   "value_changed": null
+ },
+ {
+  "attach_files": "",
+  "attach_print": 0,
+  "channel": "Email",
+  "condition": null,
+  "date_changed": null,
+  "days_in_advance": 0,
+  "docstatus": 0,
+  "doctype": "Notification",
+  "document_type": "Interview",
+  "enabled": 0,
+  "event": "Save",
+  "from_attach_field": null,
+  "is_standard": 0,
+  "message": "<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: #ffffff;\">\r\n  \r\n  <!-- Header Logo / Brand -->\r\n  <div style=\"text-align: center; border-bottom: 2px solid #00843d; padding-bottom: 15px; margin-bottom: 20px;\">\r\n    <h2 style=\"color: #00843d; margin: 0;\">ACCESS Health International</h2>\r\n    <p style=\"color: #666666; font-size: 14px; margin: 5px 0 0 0;\">Talent Acquisition Team</p>\r\n  </div>\r\n\r\n  <!-- Body Content -->\r\n  <p style=\"font-size: 16px; color: #333333;\">Dear Candidate,</p>\r\n  \r\n  <p style=\"font-size: 15px; color: #444444; line-height: 1.5;\">\r\n    Thank you for your interest in joining our team. We are pleased to invite you to the next stage of our recruitment process. Below are the complete details regarding your upcoming interview:\r\n  </p>\r\n\r\n  <!-- Details Card -->\r\n  <div style=\"background-color: #f9f9f9; border-left: 4px solid #00843d; padding: 15px 20px; margin: 20px 0; border-radius: 4px;\">\r\n    <table style=\"width: 100%; border-collapse: collapse; font-size: 14px; color: #333333;\">\r\n      <tr>\r\n        <td style=\"padding: 6px 0; font-weight: bold; width: 35%;\">Position / Role:</td>\r\n        <td style=\"padding: 6px 0;\">{{ doc.designation or \"Technical Role\" }}</td>\r\n      </tr>\r\n      <tr>\r\n        <td style=\"padding: 6px 0; font-weight: bold;\">Interview Round:</td>\r\n        <td style=\"padding: 6px 0;\">{{ doc.interview_round }}</td>\r\n      </tr>\r\n      <tr>\r\n        <td style=\"padding: 6px 0; font-weight: bold;\">Date:</td>\r\n        <td style=\"padding: 6px 0;\">{{ doc.scheduled_on }}</td>\r\n      </tr>\r\n      <tr>\r\n        <td style=\"padding: 6px 0; font-weight: bold;\">Time:</td>\r\n        <td style=\"padding: 6px 0;\">{{ doc.from_time }} to {{ doc.to_time }}</td>\r\n      </tr>\r\n    </table>\r\n  </div>\r\n\r\n  <!-- Call to Action Button (Opens in New Tab) -->\r\n  <p style=\"font-size: 15px; color: #444444; line-height: 1.5;\">\r\n    Please click the button below to join the virtual meeting room at your scheduled time:\r\n  </p>\r\n\r\n  <div style=\"text-align: center; margin: 30px 0;\">\r\n    <a href=\"{{ doc.custom_meeting_link }}\" target=\"_blank\" style=\"background-color: #00843d; color: #ffffff; padding: 12px 25px; text-decoration: none; font-size: 16px; font-weight: bold; border-radius: 5px; display: inline-block;\">\r\n      Join Interview Meeting\r\n    </a>\r\n  </div>\r\n\r\n  <!-- Backup Clickable Text Link -->\r\n  <p style=\"font-size: 14px; color: #555555; line-height: 1.5; text-align: center;\">\r\n    Or copy and paste this link into your browser: <br>\r\n    <a href=\"{{ doc.custom_meeting_link }}\" target=\"_blank\" style=\"color: #0066cc; text-decoration: underline;\">{{ doc.custom_meeting_link }}</a>\r\n  </p>\r\n\r\n  <p style=\"font-size: 14px; color: #555555; line-height: 1.5; margin-top: 25px;\">\r\n    If you have any questions or need to reschedule, please feel free to reply directly to this email.\r\n  </p>\r\n\r\n  <p style=\"font-size: 14px; color: #333333; margin-top: 30px;\">\r\n    Best regards,<br>\r\n    <strong>HR Recruitment Team</strong><br>\r\n    Access Health International\r\n  </p>\r\n\r\n  <!-- Footer -->\r\n  <div style=\"text-align: center; border-top: 1px solid #e0e0e0; padding-top: 15px; margin-top: 25px; color: #888888; font-size: 12px;\">\r\n    <p>This is an automated notification from your applicant portal. Please do not share your meeting link with others.</p>\r\n  </div>\r\n\r\n</div>",
+  "message_type": "Markdown",
+  "method": null,
+  "modified": "2026-08-12 11:47:02.739457",
+  "module": null,
+  "name": "Interview Invitation Notification",
+  "print_format": null,
+  "property_value": null,
+  "recipients": [
+   {
+    "bcc": null,
+    "cc": null,
+    "condition": null,
+    "parent": "Interview Invitation Notification",
+    "parentfield": "recipients",
+    "parenttype": "Notification",
+    "receiver_by_document_field": "owner",
+    "receiver_by_role": null
+   }
+  ],
+  "send_system_notification": 0,
+  "send_to_all_assignees": 0,
+  "sender": null,
+  "sender_email": null,
+  "set_property_after_alert": null,
+  "slack_webhook_url": null,
+  "subject": "Interview Invitation: {{ doc.interview_round }}",
+  "value_changed": null
  }
 ]

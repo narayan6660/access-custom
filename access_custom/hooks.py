@@ -270,7 +270,8 @@ fixtures = [
     "Notification",
     
     # Policy Records
-    "Company Policy"
+    "Company Policy",
+    "Custom HTML Block"
 ]
 
 app_include_css = "/assets/access_custom/css/style.css"

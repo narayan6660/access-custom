@@ -12,13 +12,13 @@ app_license = "mit"
 
 # Each item in the list will be shown as an app in the apps page
 # add_to_apps_screen = [
-# 	{
-# 		"name": "access_custom",
-# 		"logo": "/assets/access_custom/logo.png",
-# 		"title": "Access Custom",
-# 		"route": "/access_custom",
-# 		"has_permission": "access_custom.api.permission.has_app_permission"
-# 	}
+#   {
+#       "name": "access_custom",
+#       "logo": "/assets/access_custom/logo.png",
+#       "title": "Access Custom",
+#       "route": "/access_custom",
+#       "has_permission": "access_custom.api.permission.has_app_permission"
+#   }
 # ]
 
 # Includes in <head>
@@ -61,7 +61,7 @@ app_license = "mit"
 
 # website user home page (by Role)
 # role_home_page = {
-# 	"Role": "home_page"
+#   "Role": "home_page"
 # }
 
 # Generators
@@ -75,8 +75,8 @@ app_license = "mit"
 
 # add methods and filters to jinja environment
 # jinja = {
-# 	"methods": "access_custom.utils.jinja_methods",
-# 	"filters": "access_custom.utils.jinja_filters"
+#   "methods": "access_custom.utils.jinja_methods",
+#   "filters": "access_custom.utils.jinja_filters"
 # }
 
 # Installation
@@ -118,11 +118,11 @@ app_license = "mit"
 # Permissions evaluated in scripted ways
 
 # permission_query_conditions = {
-# 	"Event": "frappe.desk.doctype.event.event.get_permission_query_conditions",
+#   "Event": "frappe.desk.doctype.event.event.get_permission_query_conditions",
 # }
 #
 # has_permission = {
-# 	"Event": "frappe.desk.doctype.event.event.has_permission",
+#   "Event": "frappe.desk.doctype.event.event.has_permission",
 # }
 
 # DocType Class
@@ -130,7 +130,7 @@ app_license = "mit"
 # Override standard doctype classes
 
 # override_doctype_class = {
-# 	"ToDo": "custom_app.overrides.CustomToDo"
+#   "ToDo": "custom_app.overrides.CustomToDo"
 # }
 
 # Document Events
@@ -138,32 +138,32 @@ app_license = "mit"
 # Hook on document methods and events
 
 # doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
+#   "*": {
+#       "on_update": "method",
+#       "on_cancel": "method",
+#       "on_trash": "method"
+#   }
 # }
 
 # Scheduled Tasks
 # ---------------
 
 # scheduler_events = {
-# 	"all": [
-# 		"access_custom.tasks.all"
-# 	],
-# 	"daily": [
-# 		"access_custom.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"access_custom.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"access_custom.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"access_custom.tasks.monthly"
-# 	],
+#   "all": [
+#       "access_custom.tasks.all"
+#   ],
+#   "daily": [
+#       "access_custom.tasks.daily"
+#   ],
+#   "hourly": [
+#       "access_custom.tasks.hourly"
+#   ],
+#   "weekly": [
+#       "access_custom.tasks.weekly"
+#   ],
+#   "monthly": [
+#       "access_custom.tasks.monthly"
+#   ],
 # }
 
 # Testing
@@ -175,14 +175,14 @@ app_license = "mit"
 # ------------------------------
 #
 # override_whitelisted_methods = {
-# 	"frappe.desk.doctype.event.event.get_events": "access_custom.event.get_events"
+#   "frappe.desk.doctype.event.event.get_events": "access_custom.event.get_events"
 # }
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
 # along with any modifications made in other Frappe apps
 # override_doctype_dashboards = {
-# 	"Task": "access_custom.task.get_dashboard_data"
+#   "Task": "access_custom.task.get_dashboard_data"
 # }
 
 # exempt linked doctypes from being automatically cancelled
@@ -208,38 +208,38 @@ app_license = "mit"
 # --------------------
 
 # user_data_fields = [
-# 	{
-# 		"doctype": "{doctype_1}",
-# 		"filter_by": "{filter_by}",
-# 		"redact_fields": ["{field_1}", "{field_2}"],
-# 		"partial": 1,
-# 	},
-# 	{
-# 		"doctype": "{doctype_2}",
-# 		"filter_by": "{filter_by}",
-# 		"partial": 1,
-# 	},
-# 	{
-# 		"doctype": "{doctype_3}",
-# 		"strict": False,
-# 	},
-# 	{
-# 		"doctype": "{doctype_4}"
-# 	}
+#   {
+#       "doctype": "{doctype_1}",
+#       "filter_by": "{filter_by}",
+#       "redact_fields": ["{field_1}", "{field_2}"],
+#       "partial": 1,
+#   },
+#   {
+#       "doctype": "{doctype_2}",
+#       "filter_by": "{filter_by}",
+#       "partial": 1,
+#   },
+#   {
+#       "doctype": "{doctype_3}",
+#       "strict": False,
+#   },
+#   {
+#       "doctype": "{doctype_4}"
+#   }
 # ]
 
 # Authentication and authorization
 # --------------------------------
 
 # auth_hooks = [
-# 	"access_custom.auth.validate"
+#   "access_custom.auth.validate"
 # ]
 
 # Automatically update python controller files with type annotations for this app.
 # export_python_type_annotations = True
 
 # default_log_clearing_doctypes = {
-# 	"Logging DocType Name": 30  # days to retain logs
+#   "Logging DocType Name": 30  # days to retain logs
 # }
 
 # Translation
@@ -267,8 +267,12 @@ fixtures = [
     "Document Naming Rule",
     
     # Notifications & Email Configuration
-    "Notification"
+    "Notification",
+    
+    # Policy Records
+    "Company Policy"
 ]
+
 app_include_css = "/assets/access_custom/css/style.css"
 web_include_css = "/assets/access_custom/css/web_style.css"
 app_logo_url = "/assets/access_custom/images/logo.png"

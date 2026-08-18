@@ -1,0 +1,73 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-08-17 13:31:14.932376",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "policy_name",
+  "department",
+  "office_entity",
+  "policy_document"
+ ],
+ "fields": [
+  {
+   "fieldname": "policy_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Policy Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "department",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Department",
+   "options": "Human Resource\nFinance\nProcurement\nCommunications",
+   "reqd": 1
+  },
+  {
+   "fieldname": "office_entity",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Office Entity",
+   "options": "ACCESS Health International Global\nACCESS Health International - USA\nACCESS Health International-LO\nACCESS Health International-MENA\nACCESS Health International-SEA\nAffordable Quality Health\nAppraisal Practice Company\nQuality Healthcare Access Pvt. Ltd",
+   "reqd": 1
+  },
+  {
+   "fieldname": "policy_document",
+   "fieldtype": "Attach",
+   "in_list_view": 1,
+   "label": "Policy Document",
+   "reqd": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-08-19 00:06:02.874711",
+ "modified_by": "Administrator",
+ "module": "Access Custom",
+ "name": "Company Policy",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "policy_name"
+}

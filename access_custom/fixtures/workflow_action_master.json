@@ -30,13 +30,6 @@
  {
   "docstatus": 0,
   "doctype": "Workflow Action Master",
-  "modified": "2026-06-18 12:54:20.593768",
-  "name": "Submit to Team Lead",
-  "workflow_action_name": "Submit to Team Lead"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
   "modified": "2026-06-18 13:01:45.223664",
   "name": "Route Customer Contract",
   "workflow_action_name": "Route Customer Contract"
@@ -163,13 +156,6 @@
  {
   "docstatus": 0,
   "doctype": "Workflow Action Master",
-  "modified": "2026-06-18 12:56:15.583204",
-  "name": "Approve Team Lead",
-  "workflow_action_name": "Approve Team Lead"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
   "modified": "2026-06-18 14:39:06.922975",
   "name": "System Update",
   "workflow_action_name": "System Update"
@@ -198,6 +184,90 @@
  {
   "docstatus": 0,
   "doctype": "Workflow Action Master",
+  "modified": "2026-08-21 16:13:57.419779",
+  "name": "Terminate",
+  "workflow_action_name": "Terminate"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-08-21 16:14:06.746589",
+  "name": "Close Contract",
+  "workflow_action_name": "Close Contract"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-08-21 16:14:50.907683",
+  "name": "Initiate Renewal",
+  "workflow_action_name": "Initiate Renewal"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-08-21 16:16:06.866437",
+  "name": "Approve Legal",
+  "workflow_action_name": "Approve Legal"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-08-21 16:16:14.733706",
+  "name": "Reject Legal",
+  "workflow_action_name": "Reject Legal"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-08-21 16:16:39.601734",
+  "name": "Reject Finance",
+  "workflow_action_name": "Reject Finance"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-08-21 16:16:46.134868",
+  "name": "Approve HR",
+  "workflow_action_name": "Approve HR"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-08-21 16:16:52.917006",
+  "name": "Reject HR",
+  "workflow_action_name": "Reject HR"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-08-21 16:17:13.433975",
+  "name": "Approve CEO",
+  "workflow_action_name": "Approve CEO"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-08-21 16:17:35.366927",
+  "name": "Initiate Amendment",
+  "workflow_action_name": "Initiate Amendment"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-08-21 16:21:07.308630",
+  "name": "Approve Amendment",
+  "workflow_action_name": "Approve Amendment"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-06-18 12:54:20.593768",
+  "name": "Submit to Team Lead",
+  "workflow_action_name": "Submit to Team Lead"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
   "modified": "2026-06-26 13:51:45.335677",
   "name": "Resubmit Objectives",
   "workflow_action_name": "Resubmit Objectives"
@@ -205,9 +275,51 @@
  {
   "docstatus": 0,
   "doctype": "Workflow Action Master",
+  "modified": "2026-08-21 16:15:02.847274",
+  "name": "Finalize Amendment",
+  "workflow_action_name": "Finalize Amendment"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-08-21 16:17:20.415871",
+  "name": "Reject CEO",
+  "workflow_action_name": "Reject CEO"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-08-21 16:20:41.987843",
+  "name": "Submit Amendment",
+  "workflow_action_name": "Submit Amendment"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
   "modified": "2026-06-26 13:52:43.709257",
   "name": "Submit Objectives",
   "workflow_action_name": "Submit Objectives"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-06-18 12:56:15.583204",
+  "name": "Approve Team Lead",
+  "workflow_action_name": "Approve Team Lead"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-08-21 16:14:40.828418",
+  "name": "Reject Amendment",
+  "workflow_action_name": "Reject Amendment"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-08-21 16:16:25.394533",
+  "name": "Approve Finance",
+  "workflow_action_name": "Approve Finance"
  },
  {
   "docstatus": 0,

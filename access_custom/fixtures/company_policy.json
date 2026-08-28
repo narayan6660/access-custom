@@ -498,5 +498,15 @@
   "office_entity": "Quality Healthcare Access Pvt. Ltd",
   "policy_document": "/private/files/Powerpoint Template_ACCESS Health_Oct 2024.pdf",
   "policy_name": "testing"
+ },
+ {
+  "department": "Finance",
+  "docstatus": 0,
+  "doctype": "Company Policy",
+  "modified": "2026-08-24 13:10:55.399307",
+  "name": "5qa718g9uc",
+  "office_entity": "ACCESS Health International Global",
+  "policy_document": "/private/files/NARAYN_RESUME.docx",
+  "policy_name": "test"
  }
 ]

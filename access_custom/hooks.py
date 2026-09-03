@@ -281,12 +281,14 @@ fixtures = [
     "Server Script",
     "Custom DocPerm",
     {"dt": "DocType", "filters": [["module", "=", "Access Custom"], ["custom", "=", 1]]},
-    {"dt": "DocType", "filters": [["name", "in", [
-        "Test Customer Contract", 
-        "Contract Industry", 
-        "Contract Country Selection", 
-        "Test Financial Tracking"
-    ]]]},
+    
+    # 1. BASE TABLES FIRST (Dependencies)
+    {"dt": "DocType", "filters": [["name", "=", "Contract Industry"]]},
+    {"dt": "DocType", "filters": [["name", "=", "Contract Country Selection"]]},
+    {"dt": "DocType", "filters": [["name", "=", "Test Financial Tracking"]]},
+    
+    # 2. MAIN TABLE LAST (So the dependencies already exist when it builds)
+    {"dt": "DocType", "filters": [["name", "=", "Test Customer Contract"]]},
     
     # UI & Global Settings
     "Website Settings",

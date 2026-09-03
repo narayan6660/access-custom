@@ -281,7 +281,8 @@ fixtures = [
     "Server Script",
     "Custom DocPerm",
     {"dt": "DocType", "filters": [["module", "=", "Access Custom"], ["custom", "=", 1]]},
-    {"dt": "DocType", "filters": [["name", "=", "Test Customer Contract"]]}, # <--- THIS IS THE NEW LINE
+    {"dt": "DocType", "filters": [["name", "=", "Test Customer Contract"]]},
+    {"dt": "DocType", "filters": [["name", "=", "Contract Industry"]]}, # <--- ADD THIS LINE
     
     # UI & Global Settings
     "Website Settings",
@@ -300,6 +301,8 @@ fixtures = [
     "Company Policy",
     "Custom HTML Block"
 ]
+
+
 app_include_css = "/assets/access_custom/css/style.css"
 web_include_css = "/assets/access_custom/css/web_style.css"
 app_logo_url = "/assets/access_custom/images/logo.png"

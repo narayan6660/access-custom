@@ -1095,7 +1095,7 @@
   "doctype": "Workflow",
   "document_type": "Test Customer Contract",
   "is_active": 1,
-  "modified": "2026-08-27 18:02:26.510697",
+  "modified": "2026-09-02 14:30:08.949666",
   "name": "Customer Contract Workflow",
   "override_status": 0,
   "send_email_alert": 0,
@@ -1197,6 +1197,22 @@
     "workflow_builder_id": null
    },
    {
+    "allow_edit": "Employee",
+    "avoid_status_override": 0,
+    "doc_status": "0",
+    "is_optional_state": 0,
+    "message": null,
+    "next_action_email_template": null,
+    "parent": "Customer Contract Workflow",
+    "parentfield": "states",
+    "parenttype": "Workflow",
+    "send_email": 1,
+    "state": "In Progress",
+    "update_field": "contract_status",
+    "update_value": "In Progress",
+    "workflow_builder_id": null
+   },
+   {
     "allow_edit": "System Manager",
     "avoid_status_override": 0,
     "doc_status": "1",
@@ -1207,9 +1223,9 @@
     "parentfield": "states",
     "parenttype": "Workflow",
     "send_email": 1,
-    "state": "Issued",
+    "state": "Commenced",
     "update_field": "contract_status",
-    "update_value": "Issued",
+    "update_value": "Commenced",
     "workflow_builder_id": null
    },
    {
@@ -1445,10 +1461,10 @@
    },
    {
     "action": "Approve CEO",
-    "allow_self_approval": 0,
+    "allow_self_approval": 1,
     "allowed": "Employee",
     "condition": "doc.ceo_approver == frappe.session.user",
-    "next_state": "Issued",
+    "next_state": "In Progress",
     "parent": "Customer Contract Workflow",
     "parentfield": "transitions",
     "parenttype": "Workflow",
@@ -1458,7 +1474,7 @@
    },
    {
     "action": "Reject CEO",
-    "allow_self_approval": 0,
+    "allow_self_approval": 1,
     "allowed": "Employee",
     "condition": "doc.ceo_approver == frappe.session.user",
     "next_state": "Draft",
@@ -1479,7 +1495,7 @@
     "parentfield": "transitions",
     "parenttype": "Workflow",
     "send_email_to_creator": 0,
-    "state": "Issued",
+    "state": "Commenced",
     "workflow_builder_id": null
    },
    {
@@ -1552,7 +1568,7 @@
     "allow_self_approval": 0,
     "allowed": "Employee",
     "condition": null,
-    "next_state": "Issued",
+    "next_state": "Commenced",
     "parent": "Customer Contract Workflow",
     "parentfield": "transitions",
     "parenttype": "Workflow",
@@ -1583,7 +1599,7 @@
     "parentfield": "transitions",
     "parenttype": "Workflow",
     "send_email_to_creator": 0,
-    "state": "Issued",
+    "state": "Commenced",
     "workflow_builder_id": null
    },
    {
@@ -1596,7 +1612,7 @@
     "parentfield": "transitions",
     "parenttype": "Workflow",
     "send_email_to_creator": 0,
-    "state": "Issued",
+    "state": "Commenced",
     "workflow_builder_id": null
    },
    {
@@ -1609,7 +1625,20 @@
     "parentfield": "transitions",
     "parenttype": "Workflow",
     "send_email_to_creator": 0,
-    "state": "Issued",
+    "state": "Commenced",
+    "workflow_builder_id": null
+   },
+   {
+    "action": "Commence Contract",
+    "allow_self_approval": 1,
+    "allowed": "Employee",
+    "condition": "doc.owner == frappe.session.user and doc.upload_signed_document",
+    "next_state": "Commenced",
+    "parent": "Customer Contract Workflow",
+    "parentfield": "transitions",
+    "parenttype": "Workflow",
+    "send_email_to_creator": 0,
+    "state": "In Progress",
     "workflow_builder_id": null
    }
   ],

@@ -191,13 +191,6 @@
  {
   "docstatus": 0,
   "doctype": "Workflow Action Master",
-  "modified": "2026-08-21 16:14:06.746589",
-  "name": "Close Contract",
-  "workflow_action_name": "Close Contract"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
   "modified": "2026-08-21 16:14:50.907683",
   "name": "Initiate Renewal",
   "workflow_action_name": "Initiate Renewal"
@@ -261,6 +254,13 @@
  {
   "docstatus": 0,
   "doctype": "Workflow Action Master",
+  "modified": "2026-09-02 14:26:53.325223",
+  "name": "Commence Contract",
+  "workflow_action_name": "Commence Contract"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
   "modified": "2026-06-18 12:54:20.593768",
   "name": "Submit to Team Lead",
   "workflow_action_name": "Submit to Team Lead"
@@ -275,16 +275,16 @@
  {
   "docstatus": 0,
   "doctype": "Workflow Action Master",
-  "modified": "2026-08-21 16:15:02.847274",
-  "name": "Finalize Amendment",
-  "workflow_action_name": "Finalize Amendment"
+  "modified": "2026-08-21 16:14:06.746589",
+  "name": "Close Contract",
+  "workflow_action_name": "Close Contract"
  },
  {
   "docstatus": 0,
   "doctype": "Workflow Action Master",
-  "modified": "2026-08-21 16:17:20.415871",
-  "name": "Reject CEO",
-  "workflow_action_name": "Reject CEO"
+  "modified": "2026-08-21 16:15:02.847274",
+  "name": "Finalize Amendment",
+  "workflow_action_name": "Finalize Amendment"
  },
  {
   "docstatus": 0,
@@ -320,6 +320,13 @@
   "modified": "2026-08-21 16:16:25.394533",
   "name": "Approve Finance",
   "workflow_action_name": "Approve Finance"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-08-21 16:17:20.415871",
+  "name": "Reject CEO",
+  "workflow_action_name": "Reject CEO"
  },
  {
   "docstatus": 0,

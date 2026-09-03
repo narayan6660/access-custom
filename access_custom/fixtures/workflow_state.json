@@ -75,15 +75,6 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
-  "modified": "2026-06-17 12:16:05.731166",
-  "name": "Closed",
-  "style": "",
-  "workflow_state_name": "Closed"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
-  "icon": "",
   "modified": "2026-06-18 14:35:15.618365",
   "name": "Finance Rejected",
   "style": "",
@@ -160,15 +151,6 @@
   "name": "HR Rejected",
   "style": "",
   "workflow_state_name": "HR Rejected"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
-  "icon": "",
-  "modified": "2026-06-18 14:34:52.455199",
-  "name": "Pending CEO Approval",
-  "style": "",
-  "workflow_state_name": "Pending CEO Approval"
  },
  {
   "docstatus": 0,
@@ -273,10 +255,64 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
+  "modified": "2026-06-17 12:16:05.731166",
+  "name": "Closed",
+  "style": "",
+  "workflow_state_name": "Closed"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
   "modified": "2026-08-21 16:35:28.817277",
   "name": "Amendment Pending CEO",
   "style": "",
   "workflow_state_name": "Amendment Pending CEO"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-02 14:26:11.149131",
+  "name": "In Progress",
+  "style": "",
+  "workflow_state_name": "In Progress"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-06-18 14:34:52.455199",
+  "name": "Pending CEO Approval",
+  "style": "",
+  "workflow_state_name": "Pending CEO Approval"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-06-26 13:49:13.047954",
+  "name": "Objectives Rejected",
+  "style": "",
+  "workflow_state_name": "Objectives Rejected"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-08-31 07:08:17.384030",
+  "name": "Commenced",
+  "style": "",
+  "workflow_state_name": "Commenced"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-06-17 12:15:42.912667",
+  "name": "Active/Renewal Initiated",
+  "style": "",
+  "workflow_state_name": "Active/Renewal Initiated"
  },
  {
   "docstatus": 0,
@@ -291,10 +327,10 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
-  "modified": "2026-06-18 12:55:10.348706",
-  "name": "Pending Team Lead Approval",
+  "modified": "2026-06-17 11:17:29.203722",
+  "name": "Issued",
   "style": "",
-  "workflow_state_name": "Pending Team Lead Approval"
+  "workflow_state_name": "Issued"
  },
  {
   "docstatus": 0,
@@ -318,55 +354,10 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
-  "modified": "2026-06-26 13:49:13.047954",
-  "name": "Objectives Rejected",
-  "style": "",
-  "workflow_state_name": "Objectives Rejected"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
-  "icon": "",
-  "modified": "2026-08-21 16:02:53.617894",
-  "name": "Pending Level 2.1 Legal Approval",
-  "style": "",
-  "workflow_state_name": "Pending Level 2.1 Legal Approval"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
-  "icon": "",
-  "modified": "2026-08-21 16:03:20.832851",
-  "name": "Pending Level 2.3 HR Approval",
-  "style": "",
-  "workflow_state_name": "Pending Level 2.3 HR Approval"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
-  "icon": "",
-  "modified": "2026-06-17 12:15:42.912667",
-  "name": "Active/Renewal Initiated",
-  "style": "",
-  "workflow_state_name": "Active/Renewal Initiated"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
-  "icon": "",
   "modified": "2026-08-21 16:34:35.696871",
   "name": "Amendment Pending Legal",
   "style": "",
   "workflow_state_name": "Amendment Pending Legal"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
-  "icon": "",
-  "modified": "2026-06-17 11:17:29.203722",
-  "name": "Issued",
-  "style": "",
-  "workflow_state_name": "Issued"
  },
  {
   "docstatus": 0,
@@ -381,10 +372,28 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
+  "modified": "2026-08-21 16:03:20.832851",
+  "name": "Pending Level 2.3 HR Approval",
+  "style": "",
+  "workflow_state_name": "Pending Level 2.3 HR Approval"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
   "modified": "2026-06-11 15:38:47.591154",
   "name": "Completed",
   "style": "",
   "workflow_state_name": "Completed"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-08-21 16:02:53.617894",
+  "name": "Pending Level 2.1 Legal Approval",
+  "style": "",
+  "workflow_state_name": "Pending Level 2.1 Legal Approval"
  },
  {
   "docstatus": 0,
@@ -408,10 +417,10 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
-  "modified": "2026-05-27 17:37:14.741433",
-  "name": "Draft",
-  "style": "Primary",
-  "workflow_state_name": "Draft"
+  "modified": "2026-06-18 12:55:10.348706",
+  "name": "Pending Team Lead Approval",
+  "style": "",
+  "workflow_state_name": "Pending Team Lead Approval"
  },
  {
   "docstatus": 0,
@@ -421,5 +430,14 @@
   "name": "Pending Manager Review",
   "style": "",
   "workflow_state_name": "Pending Manager Review"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-05-27 17:37:14.741433",
+  "name": "Draft",
+  "style": "Primary",
+  "workflow_state_name": "Draft"
  }
 ]

@@ -247,6 +247,32 @@ app_license = "mit"
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
 
+# fixtures = [
+#     # Customizations & Scripts
+#     "Custom Field",
+#     "Property Setter",
+#     "Client Script",
+#     "Server Script",
+#     "Custom DocPerm",
+#     {"dt": "DocType", "filters": [["module", "=", "Access Custom"], ["custom", "=", 1]]},
+    
+#     # UI & Global Settings
+#     "Website Settings",
+#     "Navbar Settings",
+    
+#     # Workflows & Rules
+#     "Workflow",
+#     "Workflow State",
+#     "Workflow Action Master",
+#     "Document Naming Rule",
+    
+#     # Notifications & Email Configuration
+#     "Notification",
+    
+#     # Policy Records
+#     "Company Policy",
+#     "Custom HTML Block"
+# ]
 fixtures = [
     # Customizations & Scripts
     "Custom Field",
@@ -255,6 +281,7 @@ fixtures = [
     "Server Script",
     "Custom DocPerm",
     {"dt": "DocType", "filters": [["module", "=", "Access Custom"], ["custom", "=", 1]]},
+    {"dt": "DocType", "filters": [["name", "=", "Test Customer Contract"]]}, # <--- THIS IS THE NEW LINE
     
     # UI & Global Settings
     "Website Settings",
@@ -273,7 +300,6 @@ fixtures = [
     "Company Policy",
     "Custom HTML Block"
 ]
-
 app_include_css = "/assets/access_custom/css/style.css"
 web_include_css = "/assets/access_custom/css/web_style.css"
 app_logo_url = "/assets/access_custom/images/logo.png"

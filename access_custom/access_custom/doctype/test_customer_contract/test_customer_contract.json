@@ -1,0 +1,701 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "allow_rename": 1,
+ "autoname": "TEST-.YYYY.-.#####",
+ "creation": "2026-08-20 16:25:20.494352",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "access_entity",
+  "party_type",
+  "project_id_by_customer",
+  "project_title",
+  "cb_party",
+  "party_name",
+  "industries",
+  "status",
+  "project_currency",
+  "column_break_w5wo",
+  "customer_name",
+  "party_full_name",
+  "country",
+  "project_budget",
+  "project_cost",
+  "section_break_rcux",
+  "security_deposit_currency",
+  "column_break_uiwy",
+  "security_deposit_amount",
+  "column_break_caps",
+  "nature_of_security",
+  "section_break_qsup",
+  "customer_poc_name",
+  "column_break_snef",
+  "customer_poc_email",
+  "column_break_pesn",
+  "customer_poc_number",
+  "sb_terms",
+  "start_date",
+  "project_tenure",
+  "cb_date",
+  "end_date",
+  "renewal_date",
+  "column_break_yqlo",
+  "expiry_alert",
+  "section_break_avml",
+  "customer_document",
+  "column_break_wild",
+  "budget_agreed_with_customer",
+  "column_break_zqls",
+  "project__proposal",
+  "column_break_njbb",
+  "proposal_budget",
+  "sb_signee",
+  "signee",
+  "signed_on",
+  "contract_template",
+  "contract_terms",
+  "approvals_and_signatures_section",
+  "lead_approver",
+  "column_break_lp5p",
+  "lead_approver_status",
+  "column_break_xu0a",
+  "lead_approver_review",
+  "section_break_paeq",
+  "legal_approver",
+  "column_break_v4kj",
+  "legal_approver_status",
+  "column_break_wadi",
+  "legal_approver_review",
+  "section_break_dkkv",
+  "finance_approver",
+  "column_break_cmny",
+  "finance_approver_status",
+  "column_break_avlo",
+  "finance_approver_review",
+  "section_break_oxl4",
+  "hr_approver",
+  "column_break_qh11",
+  "hr_approver_status",
+  "column_break_4ywi",
+  "hr_approver_review",
+  "section_break_rich",
+  "ceo_approver",
+  "column_break_amag",
+  "ceo_approver_status",
+  "column_break_pnzx",
+  "ceo_approver_review",
+  "section_break_zhmp",
+  "upload_signed_document",
+  "column_break_w4my",
+  "amended_from",
+  "contract_status",
+  "column_break_0pyk",
+  "signed_by_company",
+  "documentation_tab",
+  "document_tracking_section",
+  "contract_documents",
+  "milestone_tracking_section",
+  "project_milestones",
+  "financial_tracking_section",
+  "financial_schedule"
+ ],
+ "fields": [
+  {
+   "fieldname": "access_entity",
+   "fieldtype": "Link",
+   "label": "Access Entity",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "default": "Customer",
+   "fieldname": "party_type",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Type of Contract",
+   "options": "Customer\nSupplier\nEmployee",
+   "reqd": 1
+  },
+  {
+   "fieldname": "project_id_by_customer",
+   "fieldtype": "Data",
+   "label": "Project Id By Customer"
+  },
+  {
+   "fieldname": "project_title",
+   "fieldtype": "Data",
+   "label": "Project Title",
+   "reqd": 1
+  },
+  {
+   "fieldname": "cb_party",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "party_name",
+   "fieldtype": "Dynamic Link",
+   "in_standard_filter": 1,
+   "label": "Customer Id",
+   "options": "party_type",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "party_name.industry",
+   "fetch_if_empty": 1,
+   "fieldname": "industries",
+   "fieldtype": "Table MultiSelect",
+   "label": "Thematic Area",
+   "options": "Contract Industry"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "no_copy": 1,
+   "options": "Unsigned\nActive\nInactive"
+  },
+  {
+   "fieldname": "project_currency",
+   "fieldtype": "Link",
+   "label": "Project Currency",
+   "options": "Currency",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_w5wo",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "party_name.customer_name",
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "label": "Customer Name"
+  },
+  {
+   "fieldname": "party_full_name",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Party Full Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "country",
+   "fieldtype": "Table MultiSelect",
+   "label": "Project Geography",
+   "options": "Contract Country Selection"
+  },
+  {
+   "fieldname": "project_budget",
+   "fieldtype": "Currency",
+   "label": "Project Budget",
+   "reqd": 1
+  },
+  {
+   "fieldname": "project_cost",
+   "fieldtype": "Currency",
+   "label": "Project Cost"
+  },
+  {
+   "fieldname": "section_break_rcux",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "security_deposit_currency",
+   "fieldtype": "Link",
+   "label": "Security Deposit Currency",
+   "options": "Currency"
+  },
+  {
+   "fieldname": "column_break_uiwy",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "security_deposit_amount",
+   "fieldtype": "Currency",
+   "label": "Security Deposit Amount"
+  },
+  {
+   "fieldname": "column_break_caps",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "nature_of_security",
+   "fieldtype": "Select",
+   "label": "Nature of Security",
+   "options": "Performance Security\nFinancial Security\nEarnest Money Deposit / EMD\nEquipment Deposit"
+  },
+  {
+   "fieldname": "section_break_qsup",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "customer_poc_name",
+   "fieldtype": "Data",
+   "label": "Customer POC Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_snef",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "customer_poc_email",
+   "fieldtype": "Data",
+   "label": "Customer POC Email",
+   "options": "Email",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_pesn",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "customer_poc_number",
+   "fieldtype": "Data",
+   "label": "Customer POC Number",
+   "options": "Phone"
+  },
+  {
+   "fieldname": "sb_terms",
+   "fieldtype": "Section Break",
+   "label": "Contract Period"
+  },
+  {
+   "fieldname": "start_date",
+   "fieldtype": "Date",
+   "label": "Start Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "project_tenure",
+   "fieldtype": "Data",
+   "label": "Project Tenure"
+  },
+  {
+   "fieldname": "cb_date",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "end_date",
+   "fieldtype": "Date",
+   "label": "End Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "renewal_date",
+   "fieldtype": "Date",
+   "label": "Renewal Date"
+  },
+  {
+   "fieldname": "column_break_yqlo",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "expiry_alert",
+   "fieldtype": "Select",
+   "label": "Expiry Alert",
+   "options": "30\n60\n90\n120\n150\n180"
+  },
+  {
+   "fieldname": "section_break_avml",
+   "fieldtype": "Section Break",
+   "label": "Contract Documents"
+  },
+  {
+   "fieldname": "customer_document",
+   "fieldtype": "Attach",
+   "label": "Contract/MOU Provided by Customer",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_wild",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "budget_agreed_with_customer",
+   "fieldtype": "Attach",
+   "label": "Budget Agreed with Customer"
+  },
+  {
+   "fieldname": "column_break_zqls",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "project__proposal",
+   "fieldtype": "Attach",
+   "label": "Project  Proposal"
+  },
+  {
+   "fieldname": "column_break_njbb",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "proposal_budget",
+   "fieldtype": "Attach",
+   "label": "Proposal Budget"
+  },
+  {
+   "depends_on": "eval:doc.is_signed==1",
+   "fieldname": "sb_signee",
+   "fieldtype": "Section Break",
+   "label": "Signee Details"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "signee",
+   "fieldtype": "Data",
+   "in_global_search": 1,
+   "label": "Signee",
+   "no_copy": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "signed_on",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Signed On",
+   "no_copy": 1
+  },
+  {
+   "fieldname": "contract_template",
+   "fieldtype": "Link",
+   "label": "Contract Template",
+   "options": "Contract Template"
+  },
+  {
+   "fieldname": "contract_terms",
+   "fieldtype": "Text Editor",
+   "in_list_view": 1,
+   "label": "Contract Terms"
+  },
+  {
+   "fieldname": "approvals_and_signatures_section",
+   "fieldtype": "Section Break",
+   "label": "Approvals and Signatures"
+  },
+  {
+   "fieldname": "lead_approver",
+   "fieldtype": "Link",
+   "label": " Level 1 Lead Approver",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_lp5p",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "lead_approver_status",
+   "fieldtype": "Data",
+   "label": "Lead Approver Status"
+  },
+  {
+   "fieldname": "column_break_xu0a",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "lead_approver_review",
+   "fieldtype": "Small Text",
+   "label": "Comments"
+  },
+  {
+   "fieldname": "section_break_paeq",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "legal_approver",
+   "fieldtype": "Link",
+   "label": "level 2.1 Legal Approver",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_v4kj",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "legal_approver_status",
+   "fieldtype": "Data",
+   "label": "Legal Approver Status"
+  },
+  {
+   "fieldname": "column_break_wadi",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "legal_approver_review",
+   "fieldtype": "Small Text",
+   "label": "Comments"
+  },
+  {
+   "fieldname": "section_break_dkkv",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "finance_approver",
+   "fieldtype": "Link",
+   "label": "Lavel 2.2 Finance Approver",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_cmny",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "finance_approver_status",
+   "fieldtype": "Data",
+   "label": "Finance Approver Status"
+  },
+  {
+   "fieldname": "column_break_avlo",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "finance_approver_review",
+   "fieldtype": "Small Text",
+   "label": "Comments"
+  },
+  {
+   "fieldname": "section_break_oxl4",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "hr_approver",
+   "fieldtype": "Link",
+   "label": "level 2.3 HR Approver",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_qh11",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "hr_approver_status",
+   "fieldtype": "Data",
+   "label": "HR Approver Status"
+  },
+  {
+   "fieldname": "column_break_4ywi",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "hr_approver_review",
+   "fieldtype": "Small Text",
+   "label": "Comments"
+  },
+  {
+   "fieldname": "section_break_rich",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "ceo_approver",
+   "fieldtype": "Link",
+   "label": "Level 3 CEO Approver",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_amag",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ceo_approver_status",
+   "fieldtype": "Data",
+   "label": "CEO Approver Status"
+  },
+  {
+   "fieldname": "column_break_pnzx",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ceo_approver_review",
+   "fieldtype": "Small Text",
+   "label": "Comments"
+  },
+  {
+   "fieldname": "section_break_zhmp",
+   "fieldtype": "Section Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "bold": 1,
+   "fieldname": "upload_signed_document",
+   "fieldtype": "Attach",
+   "label": "Complete Counter Signed Contract"
+  },
+  {
+   "fieldname": "column_break_w4my",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Test Customer Contract",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "contract_status",
+   "fieldtype": "Select",
+   "label": "Contract Status",
+   "options": "Draft\nIn Progress\nCommenced\nOn Hold\nCompleted\nClosed\nTerminated"
+  },
+  {
+   "fieldname": "column_break_0pyk",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "signed_by_company",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Signed By (Company)",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "documentation_tab",
+   "fieldtype": "Tab Break",
+   "label": "Documentation"
+  },
+  {
+   "fieldname": "document_tracking_section",
+   "fieldtype": "Section Break",
+   "label": "Document Tracking"
+  },
+  {
+   "fieldname": "contract_documents",
+   "fieldtype": "Table",
+   "label": "Contract Documents",
+   "options": "Test Document Tracking"
+  },
+  {
+   "fieldname": "milestone_tracking_section",
+   "fieldtype": "Section Break",
+   "label": "Milestone Tracking"
+  },
+  {
+   "fieldname": "project_milestones",
+   "fieldtype": "Table",
+   "label": "Project Milestones",
+   "options": "Test Milestone Tracking"
+  },
+  {
+   "fieldname": "financial_tracking_section",
+   "fieldtype": "Section Break",
+   "label": "Financial Tracking"
+  },
+  {
+   "fieldname": "financial_schedule",
+   "fieldtype": "Table",
+   "label": "Financial Schedule",
+   "options": "Test Financial Tracking"
+  }
+ ],
+ "grid_page_length": 50,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-09-03 10:38:25.042384",
+ "modified_by": "Administrator",
+ "module": "Access Custom",
+ "name": "Test Customer Contract",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Purchase Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Contract Manager",
+   "select": 1,
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "party_type, party_name, contract_template",
+ "show_name_in_global_search": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "party_name",
+ "track_changes": 1,
+ "track_seen": 1
+}

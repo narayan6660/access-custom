@@ -281,23 +281,6 @@ fixtures = [
     "Server Script",
     "Custom DocPerm",
     
-    # EXACTLY ONE DOCTYPE RULE TO PREVENT OVERWRITING
-    {
-        "dt": "DocType", 
-        "filters": [
-            ["name", "in", [
-                "Test Customer Contract", 
-                "Contract Industry", 
-                "Contract Country Selection", 
-                "Test Financial Tracking",
-                "Employee Internal Work History",
-                "Emp Docs Acknowledgement Forms",
-                "Custom Appraisal Objective",
-                "Employee Increment Record"
-            ]]
-        ]
-    },
-    
     # UI & Global Settings
     "Website Settings",
     "Navbar Settings",

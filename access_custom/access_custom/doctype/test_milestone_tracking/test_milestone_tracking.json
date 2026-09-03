@@ -1,0 +1,70 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-08-24 12:00:57.285306",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "milestone_no",
+  "milestone_name",
+  "due_date",
+  "milestone_value",
+  "invoice_amount",
+  "amount_collected",
+  "status"
+ ],
+ "fields": [
+  {
+   "fieldname": "milestone_no",
+   "fieldtype": "Data",
+   "label": "Milestone No"
+  },
+  {
+   "fieldname": "milestone_name",
+   "fieldtype": "Data",
+   "label": "Milestone Name"
+  },
+  {
+   "fieldname": "due_date",
+   "fieldtype": "Date",
+   "label": "Due Date"
+  },
+  {
+   "fieldname": "milestone_value",
+   "fieldtype": "Currency",
+   "label": "Milestone Value"
+  },
+  {
+   "fieldname": "invoice_amount",
+   "fieldtype": "Currency",
+   "label": "Invoice Amount"
+  },
+  {
+   "fieldname": "amount_collected",
+   "fieldtype": "Currency",
+   "label": "Amount Collected"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Paid\nPartially Paid\nPending"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-09-03 12:40:41.044403",
+ "modified_by": "Administrator",
+ "module": "Access Custom",
+ "name": "Test Milestone Tracking",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

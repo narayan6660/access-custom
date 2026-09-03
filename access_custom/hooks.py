@@ -281,7 +281,12 @@ fixtures = [
     "Server Script",
     "Custom DocPerm",
     {"dt": "DocType", "filters": [["module", "=", "Access Custom"], ["custom", "=", 1]]},
-    {"dt": "DocType", "filters": [["name", "in", ["Test Customer Contract", "Contract Industry"]]]},
+    {"dt": "DocType", "filters": [["name", "in", [
+        "Test Customer Contract", 
+        "Contract Industry", 
+        "Contract Country Selection", 
+        "Test Financial Tracking"
+    ]]]},
     
     # UI & Global Settings
     "Website Settings",

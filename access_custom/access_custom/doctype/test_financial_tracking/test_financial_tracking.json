@@ -1,0 +1,70 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-08-24 12:07:05.133705",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "budgeted_revenue",
+  "amount_invoiced",
+  "amount_collected",
+  "outstanding_receivable",
+  "last_invoice_date",
+  "last_collection_date",
+  "status"
+ ],
+ "fields": [
+  {
+   "fieldname": "budgeted_revenue",
+   "fieldtype": "Currency",
+   "label": "Budgeted Revenue"
+  },
+  {
+   "fieldname": "amount_invoiced",
+   "fieldtype": "Currency",
+   "label": "Amount Invoiced"
+  },
+  {
+   "fieldname": "amount_collected",
+   "fieldtype": "Currency",
+   "label": "Amount Collected"
+  },
+  {
+   "fieldname": "outstanding_receivable",
+   "fieldtype": "Currency",
+   "label": "Outstanding Receivable"
+  },
+  {
+   "fieldname": "last_invoice_date",
+   "fieldtype": "Date",
+   "label": "Last Invoice Date"
+  },
+  {
+   "fieldname": "last_collection_date",
+   "fieldtype": "Date",
+   "label": "Last Collection Date"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Active\nClosed"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-09-03 11:06:19.504450",
+ "modified_by": "Administrator",
+ "module": "Access Custom",
+ "name": "Test Financial Tracking",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

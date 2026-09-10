@@ -1,0 +1,127 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-09-04 14:38:02.487572",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "organization",
+  "department",
+  "designation",
+  "column_break_aphq",
+  "organization_employee_id",
+  "organization_email",
+  "branch",
+  "column_break_uxkj",
+  "primary",
+  "employment_status",
+  "active",
+  "column_break_kjrt",
+  "effective_from",
+  "effective_to"
+ ],
+ "fields": [
+  {
+   "fieldname": "organization",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Organization",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "label": "Department",
+   "options": "Department"
+  },
+  {
+   "fieldname": "designation",
+   "fieldtype": "Link",
+   "label": "Designation",
+   "options": "Designation"
+  },
+  {
+   "fieldname": "employment_status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Employment Status",
+   "options": "Active\nInactive\nTransferred\nEnded",
+   "reqd": 1
+  },
+  {
+   "fieldname": "effective_from",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Effective From",
+   "reqd": 1
+  },
+  {
+   "fieldname": "primary",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Primary",
+   "options": "No\nYes",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_aphq",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "organization_employee_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": " Employee ID",
+   "reqd": 1
+  },
+  {
+   "fieldname": "organization_email",
+   "fieldtype": "Data",
+   "label": "Organization Email"
+  },
+  {
+   "fieldname": "branch",
+   "fieldtype": "Link",
+   "label": "Branch",
+   "options": "Branch"
+  },
+  {
+   "fieldname": "effective_to",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Effective To"
+  },
+  {
+   "fieldname": "active",
+   "fieldtype": "Select",
+   "label": "Active",
+   "options": "Yes\nNo",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_uxkj",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_kjrt",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-09-10 14:02:31.107600",
+ "modified_by": "Administrator",
+ "module": "Access Custom",
+ "name": "Employee Organization Association",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

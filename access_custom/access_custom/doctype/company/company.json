@@ -3,7 +3,8 @@
  "allow_import": 1,
  "allow_rename": 1,
  "autoname": "field:company_name",
- "creation": "2022-01-25 10:29:55.938239",
+ "creation": "2026-07-24 12:05:46.465016",
+ "custom": 1,
  "description": "Legal Entity / Subsidiary with a separate Chart of Accounts belonging to the Organization.",
  "doctype": "DocType",
  "document_type": "Setup",
@@ -11,23 +12,22 @@
  "field_order": [
   "details",
   "company_name",
+  "company_description",
   "abbr",
   "default_currency",
   "country",
-  "is_group",
-  "default_holiday_list",
   "cb0",
-  "default_letter_head",
-  "tax_id",
+  "parent_company",
   "domain",
   "date_of_establishment",
-  "parent_company",
+  "default_letter_head",
+  "is_group",
+  "tax_id",
   "company_info",
   "company_logo",
   "date_of_incorporation",
   "phone_no",
   "email",
-  "company_description",
   "column_break1",
   "date_of_commencement",
   "fax",
@@ -38,6 +38,13 @@
   "lft",
   "rgt",
   "old_parent",
+  "hr_and_leave_settings_section",
+  "custom_hr_manager_email",
+  "leave_policy",
+  "column_break_qfxn",
+  "default_holiday_list",
+  "leave_policy_effective_from",
+  "leave_policy_active",
   "accounts_tab",
   "section_break_28",
   "create_chart_of_accounts_based_on",
@@ -50,7 +57,6 @@
   "default_receivable_account",
   "default_payable_account",
   "write_off_account",
-  "unrealized_profit_loss_account",
   "column_break0",
   "allow_account_creation_against_child_company",
   "default_expense_account",
@@ -59,6 +65,7 @@
   "payment_terms",
   "cost_center",
   "default_finance_book",
+  "unrealized_profit_loss_account",
   "exchange_gain__loss_section",
   "exchange_gain_loss_account",
   "column_break_sttp",
@@ -138,6 +145,11 @@
    "unique": 1
   },
   {
+   "fieldname": "company_description",
+   "fieldtype": "Text Editor",
+   "label": "Company Description"
+  },
+  {
    "fieldname": "abbr",
    "fieldtype": "Data",
    "label": "Abbr",
@@ -163,32 +175,16 @@
    "reqd": 1
   },
   {
-   "bold": 1,
-   "default": "0",
-   "fieldname": "is_group",
-   "fieldtype": "Check",
-   "label": "Is Group"
-  },
-  {
-   "fieldname": "default_holiday_list",
-   "fieldtype": "Link",
-   "label": "Default Holiday List",
-   "options": "Holiday List"
-  },
-  {
    "fieldname": "cb0",
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "default_letter_head",
+   "fieldname": "parent_company",
    "fieldtype": "Link",
-   "label": "Default Letter Head",
-   "options": "Letter Head"
-  },
-  {
-   "fieldname": "tax_id",
-   "fieldtype": "Data",
-   "label": "Tax ID"
+   "ignore_user_permissions": 1,
+   "in_list_view": 1,
+   "label": "Parent Company",
+   "options": "Company"
   },
   {
    "fieldname": "domain",
@@ -201,12 +197,22 @@
    "label": "Date of Establishment"
   },
   {
-   "fieldname": "parent_company",
+   "fieldname": "default_letter_head",
    "fieldtype": "Link",
-   "ignore_user_permissions": 1,
-   "in_list_view": 1,
-   "label": "Parent Company",
-   "options": "Company"
+   "label": "Default Letter Head",
+   "options": "Letter Head"
+  },
+  {
+   "bold": 1,
+   "default": "0",
+   "fieldname": "is_group",
+   "fieldtype": "Check",
+   "label": "Is Group"
+  },
+  {
+   "fieldname": "tax_id",
+   "fieldtype": "Data",
+   "label": "Tax ID"
   },
   {
    "collapsible": 1,
@@ -241,11 +247,6 @@
    "oldfieldname": "email",
    "oldfieldtype": "Data",
    "options": "Email"
-  },
-  {
-   "fieldname": "company_description",
-   "fieldtype": "Text Editor",
-   "label": "Company Description"
   },
   {
    "fieldname": "column_break1",
@@ -317,6 +318,44 @@
    "label": "old_parent",
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "hr_and_leave_settings_section",
+   "fieldtype": "Section Break",
+   "label": "HR And Leave Settings"
+  },
+  {
+   "fieldname": "custom_hr_manager_email",
+   "fieldtype": "Link",
+   "label": "HR Manager",
+   "options": "User"
+  },
+  {
+   "fieldname": "leave_policy",
+   "fieldtype": "Link",
+   "label": "Leave Policy",
+   "options": "Leave Policy"
+  },
+  {
+   "fieldname": "column_break_qfxn",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "default_holiday_list",
+   "fieldtype": "Link",
+   "label": "Default Holiday List",
+   "options": "Holiday List"
+  },
+  {
+   "fieldname": "leave_policy_effective_from",
+   "fieldtype": "Date",
+   "label": "Leave Policy Effective From"
+  },
+  {
+   "default": "0",
+   "fieldname": "leave_policy_active",
+   "fieldtype": "Check",
+   "label": "Leave Policy Active"
   },
   {
    "fieldname": "accounts_tab",
@@ -409,12 +448,6 @@
    "options": "Account"
   },
   {
-   "fieldname": "unrealized_profit_loss_account",
-   "fieldtype": "Link",
-   "label": "Unrealized Profit / Loss Account",
-   "options": "Account"
-  },
-  {
    "fieldname": "column_break0",
    "fieldtype": "Column Break",
    "oldfieldtype": "Column Break",
@@ -471,6 +504,12 @@
    "fieldtype": "Link",
    "label": "Default Finance Book",
    "options": "Finance Book"
+  },
+  {
+   "fieldname": "unrealized_profit_loss_account",
+   "fieldtype": "Link",
+   "label": "Unrealized Profit / Loss Account",
+   "options": "Account"
   },
   {
    "fieldname": "exchange_gain__loss_section",
@@ -861,11 +900,10 @@
   }
  ],
  "icon": "fa fa-building",
- "idx": 1,
  "image_field": "company_logo",
  "is_tree": 1,
  "links": [],
- "modified": "2026-05-07 12:13:47.937163",
+ "modified": "2026-09-10 11:15:02.266832",
  "modified_by": "Administrator",
  "module": "Access Custom",
  "name": "Company",
@@ -925,6 +963,19 @@
   {
    "role": "Auditor",
    "select": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "select": 1,
+   "share": 1,
+   "write": 1
   }
  ],
  "row_format": "Dynamic",

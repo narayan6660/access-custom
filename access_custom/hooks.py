@@ -299,7 +299,11 @@ fixtures = [
     
     # Policy Records
     "Company Policy",
-    "Custom HTML Block"
+    "Custom HTML Block",
+    
+    # Leave Management Setup
+    "Leave Type",
+    "Leave Policy"
 ]
 
 

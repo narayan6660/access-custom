@@ -263,15 +263,6 @@
  {
   "docstatus": 0,
   "doctype": "Workflow State",
-  "icon": "",
-  "modified": "2026-06-18 14:34:52.455199",
-  "name": "Pending CEO Approval",
-  "style": "",
-  "workflow_state_name": "Pending CEO Approval"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
   "icon": "remove",
   "modified": "2026-05-14 15:44:47.363569",
   "name": "Rejected",
@@ -286,15 +277,6 @@
   "name": "Approved",
   "style": "Success",
   "workflow_state_name": "Approved"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
-  "icon": "",
-  "modified": "2026-09-08 10:40:07.519385",
-  "name": "Pending Line Manager Approval",
-  "style": "",
-  "workflow_state_name": "Pending Line Manager Approval"
  },
  {
   "docstatus": 0,
@@ -318,6 +300,15 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
+  "modified": "2026-09-08 10:40:07.519385",
+  "name": "Pending Line Manager Approval",
+  "style": "",
+  "workflow_state_name": "Pending Line Manager Approval"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
   "modified": "2026-06-17 12:15:42.912667",
   "name": "Active/Renewal Initiated",
   "style": "",
@@ -331,6 +322,15 @@
   "name": "Active/Amendment Initiated",
   "style": "",
   "workflow_state_name": "Active/Amendment Initiated"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-06-18 14:34:52.455199",
+  "name": "Pending CEO Approval",
+  "style": "",
+  "workflow_state_name": "Pending CEO Approval"
  },
  {
   "docstatus": 0,
@@ -380,20 +380,20 @@
  {
   "docstatus": 0,
   "doctype": "Workflow State",
-  "icon": "question-sign",
-  "modified": "2026-05-14 15:44:47.358883",
-  "name": "Pending",
-  "style": "",
-  "workflow_state_name": "Pending"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
   "icon": "",
   "modified": "2026-06-11 15:38:47.591154",
   "name": "Completed",
   "style": "",
   "workflow_state_name": "Completed"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "question-sign",
+  "modified": "2026-05-14 15:44:47.358883",
+  "name": "Pending",
+  "style": "",
+  "workflow_state_name": "Pending"
  },
  {
   "docstatus": 0,

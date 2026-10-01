@@ -1,0 +1,219 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-09-28 16:15:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "contract",
+  "consultant_name",
+  "organization",
+  "project_name",
+  "column_break_1",
+  "extension_version",
+  "status",
+  "current_end_date",
+  "extension_months",
+  "revised_end_date",
+  "sec_commercials",
+  "current_fee",
+  "revised_fee",
+  "column_break_2",
+  "total_extension_value",
+  "sec_details",
+  "extension_reason",
+  "revised_scope",
+  "extension_appendix",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "CCE-.YYYY.-.#####.\nCCE-.#####.\n.#####.",
+   "default": "CCE-.YYYY.-.#####.",
+   "hidden": 1
+  },
+  {
+   "fieldname": "contract",
+   "fieldtype": "Link",
+   "label": "Original Consultant Contract",
+   "options": "Consultant Contract",
+   "reqd": 1
+  },
+  {
+   "fieldname": "consultant_name",
+   "fieldtype": "Data",
+   "label": "Consultant Name",
+   "read_only": 1,
+   "fetch_from": "contract.consultant_name"
+  },
+  {
+   "fieldname": "organization",
+   "fieldtype": "Link",
+   "label": "Organization",
+   "options": "Company",
+   "read_only": 1,
+   "fetch_from": "contract.organization"
+  },
+  {
+   "fieldname": "project_name",
+   "fieldtype": "Link",
+   "label": "Project",
+   "options": "Project",
+   "read_only": 1,
+   "fetch_from": "contract.project_name"
+  },
+  {
+   "fieldname": "column_break_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "extension_version",
+   "fieldtype": "Data",
+   "label": "Extension Version",
+   "default": "v2.0",
+   "read_only": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nPending Team Lead Approval\nPending HR Review\nPending CEO Approval\nApproved\nRejected",
+   "default": "Draft"
+  },
+  {
+   "fieldname": "current_end_date",
+   "fieldtype": "Date",
+   "label": "Current End Date",
+   "read_only": 1,
+   "fetch_from": "contract.end_date"
+  },
+  {
+   "fieldname": "extension_months",
+   "fieldtype": "Int",
+   "label": "Extension Period (Months)",
+   "reqd": 1
+  },
+  {
+   "fieldname": "revised_end_date",
+   "fieldtype": "Date",
+   "label": "Revised End Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "sec_commercials",
+   "fieldtype": "Section Break",
+   "label": "Commercial Revisions"
+  },
+  {
+   "fieldname": "current_fee",
+   "fieldtype": "Currency",
+   "label": "Current Monthly Fee",
+   "read_only": 1,
+   "fetch_from": "contract.proposed_fee"
+  },
+  {
+   "fieldname": "revised_fee",
+   "fieldtype": "Currency",
+   "label": "Revised Monthly Fee"
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_extension_value",
+   "fieldtype": "Currency",
+   "label": "Total Extension Value",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sec_details",
+   "fieldtype": "Section Break",
+   "label": "Extension Justification & Appendix"
+  },
+  {
+   "fieldname": "extension_reason",
+   "fieldtype": "Small Text",
+   "label": "Reason for Extension",
+   "reqd": 1
+  },
+  {
+   "fieldname": "revised_scope",
+   "fieldtype": "Text",
+   "label": "Revised Scope / Deliverables"
+  },
+  {
+   "fieldname": "extension_appendix",
+   "fieldtype": "Attach",
+   "label": "Extension Agreement / Appendix (PDF)"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "options": "Consultant Contract Extension",
+   "no_copy": 1,
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-09-28 16:15:00.000000",
+ "modified_by": "Administrator",
+ "module": "Access Custom",
+ "name": "Consultant Contract Extension",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Employee",
+   "share": 1,
+   "submit": 0,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

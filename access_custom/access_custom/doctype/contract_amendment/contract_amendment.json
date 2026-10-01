@@ -1,0 +1,822 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2026-09-19 12:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_overview",
+  "naming_series",
+  "contract",
+  "customer_name",
+  "project_title",
+  "customer_amendment_number",
+  "column_break_hdr1",
+  "amendment_type",
+  "amendment_types",
+  "requested_by",
+  "amendment_date",
+  "amendment_effective_date",
+  "column_break_hdr2",
+  "current_version",
+  "new_version",
+  "client_reference",
+  "client_amendment_date",
+  "section_break_reason",
+  "amendment_reason",
+  "section_break_impact",
+  "impact_scope",
+  "impact_services",
+  "impact_deliverables",
+  "impact_timeline",
+  "column_break_imp1",
+  "impact_value",
+  "impact_budget_dist",
+  "impact_payment_terms",
+  "impact_staffing",
+  "column_break_imp2",
+  "impact_fte",
+  "impact_reporting",
+  "impact_legal",
+  "impact_other",
+  "section_break_scope",
+  "scope_changes",
+  "scope_description",
+  "section_break_timeline",
+  "is_no_cost_extension",
+  "original_start_date",
+  "current_end_date",
+  "column_break_time1",
+  "revised_start_date",
+  "revised_end_date",
+  "extension_days",
+  "section_break_finance",
+  "has_cost_impact",
+  "original_contract_value",
+  "current_contract_value",
+  "column_break_fin1",
+  "value_change",
+  "revised_contract_value",
+  "percentage_change",
+  "section_break_realloc",
+  "budget_reallocations",
+  "section_break_resources",
+  "resource_changes",
+  "section_break_approvals",
+  "lead_approver",
+  "column_break_app1",
+  "lead_approver_status",
+  "column_break_app2",
+  "lead_approver_review",
+  "section_break_app_legal",
+  "legal_approver",
+  "column_break_app3",
+  "legal_approver_status",
+  "column_break_app4",
+  "legal_approver_review",
+  "section_break_app_fin",
+  "finance_approver",
+  "column_break_app5",
+  "finance_approver_status",
+  "column_break_app6",
+  "finance_approver_review",
+  "section_break_app_hr",
+  "hr_approver",
+  "column_break_app7",
+  "hr_approver_status",
+  "column_break_app8",
+  "hr_approver_review",
+  "section_break_app_ceo",
+  "ceo_approver",
+  "column_break_app9",
+  "ceo_approver_status",
+  "column_break_app10",
+  "ceo_approver_review",
+  "section_break_execution",
+  "client_signatory_name",
+  "client_signed_date",
+  "column_break_exec1",
+  "company_signatory",
+  "company_signed_date",
+  "section_break_doc",
+  "signed_amendment_document",
+  "section_break_sys",
+  "amended_from",
+  "requires_legal",
+  "requires_finance",
+  "requires_hr",
+  "is_multiple_types"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_overview",
+   "fieldtype": "Section Break",
+   "label": "Amendment Information"
+  },
+  {
+   "default": "AMD-.YYYY.-.#####",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Series",
+   "options": "AMD-.YYYY.-.#####\nAMD-.contract.-.###"
+  },
+  {
+   "fieldname": "contract",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Contract Reference / ID",
+   "options": "Test Customer Contract",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "contract.customer_name",
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Customer Name",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "contract.project_title",
+   "fieldname": "project_title",
+   "fieldtype": "Data",
+   "label": "Project Title",
+   "read_only": 1
+  },
+  {
+   "fieldname": "customer_amendment_number",
+   "fieldtype": "Data",
+   "label": "Customer Amendment Number"
+  },
+  {
+   "fieldname": "column_break_hdr1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "amendment_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Amendment Type",
+   "options": "\nContract Extension \u2013 No Cost\nChange in Scope / Services\nBudget Reallocation\nCost / Contract Value Change\nResource Change\nTimeline / Milestone Change\nPayment / Commercial Terms Change\nOther\nMultiple types",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.amendment_type=='Multiple types'",
+   "fieldname": "amendment_types",
+   "fieldtype": "Table MultiSelect",
+   "label": "Select Multiple Amendment Types",
+   "options": "Amendment Type Item"
+  },
+  {
+   "fieldname": "requested_by",
+   "fieldtype": "Link",
+   "ignore_user_permissions": 1,
+   "label": "Requested By",
+   "options": "Employee"
+  },
+  {
+   "fetch_from": "requested_by.employee_name",
+   "fieldname": "requested_by_name",
+   "fieldtype": "Data",
+   "label": "Employee Name",
+   "read_only": 1,
+   "in_list_view": 1,
+   "hidden": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "amendment_date",
+   "fieldtype": "Date",
+   "label": "Request Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "amendment_effective_date",
+   "fieldtype": "Date",
+   "label": "Effective Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_hdr2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "contract.current_version",
+   "fieldname": "current_version",
+   "fieldtype": "Data",
+   "label": "Current Contract Version",
+   "read_only": 1
+  },
+  {
+   "fieldname": "new_version",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "New Version After Amendment",
+   "read_only": 1
+  },
+  {
+   "fieldname": "client_reference",
+   "fieldtype": "Data",
+   "label": "Client Reference"
+  },
+  {
+   "fieldname": "client_amendment_date",
+   "fieldtype": "Date",
+   "label": "Client Amendment Date"
+  },
+  {
+   "fieldname": "section_break_reason",
+   "fieldtype": "Section Break",
+   "label": "Reason / Justification"
+  },
+  {
+   "fieldname": "amendment_reason",
+   "fieldtype": "Small Text",
+   "label": "Reason / Justification for Amendment",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_impact",
+   "fieldtype": "Section Break",
+   "label": "Change Impact (Impact Matrix)"
+  },
+  {
+   "default": "0",
+   "fieldname": "impact_scope",
+   "fieldtype": "Check",
+   "label": "Scope of Work"
+  },
+  {
+   "default": "0",
+   "fieldname": "impact_services",
+   "fieldtype": "Check",
+   "label": "Services / Activities"
+  },
+  {
+   "default": "0",
+   "fieldname": "impact_deliverables",
+   "fieldtype": "Check",
+   "label": "Deliverables / Milestones"
+  },
+  {
+   "default": "0",
+   "fieldname": "impact_timeline",
+   "fieldtype": "Check",
+   "label": "Timeline / Duration (End Date)"
+  },
+  {
+   "fieldname": "column_break_imp1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "impact_value",
+   "fieldtype": "Check",
+   "label": "Contract Value (Cost Impact)"
+  },
+  {
+   "default": "0",
+   "fieldname": "impact_budget_dist",
+   "fieldtype": "Check",
+   "label": "Budget Distribution / Reallocation"
+  },
+  {
+   "default": "0",
+   "fieldname": "impact_payment_terms",
+   "fieldtype": "Check",
+   "label": "Payment Terms / Schedule"
+  },
+  {
+   "default": "0",
+   "fieldname": "impact_staffing",
+   "fieldtype": "Check",
+   "label": "Staffing / Personnel"
+  },
+  {
+   "fieldname": "column_break_imp2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "impact_fte",
+   "fieldtype": "Check",
+   "label": "FTE Allocation"
+  },
+  {
+   "default": "0",
+   "fieldname": "impact_reporting",
+   "fieldtype": "Check",
+   "label": "Reporting Requirements"
+  },
+  {
+   "default": "0",
+   "fieldname": "impact_legal",
+   "fieldtype": "Check",
+   "label": "Legal / Terms & Conditions"
+  },
+  {
+   "default": "0",
+   "fieldname": "impact_other",
+   "fieldtype": "Check",
+   "label": "Other Administrative"
+  },
+  {
+   "fieldname": "section_break_scope",
+   "fieldtype": "Section Break",
+   "label": "Scope / Service Changes"
+  },
+  {
+   "fieldname": "scope_changes",
+   "fieldtype": "Table",
+   "label": "Scope / Service Changes",
+   "options": "Amendment Scope Change"
+  },
+  {
+   "fieldname": "scope_description",
+   "fieldtype": "Text",
+   "label": "Detailed Description of Changes"
+  },
+  {
+   "fieldname": "section_break_timeline",
+   "fieldtype": "Section Break",
+   "label": "Timeline Changes"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_no_cost_extension",
+   "fieldtype": "Check",
+   "label": "No-Cost Extension"
+  },
+  {
+   "fieldname": "original_start_date",
+   "fieldtype": "Date",
+   "label": "Original Start Date"
+  },
+  {
+   "fetch_from": "contract.current_end_date",
+   "fieldname": "current_end_date",
+   "fieldtype": "Date",
+   "label": "Original / Current End Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_time1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "revised_start_date",
+   "fieldtype": "Date",
+   "label": "Revised Start Date"
+  },
+  {
+   "fieldname": "revised_end_date",
+   "fieldtype": "Date",
+   "label": "Revised Contract End Date"
+  },
+  {
+   "fieldname": "extension_days",
+   "fieldtype": "Int",
+   "label": "Extension Days",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_finance",
+   "fieldtype": "Section Break",
+   "label": "Financial Changes"
+  },
+  {
+   "default": "0",
+   "fieldname": "has_cost_impact",
+   "fieldtype": "Check",
+   "label": "Cost Impact (Auto-calculated)"
+  },
+  {
+   "fetch_from": "contract.project_budget",
+   "fieldname": "original_contract_value",
+   "fieldtype": "Currency",
+   "label": "Original Contract Value",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "contract.current_contract_value",
+   "fieldname": "current_contract_value",
+   "fieldtype": "Currency",
+   "label": "Previous Contract Value",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_fin1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "value_change",
+   "fieldtype": "Currency",
+   "label": "Financial Change (+/-)"
+  },
+  {
+   "fieldname": "revised_contract_value",
+   "fieldtype": "Currency",
+   "label": "Revised Contract Value",
+   "read_only": 1
+  },
+  {
+   "fieldname": "percentage_change",
+   "fieldtype": "Percent",
+   "label": "Percentage Change (%)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_realloc",
+   "fieldtype": "Section Break",
+   "label": "Budget Reallocation"
+  },
+  {
+   "fieldname": "budget_reallocations",
+   "fieldtype": "Table",
+   "label": "Budget Reallocations",
+   "options": "Amendment Budget Reallocation"
+  },
+  {
+   "fieldname": "section_break_resources",
+   "fieldtype": "Section Break",
+   "label": "Resource Changes"
+  },
+  {
+   "fieldname": "resource_changes",
+   "fieldtype": "Table",
+   "label": "Resource Changes",
+   "options": "Amendment Resource Change"
+  },
+  {
+   "fieldname": "section_break_approvals",
+   "fieldtype": "Section Break",
+   "label": "Approvals"
+  },
+  {
+   "fieldname": "lead_approver",
+   "fieldtype": "Link",
+   "label": "Level 1 Lead Approver",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_app1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "lead_approver_status",
+   "fieldtype": "Data",
+   "label": "Lead Approver Status",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_app2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "lead_approver_review",
+   "fieldtype": "Small Text",
+   "label": "Lead Approver Comments"
+  },
+  {
+   "depends_on": "eval:doc.requires_legal == 1",
+   "fieldname": "section_break_app_legal",
+   "fieldtype": "Section Break",
+   "label": "Legal Review"
+  },
+  {
+   "depends_on": "eval:doc.requires_legal == 1",
+   "fieldname": "legal_approver",
+   "fieldtype": "Link",
+   "label": "Level 2.1 Legal Approver",
+   "mandatory_depends_on": "eval:doc.requires_legal == 1",
+   "options": "User"
+  },
+  {
+   "fieldname": "column_break_app3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "legal_approver_status",
+   "fieldtype": "Data",
+   "label": "Legal Approver Status",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_app4",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "legal_approver_review",
+   "fieldtype": "Small Text",
+   "label": "Legal Approver Comments"
+  },
+  {
+   "depends_on": "eval:doc.requires_finance == 1",
+   "fieldname": "section_break_app_fin",
+   "fieldtype": "Section Break",
+   "label": "Finance Review"
+  },
+  {
+   "depends_on": "eval:doc.requires_finance == 1",
+   "fieldname": "finance_approver",
+   "fieldtype": "Link",
+   "label": "Level 2.2 Finance Approver",
+   "mandatory_depends_on": "eval:doc.requires_finance == 1",
+   "options": "User"
+  },
+  {
+   "fieldname": "column_break_app5",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "finance_approver_status",
+   "fieldtype": "Data",
+   "label": "Finance Approver Status",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_app6",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "finance_approver_review",
+   "fieldtype": "Small Text",
+   "label": "Finance Approver Comments"
+  },
+  {
+   "depends_on": "eval:doc.requires_hr == 1",
+   "fieldname": "section_break_app_hr",
+   "fieldtype": "Section Break",
+   "label": "HR Review (Conditional)"
+  },
+  {
+   "depends_on": "eval:doc.requires_hr == 1",
+   "fieldname": "hr_approver",
+   "fieldtype": "Link",
+   "label": "Level 2.3 HR Approver",
+   "mandatory_depends_on": "eval:doc.requires_hr == 1",
+   "options": "User"
+  },
+  {
+   "fieldname": "column_break_app7",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "hr_approver_status",
+   "fieldtype": "Data",
+   "label": "HR Approver Status",
+   "options": "Pending\nApproved\nNot Required\nRejected",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_app8",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "hr_approver_review",
+   "fieldtype": "Small Text",
+   "label": "HR Approver Comments"
+  },
+  {
+   "fieldname": "section_break_app_ceo",
+   "fieldtype": "Section Break",
+   "label": "CEO Review"
+  },
+  {
+   "fieldname": "ceo_approver",
+   "fieldtype": "Link",
+   "label": "Level 3 CEO Approver",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_app9",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ceo_approver_status",
+   "fieldtype": "Data",
+   "label": "CEO Approver Status",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_app10",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ceo_approver_review",
+   "fieldtype": "Small Text",
+   "label": "CEO Approver Comments"
+  },
+  {
+   "fieldname": "section_break_execution",
+   "fieldtype": "Section Break",
+   "label": "Client Execution"
+  },
+  {
+   "fieldname": "client_signatory_name",
+   "fieldtype": "Data",
+   "label": "Client Signatory Name"
+  },
+  {
+   "fieldname": "client_signed_date",
+   "fieldtype": "Date",
+   "label": "Client Signed Date"
+  },
+  {
+   "fieldname": "column_break_exec1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "company_signatory",
+   "fieldtype": "Link",
+   "label": "Company Signatory",
+   "options": "User"
+  },
+  {
+   "fieldname": "company_signed_date",
+   "fieldtype": "Date",
+   "label": "Company Signed Date"
+  },
+  {
+   "allow_on_submit": 1,
+   "description": "Date and time when amendment was executed",
+   "fieldname": "executed_on",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Executed Date and Time",
+   "no_copy": 1,
+   "read_only": 1,
+   "hidden": 1
+  },
+  {
+   "fieldname": "section_break_doc",
+   "fieldtype": "Section Break",
+   "label": "Signed Document"
+  },
+  {
+   "fieldname": "signed_amendment_document",
+   "fieldtype": "Attach",
+   "label": "Signed Amendment Document (PDF)"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_sys",
+   "fieldtype": "Section Break",
+   "label": "System Details"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Contract Amendment",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "requires_legal",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Requires Legal Review",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "requires_finance",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Requires Finance Review",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "requires_hr",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Requires HR Review",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_multiple_types",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Is Multiple Types",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-09-22 18:10:29.854024",
+ "modified_by": "Administrator",
+ "module": "Access Custom",
+ "name": "Contract Amendment",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Contract Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 0,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Employee",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 0,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Team Lead",
+   "share": 1,
+   "submit": 0,
+   "write": 1
+  },
+  {
+   "create": 0,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Legal Approver",
+   "share": 1,
+   "submit": 0,
+   "write": 1
+  },
+  {
+   "create": 0,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Finance Approver",
+   "share": 1,
+   "submit": 0,
+   "write": 1
+  },
+  {
+   "create": 0,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Approver",
+   "share": 1,
+   "submit": 0,
+   "write": 1
+  },
+  {
+   "create": 0,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CEO Approver",
+   "share": 1,
+   "submit": 0,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "contract, customer_name, project_title, amendment_type",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

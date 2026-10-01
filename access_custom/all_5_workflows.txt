@@ -1,0 +1,148 @@
+
+==================== Customer Contract Workflow (DocType: Test Customer Contract) ====================
+STATES:
+  - Draft                               | doc_status: 0 | allow_edit: Employee
+  - Pending Team Lead Approval          | doc_status: 0 | allow_edit: Employee
+  - Pending Level 2.1 Legal Approval    | doc_status: 0 | allow_edit: Employee
+  - Pending Level 2.2 Finance Approval  | doc_status: 0 | allow_edit: Employee
+  - Pending Level 2.3 HR Approval       | doc_status: 0 | allow_edit: Employee
+  - Pending CEO Approval                | doc_status: 0 | allow_edit: Employee
+  - In Progress                         | doc_status: 0 | allow_edit: Employee
+  - Commenced                           | doc_status: 1 | allow_edit: Employee
+  - Active/Amendment Initiated          | doc_status: 1 | allow_edit: Employee
+  - On Hold                             | doc_status: 1 | allow_edit: Employee
+  - Terminated                          | doc_status: 1 | allow_edit: Employee
+  - Closed                              | doc_status: 1 | allow_edit: Employee
+
+TRANSITIONS:
+  Draft                               -> [Submit to Team Lead      ] -> Pending Team Lead Approval          | Role: Employee
+  Pending Team Lead Approval          -> [Approve Team Lead        ] -> Pending Level 2.1 Legal Approval    | Role: Employee
+  Pending Team Lead Approval          -> [Reject Team Lead         ] -> Draft                               | Role: Employee
+  Pending Level 2.1 Legal Approval    -> [Approve Legal            ] -> Pending Level 2.2 Finance Approval  | Role: Employee
+  Pending Level 2.1 Legal Approval    -> [Reject Legal             ] -> Draft                               | Role: Employee
+  Pending Level 2.2 Finance Approval  -> [Approve Finance          ] -> Pending Level 2.3 HR Approval       | Role: Employee
+  Pending Level 2.2 Finance Approval  -> [Reject Finance           ] -> Draft                               | Role: Employee
+  Pending Level 2.3 HR Approval       -> [Approve HR               ] -> Pending CEO Approval                | Role: Employee
+  Pending Level 2.3 HR Approval       -> [Reject HR                ] -> Draft                               | Role: Employee
+  Pending CEO Approval                -> [Approve CEO              ] -> In Progress                         | Role: Employee
+  Pending CEO Approval                -> [Reject CEO               ] -> Draft                               | Role: Employee
+  In Progress                         -> [Commence Contract        ] -> Commenced                           | Role: Employee
+
+==================== Contract Amendment Workflow (DocType: Contract Amendment) ====================
+STATES:
+  - Draft                               | doc_status: 0 | allow_edit: Employee
+  - Under Team Lead Review              | doc_status: 0 | allow_edit: Employee
+  - Pending Legal Review                | doc_status: 0 | allow_edit: Employee
+  - Pending Finance Review              | doc_status: 0 | allow_edit: Employee
+  - Pending HR Review                   | doc_status: 0 | allow_edit: Employee
+  - Pending CEO Review                  | doc_status: 0 | allow_edit: Employee
+  - Pending Client Signature            | doc_status: 0 | allow_edit: Employee
+  - Executed                            | doc_status: 1 | allow_edit: System Manager
+  - Returned for Revision               | doc_status: 0 | allow_edit: Employee
+  - Rejected                            | doc_status: 0 | allow_edit: Employee
+
+TRANSITIONS:
+  Draft                               -> [Submit to Team Lead      ] -> Under Team Lead Review              | Role: Employee
+  Under Team Lead Review              -> [Reject Team Lead         ] -> Draft                               | Role: Employee
+  Under Team Lead Review              -> [Return for Revision      ] -> Draft                               | Role: Employee
+  Under Team Lead Review              -> [Approve Team Lead        ] -> Pending Legal Review                | Role: Employee
+  Under Team Lead Review              -> [Approve Team Lead        ] -> Pending HR Review                   | Role: Employee
+  Under Team Lead Review              -> [Approve Team Lead        ] -> Pending Finance Review              | Role: Employee
+  Under Team Lead Review              -> [Approve Team Lead        ] -> Pending CEO Review                  | Role: Employee
+  Pending Legal Review                -> [Reject Legal             ] -> Draft                               | Role: Employee
+  Pending Legal Review                -> [Return for Revision      ] -> Draft                               | Role: Employee
+  Pending Legal Review                -> [Approve Legal            ] -> Pending Finance Review              | Role: Employee
+  Pending Legal Review                -> [Approve Legal            ] -> Pending HR Review                   | Role: Employee
+  Pending Legal Review                -> [Approve Legal            ] -> Pending CEO Review                  | Role: Employee
+  Pending Finance Review              -> [Reject Finance           ] -> Draft                               | Role: Employee
+  Pending Finance Review              -> [Return for Revision      ] -> Draft                               | Role: Employee
+  Pending Finance Review              -> [Approve Finance          ] -> Pending HR Review                   | Role: Employee
+  Pending Finance Review              -> [Approve Finance          ] -> Pending CEO Review                  | Role: Employee
+  Pending HR Review                   -> [Reject HR                ] -> Draft                               | Role: Employee
+  Pending HR Review                   -> [Return for Revision      ] -> Draft                               | Role: Employee
+  Pending HR Review                   -> [Approve HR               ] -> Pending Finance Review              | Role: Employee
+  Pending HR Review                   -> [Approve HR               ] -> Pending CEO Review                  | Role: Employee
+  Pending CEO Review                  -> [Reject CEO               ] -> Draft                               | Role: Employee
+  Pending CEO Review                  -> [Return for Revision      ] -> Draft                               | Role: Employee
+  Pending CEO Review                  -> [Approve CEO              ] -> Pending Client Signature            | Role: Employee
+  Pending Client Signature            -> [Execute Amendment        ] -> Executed                            | Role: Employee
+  Returned for Revision               -> [Resubmit                 ] -> Under Team Lead Review              | Role: Employee
+  Returned for Revision               -> [Return to Draft          ] -> Draft                               | Role: Employee
+  Rejected                            -> [Reopen as Draft          ] -> Draft                               | Role: Employee
+
+==================== Contract On Hold Workflow (DocType: Contract On Hold) ====================
+STATES:
+  - Draft                               | doc_status: 0 | allow_edit: Employee
+  - Pending Team Lead Approval          | doc_status: 0 | allow_edit: Employee
+  - Pending Legal Approval              | doc_status: 0 | allow_edit: Employee
+  - Pending Finance Approval            | doc_status: 0 | allow_edit: Employee
+  - Pending HR Approval                 | doc_status: 0 | allow_edit: Employee
+  - Pending CEO Approval                | doc_status: 0 | allow_edit: Employee
+  - On Hold                             | doc_status: 1 | allow_edit: Employee
+  - Resumed                             | doc_status: 1 | allow_edit: Employee
+  - Rejected                            | doc_status: 0 | allow_edit: Employee
+
+TRANSITIONS:
+  Draft                               -> [Submit to Team Lead      ] -> Pending Team Lead Approval          | Role: Employee
+  Pending Team Lead Approval          -> [Approve Team Lead        ] -> Pending Legal Approval              | Role: Employee
+  Pending Team Lead Approval          -> [Reject Team Lead         ] -> Rejected                            | Role: Employee
+  Pending Legal Approval              -> [Approve Legal            ] -> Pending Finance Approval            | Role: Employee
+  Pending Legal Approval              -> [Reject Legal             ] -> Rejected                            | Role: Employee
+  Pending Finance Approval            -> [Approve Finance          ] -> Pending HR Approval                 | Role: Employee
+  Pending Finance Approval            -> [Reject Finance           ] -> Rejected                            | Role: Employee
+  Pending HR Approval                 -> [Approve HR               ] -> Pending CEO Approval                | Role: Employee
+  Pending HR Approval                 -> [Reject HR                ] -> Rejected                            | Role: Employee
+  Pending CEO Approval                -> [Approve CEO              ] -> On Hold                             | Role: Employee
+  Pending CEO Approval                -> [Reject CEO               ] -> Rejected                            | Role: Employee
+  On Hold                             -> [Resume Contract          ] -> Resumed                             | Role: Employee
+
+==================== Contract Termination Workflow (DocType: Contract Termination) ====================
+STATES:
+  - Termination Requested               | doc_status: 0 | allow_edit: Employee
+  - Termination Under TL Review         | doc_status: 0 | allow_edit: Employee
+  - Termination Under Legal Review      | doc_status: 0 | allow_edit: Employee
+  - Termination Under Finance Review    | doc_status: 0 | allow_edit: Employee
+  - Termination Under HR Review         | doc_status: 0 | allow_edit: Employee
+  - Termination Under CEO Review        | doc_status: 0 | allow_edit: Employee
+  - Termination Pending Client Comm     | doc_status: 0 | allow_edit: Employee
+  - Termination Executed                | doc_status: 1 | allow_edit: Employee
+  - Rejected                            | doc_status: 0 | allow_edit: Employee
+
+TRANSITIONS:
+  Termination Requested               -> [Submit Termination       ] -> Termination Under TL Review         | Role: Employee
+  Termination Under TL Review         -> [Approve Termination TL   ] -> Termination Under Legal Review      | Role: Employee
+  Termination Under TL Review         -> [Reject Team Lead         ] -> Rejected                            | Role: Employee
+  Termination Under Legal Review      -> [Approve Termination Legal] -> Termination Under Finance Review    | Role: Employee
+  Termination Under Legal Review      -> [Reject Legal             ] -> Rejected                            | Role: Employee
+  Termination Under Finance Review    -> [Approve Termination Finance] -> Termination Under HR Review         | Role: Employee
+  Termination Under Finance Review    -> [Reject Finance           ] -> Rejected                            | Role: Employee
+  Termination Under HR Review         -> [Approve Termination HR   ] -> Termination Under CEO Review        | Role: Employee
+  Termination Under HR Review         -> [Reject HR                ] -> Rejected                            | Role: Employee
+  Termination Under CEO Review        -> [Approve Termination CEO  ] -> Termination Pending Client Comm     | Role: Employee
+  Termination Under CEO Review        -> [Reject CEO               ] -> Rejected                            | Role: Employee
+  Termination Pending Client Comm     -> [Execute Termination      ] -> Termination Executed                | Role: Employee
+
+==================== Contract Closure Workflow (DocType: Contract Closure) ====================
+STATES:
+  - Closure Initiated                   | doc_status: 0 | allow_edit: Employee
+  - Deliverable Closure                 | doc_status: 0 | allow_edit: Employee
+  - Document Closure                    | doc_status: 0 | allow_edit: Employee
+  - Team Lead Closure                   | doc_status: 0 | allow_edit: Employee
+  - Legal Closure                       | doc_status: 0 | allow_edit: Employee
+  - Finance Closure                     | doc_status: 0 | allow_edit: Employee
+  - CEO Closure                         | doc_status: 0 | allow_edit: Employee
+  - Closed                              | doc_status: 1 | allow_edit: Employee
+  - Rejected                            | doc_status: 0 | allow_edit: Employee
+
+TRANSITIONS:
+  Closure Initiated                   -> [Confirm Deliverables     ] -> Deliverable Closure                 | Role: Employee
+  Deliverable Closure                 -> [Archive Documents        ] -> Document Closure                    | Role: Employee
+  Document Closure                    -> [Submit to Team Lead      ] -> Team Lead Closure                   | Role: Employee
+  Team Lead Closure                   -> [Approve Closure TL       ] -> Legal Closure                       | Role: Employee
+  Team Lead Closure                   -> [Reject Team Lead         ] -> Rejected                            | Role: Employee
+  Legal Closure                       -> [Approve Closure Legal    ] -> Finance Closure                     | Role: Employee
+  Legal Closure                       -> [Reject Legal             ] -> Rejected                            | Role: Employee
+  Finance Closure                     -> [Approve Closure Finance  ] -> CEO Closure                         | Role: Employee
+  Finance Closure                     -> [Reject Finance           ] -> Rejected                            | Role: Employee
+  CEO Closure                         -> [Approve Closure CEO      ] -> Closed                              | Role: Employee
+  CEO Closure                         -> [Reject CEO               ] -> Rejected                            | Role: Employee

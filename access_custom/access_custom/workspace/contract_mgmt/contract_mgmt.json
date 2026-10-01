@@ -5,7 +5,7 @@
    "label": "Territory Wise Sales"
   }
  ],
- "content": "[{\"id\":\"XGIwEUStw_\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Your Shortcuts</b></span>\",\"col\":12}},{\"id\":\"_VvLQRhiIO\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"New Test Customer Contract\",\"col\":3}},{\"id\":\"CTWSo4OPfd\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Consultant Contract\",\"col\":3}},{\"id\":\"rUybhjhJkR\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Customer Contract\",\"col\":3}},{\"id\":\"69RN0XsiJK\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Lead\",\"col\":3}},{\"id\":\"t6PQ0vY-Iw\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Opportunity\",\"col\":3}},{\"id\":\"3SzhcDjzoO\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Employee Contract\",\"col\":3}},{\"id\":\"VOFE0hqXRD\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Customer\",\"col\":3}},{\"id\":\"0ik53fuemG\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Sales Analytics\",\"col\":3}},{\"id\":\"wdROEmB_XG\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Dashboard\",\"col\":3}},{\"id\":\"P37wOFd2K0\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Supplier Contract\",\"col\":3}},{\"id\":\"-I9HhcgUKE\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"ttpROKW9vk\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Reports &amp; Masters</b></span>\",\"col\":12}},{\"id\":\"-76QPdbBHy\",\"type\":\"card\",\"data\":{\"card_name\":\"Sales Pipeline\",\"col\":4}},{\"id\":\"_YmGwzVWRr\",\"type\":\"card\",\"data\":{\"card_name\":\"Masters\",\"col\":4}},{\"id\":\"Bma1PxoXk3\",\"type\":\"card\",\"data\":{\"card_name\":\"Reports\",\"col\":4}},{\"id\":\"80viA0R83a\",\"type\":\"card\",\"data\":{\"card_name\":\"Campaign\",\"col\":4}},{\"id\":\"Buo5HtKRFN\",\"type\":\"card\",\"data\":{\"card_name\":\"Settings\",\"col\":4}},{\"id\":\"sLS_x4FMK2\",\"type\":\"card\",\"data\":{\"card_name\":\"Maintenance\",\"col\":4}},{\"id\":\"Cj2TyhgiWy\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Territory Wise Sales\",\"col\":12}}]",
+ "content": "[{\"id\":\"XGIwEUStw_\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Your Shortcuts</b></span>\",\"col\":12}},{\"id\":\"_VvLQRhiIO\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Customer Contract\",\"col\":3}},{\"id\":\"CTWSo4OPfd\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Consultant Contract\",\"col\":3}},{\"id\":\"3SzhcDjzoO\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Employee Contract\",\"col\":3}},{\"id\":\"VOFE0hqXRD\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Customer\",\"col\":3}},{\"id\":\"P37wOFd2K0\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Supplier Contract\",\"col\":3}},{\"id\":\"-I9HhcgUKE\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"ttpROKW9vk\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Reports &amp; Masters</b></span>\",\"col\":12}},{\"id\":\"-76QPdbBHy\",\"type\":\"card\",\"data\":{\"card_name\":\"Sales Pipeline\",\"col\":4}},{\"id\":\"_YmGwzVWRr\",\"type\":\"card\",\"data\":{\"card_name\":\"Masters\",\"col\":4}},{\"id\":\"Bma1PxoXk3\",\"type\":\"card\",\"data\":{\"card_name\":\"Reports\",\"col\":4}},{\"id\":\"80viA0R83a\",\"type\":\"card\",\"data\":{\"card_name\":\"Campaign\",\"col\":4}},{\"id\":\"Buo5HtKRFN\",\"type\":\"card\",\"data\":{\"card_name\":\"Settings\",\"col\":4}},{\"id\":\"sLS_x4FMK2\",\"type\":\"card\",\"data\":{\"card_name\":\"Maintenance\",\"col\":4}},{\"id\":\"Cj2TyhgiWy\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Territory Wise Sales\",\"col\":12}}]",
  "creation": "2020-01-23 14:48:30.183272",
  "custom_blocks": [],
  "docstatus": 0,
@@ -418,9 +418,49 @@
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Consultant Master",
+   "link_count": 0,
+   "link_to": "Consultant Master",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Consultant Extensions",
+   "link_count": 0,
+   "link_to": "Consultant Contract Extension",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Consultant Amendments",
+   "link_count": 0,
+   "link_to": "Consultant Contract Amendment",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Consultant Terminations",
+   "link_count": 0,
+   "link_to": "Consultant Contract Termination",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
   }
  ],
- "modified": "2026-09-03 11:46:14.329992",
+ "modified": "2026-09-28 16:25:53.771135",
  "modified_by": "Administrator",
  "module": "Access Custom",
  "name": "Contract Mgmt",
@@ -434,17 +474,9 @@
  "sequence_id": 10.0,
  "shortcuts": [
   {
-   "color": "Blue",
-   "format": "{} Open",
-   "label": "Lead",
-   "link_to": "Lead",
-   "stats_filter": "{\"status\":\"Open\"}",
-   "type": "DocType"
-  },
-  {
    "color": "Grey",
    "doc_view": "List",
-   "label": "New Test Customer Contract",
+   "label": "Customer Contract",
    "type": "URL",
    "url": "/app/test-customer-contract/new"
   },
@@ -452,16 +484,9 @@
    "color": "Grey",
    "doc_view": "List",
    "label": "Consultant Contract",
-   "type": "URL",
+   "link_to": "Consultant Contract",
+   "type": "DocType",
    "url": "/app/contract/new?custom_type_of_contract=Consultant"
-  },
-  {
-   "color": "Blue",
-   "format": "{} Assigned",
-   "label": "Opportunity",
-   "link_to": "Opportunity",
-   "stats_filter": "{\"_assign\": [\"like\", '%' + frappe.session.user + '%']}",
-   "type": "DocType"
   },
   {
    "color": "Grey",
@@ -481,24 +506,6 @@
    "label": "Employee Contract",
    "type": "URL",
    "url": "/app/contract/new?custom_type_of_contract=Employee"
-  },
-  {
-   "label": "Sales Analytics",
-   "link_to": "Sales Analytics",
-   "report_ref_doctype": "Sales Order",
-   "type": "Report"
-  },
-  {
-   "color": "Grey",
-   "doc_view": "List",
-   "label": "Customer Contract",
-   "type": "URL",
-   "url": "/app/contract/new?custom_type_of_contract=Customer"
-  },
-  {
-   "label": "Dashboard",
-   "link_to": "CRM",
-   "type": "Dashboard"
   }
  ],
  "title": "Contract Mgmt"

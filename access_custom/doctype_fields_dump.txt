@@ -1,0 +1,551 @@
+
+==================== TEST_CUSTOMER_CONTRACT (151 fields) ====================
+Title field: party_name, Autoname: TEST-.YYYY.-.#####, Is Submittable: 1
+  access_entity                       | Link             | Access Entity                       | REQ |    -> Company
+  party_type                          | Select           | Type of Contract                    | REQ |    -> Customer
+Supplier
+Employee
+  project_id_by_customer              | Data             | Contract Reference No.              |     |   
+  project_title                       | Data             | Project Title                       | REQ |   
+  cb_party                            | Column Break     |                                     |     |   
+  party_name                          | Dynamic Link     | Customer Id                         | REQ |    -> party_type
+  industries                          | Table MultiSelect | Thematic Area                       |     |    -> Contract Industry
+  status                              | Select           | Status                              |     |    -> Draft
+Pending Team Lead Approval
+Pending Level 2.1 Legal Approval
+Pending Level 2.2 Finance Approval
+Pending Level 2.3 HR Approval
+Pending CEO Approval
+Pending Lead Approver
+Pending Legal Approver
+Pending Finance Approver
+Pending HR Approver
+Pending CEO Approver
+In Progress
+Commenced
+Active
+Active/Amendment Initiated
+Under Amendment
+Active/Renewal Initiated
+Under Renewal
+Deliverable Closure
+On Hold
+Terminated
+Closed
+Rejected
+  project_currency                    | Link             | Project Currency                    | REQ |    -> Currency
+  column_break_w5wo                   | Column Break     |                                     |     |   
+  customer_name                       | Data             | Customer Name                       |     |   
+  party_full_name                     | Data             | Party Full Name                     |     | RO
+  country                             | Table MultiSelect | Project Geography                   |     |    -> Contract Country Selection
+  project_budget                      | Currency         | Original Contract Value             | REQ |   
+  current_contract_value              | Currency         | Current Contract Value (incl. Amendments) |     | RO -> project_currency
+  project_cost                        | Currency         | Project Cost                        |     |   
+  section_break_rcux                  | Section Break    |                                     |     |   
+  security_deposit_currency           | Link             | Security Deposit Currency           |     |    -> Currency
+  column_break_uiwy                   | Column Break     |                                     |     |   
+  security_deposit_amount             | Currency         | Security Deposit Amount             |     |   
+  column_break_caps                   | Column Break     |                                     |     |   
+  nature_of_security                  | Select           | Nature of Security                  |     |    -> Performance Security
+Financial Security
+Earnest Money Deposit / EMD
+Equipment Deposit
+  section_break_qsup                  | Section Break    |                                     |     |   
+  customer_poc_name                   | Data             | Customer POC Name                   | REQ |   
+  column_break_snef                   | Column Break     |                                     |     |   
+  customer_poc_email                  | Data             | Customer POC Email                  | REQ |    -> Email
+  column_break_pesn                   | Column Break     |                                     |     |   
+  customer_poc_number                 | Data             | Customer POC Number                 |     |    -> Phone
+  sb_terms                            | Section Break    | Contract Period                     |     |   
+  start_date                          | Date             | Original Start Date                 | REQ |   
+  contract_signing_date               | Date             | Contract Signing Date               |     |   
+  effective_date                      | Date             | Effective Date                      |     |   
+  project_tenure                      | Data             | Project Tenure                      |     |   
+  cb_date                             | Column Break     |                                     |     |   
+  end_date                            | Date             | Original End Date                   | REQ |   
+  current_end_date                    | Date             | Current End Date (incl. Extensions) |     | RO
+  current_version                     | Data             | Current Version                     |     | RO
+  renewal_date                        | Date             | Renewal Date                        |     |   
+  renewal_required                    | Select           | Renewal Required                    |     |    -> No
+Yes
+  renewal_status                      | Select           | Renewal Status                      |     |    -> Not Started
+Under Discussion
+Renewal in Progress
+Renewed
+Not Renewed
+  column_break_yqlo                   | Column Break     |                                     |     |   
+  expiry_alert                        | Select           | Expiry Alert                        |     |    -> 30
+60
+90
+120
+150
+180
+  section_break_avml                  | Section Break    | Contract Documents                  |     |   
+  customer_document                   | Attach           | Contract/MOU Provided by Customer   | REQ |   
+  column_break_wild                   | Column Break     |                                     |     |   
+  budget_agreed_with_customer         | Attach           | Budget Agreed with Customer         |     |   
+  column_break_zqls                   | Column Break     |                                     |     |   
+  project__proposal                   | Attach           | Project  Proposal                   |     |   
+  column_break_njbb                   | Column Break     |                                     |     |   
+  proposal_budget                     | Attach           | Proposal Budget                     |     |   
+  sb_signee                           | Section Break    | Signee Details                      |     |   
+  signee                              | Data             | Signee                              |     |   
+  signed_on                           | Datetime         | Signed On                           |     |   
+  contract_template                   | Link             | Contract Template                   |     |    -> Contract Template
+  contract_terms                      | Text Editor      | Contract Terms                      |     |   
+  approvals_and_signatures_section    | Section Break    | Approvals and Signatures            |     |   
+  lead_approver                       | Link             |  Level 1 Lead Approver              | REQ |    -> User
+  column_break_lp5p                   | Column Break     |                                     |     |   
+  lead_approver_status                | Data             | Lead Approver Status                |     |   
+  column_break_xu0a                   | Column Break     |                                     |     |   
+  lead_approver_review                | Small Text       | Comments                            |     |   
+  section_break_paeq                  | Section Break    |                                     |     |   
+  legal_approver                      | Link             | level 2.1 Legal Approver            | REQ |    -> User
+  column_break_v4kj                   | Column Break     |                                     |     |   
+  legal_approver_status               | Data             | Legal Approver Status               |     |   
+  column_break_wadi                   | Column Break     |                                     |     |   
+  legal_approver_review               | Small Text       | Comments                            |     |   
+  section_break_dkkv                  | Section Break    |                                     |     |   
+  finance_approver                    | Link             | Lavel 2.2 Finance Approver          | REQ |    -> User
+  column_break_cmny                   | Column Break     |                                     |     |   
+  finance_approver_status             | Data             | Finance Approver Status             |     |   
+  column_break_avlo                   | Column Break     |                                     |     |   
+  finance_approver_review             | Small Text       | Comments                            |     |   
+  section_break_oxl4                  | Section Break    |                                     |     |   
+  hr_approver                         | Link             | level 2.3 HR Approver               | REQ |    -> User
+  column_break_qh11                   | Column Break     |                                     |     |   
+  hr_approver_status                  | Data             | HR Approver Status                  |     |   
+  column_break_4ywi                   | Column Break     |                                     |     |   
+  hr_approver_review                  | Small Text       | Comments                            |     |   
+  section_break_rich                  | Section Break    |                                     |     |   
+  ceo_approver                        | Link             | Level 3 CEO Approver                | REQ |    -> User
+  column_break_amag                   | Column Break     |                                     |     |   
+  ceo_approver_status                 | Data             | CEO Approver Status                 |     |   
+  column_break_pnzx                   | Column Break     |                                     |     |   
+  ceo_approver_review                 | Small Text       | Comments                            |     |   
+  section_break_zhmp                  | Section Break    |                                     |     |   
+  upload_signed_document              | Attach           | Complete Counter Signed Contract    |     |   
+  column_break_w4my                   | Column Break     |                                     |     |   
+  amended_from                        | Link             | Amended From                        |     | RO -> Test Customer Contract
+  contract_status                     | Select           | Contract Status                     |     |    -> Draft
+Under Review
+Pending Approval
+Pending Signature
+Active
+On Hold
+Suspended
+Expired
+Renewal in Progress
+Renewed
+Terminated
+Cancelled
+Closed
+In Progress
+Commenced
+Completed
+  column_break_0pyk                   | Column Break     |                                     |     |   
+  signed_by_company                   | Link             | Signed By (Company)                 |     | RO -> User
+  documentation_tab                   | Tab Break        | Documentation                       |     |   
+  document_tracking_section           | Section Break    | Document Tracking                   |     |   
+  contract_documents                  | Table            | Contract Documents                  |     |    -> Test Document Tracking
+  milestone_tracking_section          | Section Break    | Milestone Tracking                  |     |   
+  project_milestones                  | Table            | Project Milestones                  |     |    -> Test Milestone Tracking
+  financial_tracking_section          | Section Break    | Financial Tracking                  |     |   
+  financial_schedule                  | Table            | Financial Schedule                  |     |    -> Test Financial Tracking
+  section_break_timeline_tree         | Section Break    | Contract Version & Amendment Timeline |     |   
+  timeline_html                       | HTML             | Timeline View                       |     |   
+  section_break_on_hold               | Section Break    | On Hold Details                     |     |   
+  hold_date                           | Date             | Hold Date                           |     |   
+  hold_requested_by                   | Link             | Hold Requested By                   |     |    -> User
+  hold_requested_by_name              | Data             | Hold Requested By Name              |     | RO
+  column_break_hold1                  | Column Break     |                                     |     |   
+  expected_resume_date                | Date             | Expected Resume Date                |     |   
+  actual_resume_date                  | Date             | Actual Resume Date                  |     |   
+  impact_on_end_date                  | Int              | Impact on End Date (Days)           |     |   
+  column_break_hold2                  | Column Break     |                                     |     |   
+  hold_approved_by                    | Link             | Hold Approved By                    |     |    -> User
+  hold_supporting_document            | Attach           | Hold Supporting Document            |     |   
+  hold_reason                         | Small Text       | Hold Reason                         |     |   
+  section_break_termination           | Section Break    | Termination / Cancellation Details  |     |   
+  termination_type                    | Select           | Termination Type                    |     |    -> Client Termination
+Organisation Termination
+Mutual Termination
+Termination for Cause
+Termination for Convenience
+  termination_notice_date             | Date             | Termination Notice Date             |     |   
+  effective_termination_date          | Date             | Effective Termination Date          |     |   
+  column_break_term1                  | Column Break     |                                     |     |   
+  financial_settlement_required       | Check            | Financial Settlement Required       |     |   
+  outstanding_payment                 | Currency         | Outstanding Payment                 |     |   
+  final_settlement_amount             | Currency         | Final Settlement Amount             |     |   
+  data_handover_required              | Check            | Data Handover Required              |     |   
+  column_break_term2                  | Column Break     |                                     |     |   
+  termination_approved_by             | Link             | Termination Approved By             |     |    -> User
+  termination_supporting_document     | Attach           | Termination Supporting Document     |     |   
+  termination_reason                  | Small Text       | Termination Reason                  |     |   
+  outstanding_deliverables            | Small Text       | Outstanding Deliverables            |     |   
+  assets_to_be_returned               | Small Text       | Assets to be Returned               |     |   
+  section_break_closure               | Section Break    | Contract Closure Checklist          |     |   
+  closure_date                        | Date             | Closure Date                        |     |   
+  closure_deliverables_completed      | Check            | All deliverables completed          |     |   
+  closure_final_invoice_submitted     | Check            | Final invoice submitted             |     |   
+  closure_payments_received           | Check            | Payments received                   |     |   
+  column_break_close1                 | Column Break     |                                     |     |   
+  closure_reconciliation_completed    | Check            | Financial reconciliation completed  |     |   
+  closure_assets_returned             | Check            | Assets returned                     |     |   
+  closure_client_acceptance           | Check            | Client acceptance received          |     |   
+  column_break_close2                 | Column Break     |                                     |     |   
+  closure_final_report_submitted      | Check            | Final report submitted              |     |   
+  closure_documents_archived          | Check            | Contract documents archived         |     |   
+  closure_obligations_cleared         | Check            | Outstanding obligations cleared     |     |   
+  closure_notes                       | Small Text       | Closure Audit Notes                 |     |   
+  contract_type                       | Select           | Contract Type                       |     |    -> Consulting Agreement
+Grant Agreement
+Service Agreement
+Memorandum of Understanding
+Framework Agreement
+Implementation Agreement
+Subcontract
+Partnership Agreement
+Vendor Agreement
+Other
+  donor_funding_agency                | Link             | Donor / Funding Agency              |     |    -> Customer
+  department                          | Link             | Department                          |     |    -> Department
+  contract_owner                      | Link             | Contract Owner                      |     |    -> Employee
+  contract_owner_name                 | Data             | Contract Owner Name                 |     | RO
+  hold_financial_impact               | Currency         | Financial Impact                    |     |   
+  hold_scope_impact                   | Small Text       | Scope Impact                        |     |   
+  contract_resources                  | Table            | Contract Resources                  |     |    -> Contract Resource
+  commenced_on                        | Datetime         | Commenced Date & Time               |     | RO
+
+==================== CONTRACT_AMENDMENT (103 fields) ====================
+Title field: None, Autoname: naming_series:, Is Submittable: 1
+  section_break_overview              | Section Break    | Amendment Information               |     |   
+  naming_series                       | Select           | Series                              |     |    -> AMD-.YYYY.-.#####
+AMD-.contract.-.###
+  contract                            | Link             | Contract Reference / ID             | REQ |    -> Test Customer Contract
+  customer_name                       | Data             | Customer Name                       |     | RO
+  project_title                       | Data             | Project Title                       |     | RO
+  customer_amendment_number           | Data             | Customer Amendment Number           |     |   
+  column_break_hdr1                   | Column Break     |                                     |     |   
+  amendment_type                      | Select           | Amendment Type                      | REQ |    -> 
+Contract Extension – No Cost
+Change in Scope / Services
+Budget Reallocation
+Cost / Contract Value Change
+Resource Change
+Timeline / Milestone Change
+Payment / Commercial Terms Change
+Other
+Multiple types
+  amendment_types                     | Table MultiSelect | Select Multiple Amendment Types     |     |    -> Amendment Type Item
+  requested_by                        | Link             | Requested By                        |     |    -> Employee
+  requested_by_name                   | Data             | Employee Name                       |     | RO
+  amendment_date                      | Date             | Request Date                        | REQ |   
+  amendment_effective_date            | Date             | Effective Date                      | REQ |   
+  column_break_hdr2                   | Column Break     |                                     |     |   
+  current_version                     | Data             | Current Contract Version            |     | RO
+  new_version                         | Data             | New Version After Amendment         |     | RO
+  client_reference                    | Data             | Client Reference                    |     |   
+  client_amendment_date               | Date             | Client Amendment Date               |     |   
+  section_break_reason                | Section Break    | Reason / Justification              |     |   
+  amendment_reason                    | Small Text       | Reason / Justification for Amendment | REQ |   
+  section_break_impact                | Section Break    | Change Impact (Impact Matrix)       |     |   
+  impact_scope                        | Check            | Scope of Work                       |     |   
+  impact_services                     | Check            | Services / Activities               |     |   
+  impact_deliverables                 | Check            | Deliverables / Milestones           |     |   
+  impact_timeline                     | Check            | Timeline / Duration (End Date)      |     |   
+  column_break_imp1                   | Column Break     |                                     |     |   
+  impact_value                        | Check            | Contract Value (Cost Impact)        |     |   
+  impact_budget_dist                  | Check            | Budget Distribution / Reallocation  |     |   
+  impact_payment_terms                | Check            | Payment Terms / Schedule            |     |   
+  impact_staffing                     | Check            | Staffing / Personnel                |     |   
+  column_break_imp2                   | Column Break     |                                     |     |   
+  impact_fte                          | Check            | FTE Allocation                      |     |   
+  impact_reporting                    | Check            | Reporting Requirements              |     |   
+  impact_legal                        | Check            | Legal / Terms & Conditions          |     |   
+  impact_other                        | Check            | Other Administrative                |     |   
+  section_break_scope                 | Section Break    | Scope / Service Changes             |     |   
+  scope_changes                       | Table            | Scope / Service Changes             |     |    -> Amendment Scope Change
+  scope_description                   | Text             | Detailed Description of Changes     |     |   
+  section_break_timeline              | Section Break    | Timeline Changes                    |     |   
+  is_no_cost_extension                | Check            | No-Cost Extension                   |     |   
+  original_start_date                 | Date             | Original Start Date                 |     |   
+  current_end_date                    | Date             | Original / Current End Date         |     | RO
+  column_break_time1                  | Column Break     |                                     |     |   
+  revised_start_date                  | Date             | Revised Start Date                  |     |   
+  revised_end_date                    | Date             | Revised Contract End Date           |     |   
+  extension_days                      | Int              | Extension Days                      |     | RO
+  section_break_finance               | Section Break    | Financial Changes                   |     |   
+  has_cost_impact                     | Check            | Cost Impact (Auto-calculated)       |     |   
+  original_contract_value             | Currency         | Original Contract Value             |     | RO
+  current_contract_value              | Currency         | Previous Contract Value             |     | RO
+  column_break_fin1                   | Column Break     |                                     |     |   
+  value_change                        | Currency         | Financial Change (+/-)              |     |   
+  revised_contract_value              | Currency         | Revised Contract Value              |     | RO
+  percentage_change                   | Percent          | Percentage Change (%)               |     | RO
+  section_break_realloc               | Section Break    | Budget Reallocation                 |     |   
+  budget_reallocations                | Table            | Budget Reallocations                |     |    -> Amendment Budget Reallocation
+  section_break_resources             | Section Break    | Resource Changes                    |     |   
+  resource_changes                    | Table            | Resource Changes                    |     |    -> Amendment Resource Change
+  section_break_approvals             | Section Break    | Approvals                           |     |   
+  lead_approver                       | Link             | Level 1 Lead Approver               | REQ |    -> User
+  column_break_app1                   | Column Break     |                                     |     |   
+  lead_approver_status                | Data             | Lead Approver Status                |     | RO
+  column_break_app2                   | Column Break     |                                     |     |   
+  lead_approver_review                | Small Text       | Lead Approver Comments              |     |   
+  section_break_app_legal             | Section Break    | Legal Review                        |     |   
+  legal_approver                      | Link             | Level 2.1 Legal Approver            |     |    -> User
+  column_break_app3                   | Column Break     |                                     |     |   
+  legal_approver_status               | Data             | Legal Approver Status               |     | RO
+  column_break_app4                   | Column Break     |                                     |     |   
+  legal_approver_review               | Small Text       | Legal Approver Comments             |     |   
+  section_break_app_fin               | Section Break    | Finance Review                      |     |   
+  finance_approver                    | Link             | Level 2.2 Finance Approver          |     |    -> User
+  column_break_app5                   | Column Break     |                                     |     |   
+  finance_approver_status             | Data             | Finance Approver Status             |     | RO
+  column_break_app6                   | Column Break     |                                     |     |   
+  finance_approver_review             | Small Text       | Finance Approver Comments           |     |   
+  section_break_app_hr                | Section Break    | HR Review (Conditional)             |     |   
+  hr_approver                         | Link             | Level 2.3 HR Approver               |     |    -> User
+  column_break_app7                   | Column Break     |                                     |     |   
+  hr_approver_status                  | Data             | HR Approver Status                  |     | RO -> Pending
+Approved
+Not Required
+Rejected
+  column_break_app8                   | Column Break     |                                     |     |   
+  hr_approver_review                  | Small Text       | HR Approver Comments                |     |   
+  section_break_app_ceo               | Section Break    | CEO Review                          |     |   
+  ceo_approver                        | Link             | Level 3 CEO Approver                | REQ |    -> User
+  column_break_app9                   | Column Break     |                                     |     |   
+  ceo_approver_status                 | Data             | CEO Approver Status                 |     | RO
+  column_break_app10                  | Column Break     |                                     |     |   
+  ceo_approver_review                 | Small Text       | CEO Approver Comments               |     |   
+  section_break_execution             | Section Break    | Client Execution                    |     |   
+  client_signatory_name               | Data             | Client Signatory Name               |     |   
+  client_signed_date                  | Date             | Client Signed Date                  |     |   
+  column_break_exec1                  | Column Break     |                                     |     |   
+  company_signatory                   | Link             | Company Signatory                   |     |    -> User
+  company_signed_date                 | Date             | Company Signed Date                 |     |   
+  executed_on                         | Datetime         | Executed Date and Time              |     | RO
+  section_break_doc                   | Section Break    | Signed Document                     |     |   
+  signed_amendment_document           | Attach           | Signed Amendment Document (PDF)     |     |   
+  section_break_sys                   | Section Break    | System Details                      |     |   
+  amended_from                        | Link             | Amended From                        |     | RO -> Contract Amendment
+  requires_legal                      | Check            | Requires Legal Review               |     | RO
+  requires_finance                    | Check            | Requires Finance Review             |     | RO
+  requires_hr                         | Check            | Requires HR Review                  |     | RO
+  is_multiple_types                   | Check            | Is Multiple Types                   |     | RO
+
+==================== CONTRACT_ON_HOLD (61 fields) ====================
+Title field: None, Autoname: naming_series:, Is Submittable: 1
+  section_break_overview              | Section Break    | Contract Information                |     |   
+  naming_series                       | Select           | Series                              | REQ |    -> HOLD-.YYYY.-.#####
+  contract                            | Link             | Contract ID                         | REQ |    -> Test Customer Contract
+  customer_name                       | Data             | Customer                            |     | RO
+  project_title                       | Data             | Project Title                       |     | RO
+  company                             | Link             | Company                             |     | RO -> Company
+  column_break_hdr1                   | Column Break     |                                     |     |   
+  hold_date                           | Date             | Hold Date                           | REQ |   
+  expected_resume_date                | Date             | Expected Resume Date                |     |   
+  actual_resume_date                  | Date             | Actual Resume Date                  |     |   
+  requested_by                        | Link             | Requested By                        |     |    -> Employee
+  requested_by_name                   | Data             | Employee Name                       |     | RO
+  approved_by                         | Link             | Approved By                         |     | RO -> User
+  section_break_reason                | Section Break    | Reason / Justification              |     |   
+  hold_reason                         | Small Text       | Hold Reason                         | REQ |   
+  section_break_impact                | Section Break    | Impact & Supporting Information     |     |   
+  impact_on_end_date                  | Check            | Impact on End Date                  |     |   
+  revised_end_date                    | Date             | Revised Contract End Date           |     |   
+  financial_impact                    | Currency         | Financial Impact (if any)           |     |   
+  column_break_imp1                   | Column Break     |                                     |     |   
+  scope_impact                        | Small Text       | Scope Impact                        |     |   
+  supporting_document                 | Attach           | Supporting Document                 |     |   
+  section_break_approvals             | Section Break    | Approvals and Reviews               |     |   
+  lead_approver                       | Link             | Level 1 Lead Approver               | REQ |    -> User
+  column_break_app1                   | Column Break     |                                     |     |   
+  lead_approver_status                | Data             | Lead Approver Status                |     | RO
+  column_break_app2                   | Column Break     |                                     |     |   
+  lead_approver_review                | Small Text       | Lead Approver Comments              |     |   
+  section_break_app_legal             | Section Break    | Legal Review                        |     |   
+  legal_approver                      | Link             | Level 2.1 Legal Approver            |     |    -> User
+  column_break_app3                   | Column Break     |                                     |     |   
+  legal_approver_status               | Data             | Legal Approver Status               |     | RO
+  column_break_app4                   | Column Break     |                                     |     |   
+  legal_approver_review               | Small Text       | Legal Approver Comments             |     |   
+  section_break_app_fin               | Section Break    | Finance Review                      |     |   
+  finance_approver                    | Link             | Level 2.2 Finance Approver          |     |    -> User
+  column_break_app5                   | Column Break     |                                     |     |   
+  finance_approver_status             | Data             | Finance Approver Status             |     | RO
+  column_break_app6                   | Column Break     |                                     |     |   
+  finance_approver_review             | Small Text       | Finance Approver Comments           |     |   
+  section_break_app_hr                | Section Break    | HR Review                           |     |   
+  hr_approver                         | Link             | Level 2.3 HR Approver               |     |    -> User
+  column_break_app7                   | Column Break     |                                     |     |   
+  hr_approver_status                  | Data             | HR Approver Status                  |     | RO
+  column_break_app8                   | Column Break     |                                     |     |   
+  hr_approver_review                  | Small Text       | HR Approver Comments                |     |   
+  section_break_app_ceo               | Section Break    | CEO Review                          |     |   
+  ceo_approver                        | Link             | Level 3 CEO Approver                | REQ |    -> User
+  column_break_app9                   | Column Break     |                                     |     |   
+  ceo_approver_status                 | Data             | CEO Approver Status                 |     | RO
+  column_break_app10                  | Column Break     |                                     |     |   
+  ceo_approver_review                 | Small Text       | CEO Approver Comments               |     |   
+  section_break_status                | Section Break    | Status & Audit                      |     |   
+  workflow_state                      | Link             | Workflow State                      |     | RO -> Workflow State
+  column_break_status_audit           | Column Break     |                                     |     |   
+  status                              | Select           | Status                              |     | RO -> Draft
+Pending Approval
+On Hold
+Resumed
+Rejected
+  on_hold_on                          | Datetime         | Placed On Hold Date and Time        |     | RO
+  resumed_on                          | Datetime         | Resumed Date and Time               |     | RO
+  section_break_resume_remarks        | Section Break    |                                     |     |   
+  resume_remarks                      | Small Text       | Resume Remarks                      |     |   
+  amended_from                        | Link             | Amended From                        |     | RO -> Contract On Hold
+
+==================== CONTRACT_TERMINATION (63 fields) ====================
+Title field: None, Autoname: naming_series:, Is Submittable: 1
+  section_break_overview              | Section Break    | Contract & Termination Details      |     |   
+  naming_series                       | Select           | Series                              | REQ |    -> TERM-.YYYY.-.#####
+  contract                            | Link             | Contract ID                         | REQ |    -> Test Customer Contract
+  customer_name                       | Data             | Customer                            |     | RO
+  project_title                       | Data             | Project Title                       |     | RO
+  company                             | Link             | Company                             |     | RO -> Company
+  contract_value                      | Currency         | Contract Value                      |     | RO
+  column_break_hdr1                   | Column Break     |                                     |     |   
+  termination_type                    | Select           | Termination Type                    | REQ |    -> Client Termination
+Organisation Termination
+Mutual Termination
+Termination for Cause
+Termination for Convenience
+  termination_notice_date             | Date             | Termination Notice Date             |     |   
+  effective_termination_date          | Date             | Effective Termination Date          | REQ |   
+  requested_by                        | Link             | Requested By                        |     |    -> Employee
+  requested_by_name                   | Data             | Employee Name                       |     | RO
+  approved_by                         | Link             | Approved By                         |     | RO -> User
+  section_break_reason                | Section Break    | Reason for Termination              |     |   
+  reason                              | Text             | Termination Reason                  | REQ |   
+  section_break_settlement            | Section Break    | Financial Settlement & Assets       |     |   
+  financial_settlement_required       | Check            | Financial Settlement Required       |     |   
+  outstanding_payment                 | Currency         | Outstanding Payment                 |     |   
+  final_settlement                    | Currency         | Final Settlement Amount             |     |   
+  column_break_settle1                | Column Break     |                                     |     |   
+  outstanding_deliverables            | Small Text       | Outstanding Deliverables            |     |   
+  assets_to_be_returned               | Small Text       | Assets to be Returned               |     |   
+  data_handover_required              | Check            | Data Handover Required              |     |   
+  section_break_approvals             | Section Break    | Approvals and Reviews               |     |   
+  lead_approver                       | Link             | Level 1 Lead Approver               | REQ |    -> User
+  column_break_app1                   | Column Break     |                                     |     |   
+  lead_approver_status                | Data             | Lead Approver Status                |     | RO
+  column_break_app2                   | Column Break     |                                     |     |   
+  lead_approver_review                | Small Text       | Lead Approver Comments              |     |   
+  section_break_app_legal             | Section Break    | Legal Review                        |     |   
+  legal_approver                      | Link             | Level 2.1 Legal Approver            |     |    -> User
+  column_break_app3                   | Column Break     |                                     |     |   
+  legal_approver_status               | Data             | Legal Approver Status               |     | RO
+  column_break_app4                   | Column Break     |                                     |     |   
+  legal_approver_review               | Small Text       | Legal Approver Comments             |     |   
+  section_break_app_fin               | Section Break    | Finance Review                      |     |   
+  finance_approver                    | Link             | Level 2.2 Finance Approver          |     |    -> User
+  column_break_app5                   | Column Break     |                                     |     |   
+  finance_approver_status             | Data             | Finance Approver Status             |     | RO
+  column_break_app6                   | Column Break     |                                     |     |   
+  finance_approver_review             | Small Text       | Finance Approver Comments           |     |   
+  section_break_app_hr                | Section Break    | HR Review                           |     |   
+  hr_approver                         | Link             | Level 2.3 HR Approver               |     |    -> User
+  column_break_app7                   | Column Break     |                                     |     |   
+  hr_approver_status                  | Data             | HR Approver Status                  |     | RO
+  column_break_app8                   | Column Break     |                                     |     |   
+  hr_approver_review                  | Small Text       | HR Approver Comments                |     |   
+  section_break_app_ceo               | Section Break    | CEO Review                          |     |   
+  ceo_approver                        | Link             | Level 3 CEO Approver                | REQ |    -> User
+  column_break_app9                   | Column Break     |                                     |     |   
+  ceo_approver_status                 | Data             | CEO Approver Status                 |     | RO
+  column_break_app10                  | Column Break     |                                     |     |   
+  ceo_approver_review                 | Small Text       | CEO Approver Comments               |     |   
+  section_break_docs                  | Section Break    | Supporting Documents & Client Communication |     |   
+  closure_documents                   | Attach           | Closure Documents                   |     |   
+  column_break_docs1                  | Column Break     |                                     |     |   
+  client_communication_document       | Attach           | Client Communication Upload         |     |   
+  section_break_status                | Section Break    | Status & Audit                      |     |   
+  workflow_state                      | Link             | Workflow State                      |     | RO -> Workflow State
+  status                              | Select           | Status                              |     | RO -> Draft
+Under Review
+Client Communication Required
+Terminated
+Cancelled
+  executed_on                         | Datetime         | Executed Date and Time              |     | RO
+  amended_from                        | Link             | Amended From                        |     | RO -> Contract Termination
+
+==================== CONTRACT_CLOSURE (65 fields) ====================
+Title field: None, Autoname: naming_series:, Is Submittable: 1
+  section_break_overview              | Section Break    | Contract Information                |     |   
+  naming_series                       | Select           | Series                              | REQ |    -> CLOS-.YYYY.-.#####
+  contract                            | Link             | Contract ID                         | REQ |    -> Test Customer Contract
+  customer_name                       | Data             | Customer                            |     | RO
+  project_title                       | Data             | Project Title                       |     | RO
+  company                             | Link             | Company                             |     | RO -> Company
+  contract_end_date                   | Date             | Contract End Date                   |     | RO
+  column_break_hdr1                   | Column Break     |                                     |     |   
+  closure_date                        | Date             | Closure Date                        | REQ |   
+  requested_by                        | Link             | Requested By                        |     |    -> Employee
+  requested_by_name                   | Data             | Employee Name                       |     | RO
+  approved_by                         | Link             | Approved By                         |     | RO -> User
+  section_break_checklist             | Section Break    | Closure Checklist                   |     |   
+  all_deliverables_completed          | Check            | All Deliverables Completed          |     |   
+  final_invoice_submitted             | Check            | Final Invoice Submitted             |     |   
+  payments_received                   | Check            | Payments Received                   |     |   
+  financial_reconciliation_completed  | Check            | Financial Reconciliation Completed  |     |   
+  assets_returned                     | Check            | Assets Returned                     |     |   
+  column_break_check1                 | Column Break     |                                     |     |   
+  client_acceptance_received          | Check            | Client Acceptance Received          |     |   
+  final_report_submitted              | Check            | Final Report Submitted              |     |   
+  contract_documents_archived         | Check            | Contract Documents Archived         |     |   
+  outstanding_obligations_cleared     | Check            | Outstanding Obligations Cleared     |     |   
+  section_break_docs                  | Section Break    | Closure Documentation & Notes       |     |   
+  closure_documents                   | Attach           | Final Deliverable / Closure Report (PDF) |     |   
+  client_acceptance_document          | Attach           | Client Acceptance Sign-off (PDF)    |     |   
+  final_settlement_document           | Attach           | Final Settlement & Reconciliation (PDF) |     |   
+  final_settlement_notes              | Small Text       | Final Settlement Notes              |     |   
+  column_break_notes1                 | Column Break     |                                     |     |   
+  remarks                             | Text             | Closure Remarks / Summary           |     |   
+  section_break_approvals             | Section Break    | Approvals and Reviews               |     |   
+  lead_approver                       | Link             | Level 1 Lead Approver               | REQ |    -> User
+  column_break_app1                   | Column Break     |                                     |     |   
+  lead_approver_status                | Data             | Lead Approver Status                |     | RO
+  column_break_app2                   | Column Break     |                                     |     |   
+  lead_approver_review                | Small Text       | Lead Approver Comments              |     |   
+  section_break_app_legal             | Section Break    | Legal Review                        |     |   
+  legal_approver                      | Link             | Level 2.1 Legal Approver            |     |    -> User
+  column_break_app3                   | Column Break     |                                     |     |   
+  legal_approver_status               | Data             | Legal Approver Status               |     | RO
+  column_break_app4                   | Column Break     |                                     |     |   
+  legal_approver_review               | Small Text       | Legal Approver Comments             |     |   
+  section_break_app_fin               | Section Break    | Finance Review                      |     |   
+  finance_approver                    | Link             | Level 2.2 Finance Approver          |     |    -> User
+  column_break_app5                   | Column Break     |                                     |     |   
+  finance_approver_status             | Data             | Finance Approver Status             |     | RO
+  column_break_app6                   | Column Break     |                                     |     |   
+  finance_approver_review             | Small Text       | Finance Approver Comments           |     |   
+  section_break_app_hr                | Section Break    | HR Review                           |     |   
+  hr_approver                         | Link             | Level 2.3 HR Approver               |     |    -> User
+  column_break_app7                   | Column Break     |                                     |     |   
+  hr_approver_status                  | Data             | HR Approver Status                  |     | RO
+  column_break_app8                   | Column Break     |                                     |     |   
+  hr_approver_review                  | Small Text       | HR Approver Comments                |     |   
+  section_break_app_ceo               | Section Break    | CEO Review                          |     |   
+  ceo_approver                        | Link             | Level 3 CEO Approver                | REQ |    -> User
+  column_break_app9                   | Column Break     |                                     |     |   
+  ceo_approver_status                 | Data             | CEO Approver Status                 |     | RO
+  column_break_app10                  | Column Break     |                                     |     |   
+  ceo_approver_review                 | Small Text       | CEO Approver Comments               |     |   
+  section_break_status                | Section Break    | Status & Audit                      |     |   
+  workflow_state                      | Link             | Workflow State                      |     | RO -> Workflow State
+  status                              | Select           | Status                              |     | RO -> Draft
+In Progress
+Closed
+Rejected
+  closed_on                           | Datetime         | Closed Date and Time                |     | RO
+  amended_from                        | Link             | Amended From                        |     | RO -> Contract Closure

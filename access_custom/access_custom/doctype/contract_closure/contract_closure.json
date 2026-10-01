@@ -1,0 +1,556 @@
+{
+ "actions": [],
+ "autoname": "naming_series:",
+ "creation": "2026-09-21 17:49:28.849086",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_overview",
+  "naming_series",
+  "contract",
+  "customer_name",
+  "project_title",
+  "company",
+  "contract_end_date",
+  "column_break_hdr1",
+  "closure_date",
+  "requested_by",
+  "approved_by",
+  "section_break_checklist",
+  "all_deliverables_completed",
+  "final_invoice_submitted",
+  "payments_received",
+  "financial_reconciliation_completed",
+  "assets_returned",
+  "column_break_check1",
+  "client_acceptance_received",
+  "final_report_submitted",
+  "contract_documents_archived",
+  "outstanding_obligations_cleared",
+  "section_break_docs",
+  "closure_documents",
+  "final_settlement_notes",
+  "column_break_notes1",
+  "remarks",
+  "section_break_approvals",
+  "lead_approver",
+  "column_break_app1",
+  "lead_approver_status",
+  "column_break_app2",
+  "lead_approver_review",
+  "section_break_app_legal",
+  "legal_approver",
+  "column_break_app3",
+  "legal_approver_status",
+  "column_break_app4",
+  "legal_approver_review",
+  "section_break_app_fin",
+  "finance_approver",
+  "column_break_app5",
+  "finance_approver_status",
+  "column_break_app6",
+  "finance_approver_review",
+  "section_break_app_hr",
+  "hr_approver",
+  "column_break_app7",
+  "hr_approver_status",
+  "column_break_app8",
+  "hr_approver_review",
+  "section_break_app_ceo",
+  "ceo_approver",
+  "column_break_app9",
+  "ceo_approver_status",
+  "column_break_app10",
+  "ceo_approver_review",
+  "section_break_status",
+  "workflow_state",
+  "status",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_overview",
+   "fieldtype": "Section Break",
+   "label": "Contract Information"
+  },
+  {
+   "default": "CLOS-.YYYY.-.#####",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "CLOS-.YYYY.-.#####",
+   "reqd": 1
+  },
+  {
+   "fieldname": "contract",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Contract ID",
+   "options": "Test Customer Contract",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "contract.customer_name",
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "label": "Customer",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "contract.project_title",
+   "fieldname": "project_title",
+   "fieldtype": "Data",
+   "label": "Project Title",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "contract.access_entity",
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "contract.end_date",
+   "fieldname": "contract_end_date",
+   "fieldtype": "Date",
+   "label": "Contract End Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_hdr1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Today",
+   "fieldname": "closure_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Closure Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "requested_by",
+   "fieldtype": "Link",
+   "ignore_user_permissions": 1,
+   "label": "Requested By",
+   "options": "Employee"
+  },
+  {
+   "fetch_from": "requested_by.employee_name",
+   "fieldname": "requested_by_name",
+   "fieldtype": "Data",
+   "label": "Employee Name",
+   "read_only": 1,
+   "in_list_view": 1,
+   "hidden": 1
+  },
+  {
+   "fieldname": "approved_by",
+   "fieldtype": "Link",
+   "label": "Approved By",
+   "options": "User",
+   "read_only": 1,
+   "hidden": 1
+  },
+  {
+   "fieldname": "section_break_checklist",
+   "fieldtype": "Section Break",
+   "label": "Closure Checklist"
+  },
+  {
+   "default": "0",
+   "fieldname": "all_deliverables_completed",
+   "fieldtype": "Check",
+   "label": "All Deliverables Completed"
+  },
+  {
+   "default": "0",
+   "fieldname": "final_invoice_submitted",
+   "fieldtype": "Check",
+   "label": "Final Invoice Submitted"
+  },
+  {
+   "default": "0",
+   "fieldname": "payments_received",
+   "fieldtype": "Check",
+   "label": "Payments Received"
+  },
+  {
+   "default": "0",
+   "fieldname": "financial_reconciliation_completed",
+   "fieldtype": "Check",
+   "label": "Financial Reconciliation Completed"
+  },
+  {
+   "default": "0",
+   "fieldname": "assets_returned",
+   "fieldtype": "Check",
+   "label": "Assets Returned"
+  },
+  {
+   "fieldname": "column_break_check1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "client_acceptance_received",
+   "fieldtype": "Check",
+   "label": "Client Acceptance Received"
+  },
+  {
+   "default": "0",
+   "fieldname": "final_report_submitted",
+   "fieldtype": "Check",
+   "label": "Final Report Submitted"
+  },
+  {
+   "default": "0",
+   "fieldname": "contract_documents_archived",
+   "fieldtype": "Check",
+   "label": "Contract Documents Archived"
+  },
+  {
+   "default": "0",
+   "fieldname": "outstanding_obligations_cleared",
+   "fieldtype": "Check",
+   "label": "Outstanding Obligations Cleared"
+  },
+  {
+   "fieldname": "section_break_docs",
+   "fieldtype": "Section Break",
+   "label": "Closure Documentation & Notes"
+  },
+  {
+   "fieldname": "closure_documents",
+   "fieldtype": "Attach",
+   "label": "Final Deliverable / Closure Report (PDF)"
+  },
+  {
+   "fieldname": "client_acceptance_document",
+   "fieldtype": "Attach",
+   "label": "Client Acceptance Sign-off (PDF)"
+  },
+  {
+   "fieldname": "final_settlement_document",
+   "fieldtype": "Attach",
+   "label": "Final Settlement & Reconciliation (PDF)"
+  },
+  {
+   "fieldname": "final_settlement_notes",
+   "fieldtype": "Small Text",
+   "label": "Final Settlement Notes"
+  },
+  {
+   "fieldname": "column_break_notes1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Text",
+   "label": "Closure Remarks / Summary"
+  },
+  {
+   "fieldname": "section_break_approvals",
+   "fieldtype": "Section Break",
+   "label": "Approvals and Reviews"
+  },
+  {
+   "fieldname": "lead_approver",
+   "fieldtype": "Link",
+   "label": "Level 1 Lead Approver",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_app1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "lead_approver_status",
+   "fieldtype": "Data",
+   "label": "Lead Approver Status",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_app2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "lead_approver_review",
+   "fieldtype": "Small Text",
+   "label": "Lead Approver Comments"
+  },
+  {
+   "fieldname": "section_break_app_legal",
+   "fieldtype": "Section Break",
+   "label": "Legal Review"
+  },
+  {
+   "fieldname": "legal_approver",
+   "fieldtype": "Link",
+   "label": "Level 2.1 Legal Approver",
+   "options": "User"
+  },
+  {
+   "fieldname": "column_break_app3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "legal_approver_status",
+   "fieldtype": "Data",
+   "label": "Legal Approver Status",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_app4",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "legal_approver_review",
+   "fieldtype": "Small Text",
+   "label": "Legal Approver Comments"
+  },
+  {
+   "fieldname": "section_break_app_fin",
+   "fieldtype": "Section Break",
+   "label": "Finance Review"
+  },
+  {
+   "fieldname": "finance_approver",
+   "fieldtype": "Link",
+   "label": "Level 2.2 Finance Approver",
+   "options": "User"
+  },
+  {
+   "fieldname": "column_break_app5",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "finance_approver_status",
+   "fieldtype": "Data",
+   "label": "Finance Approver Status",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_app6",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "finance_approver_review",
+   "fieldtype": "Small Text",
+   "label": "Finance Approver Comments"
+  },
+  {
+   "fieldname": "section_break_app_hr",
+   "fieldtype": "Section Break",
+   "label": "HR Review"
+  },
+  {
+   "fieldname": "hr_approver",
+   "fieldtype": "Link",
+   "label": "Level 2.3 HR Approver",
+   "options": "User"
+  },
+  {
+   "fieldname": "column_break_app7",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "hr_approver_status",
+   "fieldtype": "Data",
+   "label": "HR Approver Status",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_app8",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "hr_approver_review",
+   "fieldtype": "Small Text",
+   "label": "HR Approver Comments"
+  },
+  {
+   "fieldname": "section_break_app_ceo",
+   "fieldtype": "Section Break",
+   "label": "CEO Review"
+  },
+  {
+   "fieldname": "ceo_approver",
+   "fieldtype": "Link",
+   "label": "Level 3 CEO Approver",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_app9",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ceo_approver_status",
+   "fieldtype": "Data",
+   "label": "CEO Approver Status",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_app10",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ceo_approver_review",
+   "fieldtype": "Small Text",
+   "label": "CEO Approver Comments"
+  },
+  {
+   "fieldname": "section_break_status",
+   "fieldtype": "Section Break",
+   "label": "Status & Audit"
+  },
+  {
+   "fieldname": "workflow_state",
+   "fieldtype": "Link",
+   "label": "Workflow State",
+   "options": "Workflow State",
+   "read_only": 1
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nIn Progress\nClosed\nRejected",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "description": "Date and time when the closure was completed",
+   "fieldname": "closed_on",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Closed Date and Time",
+   "no_copy": 1,
+   "read_only": 1,
+   "hidden": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Contract Closure",
+   "print_hide": 1,
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-09-22 18:10:30.939967",
+ "modified_by": "Administrator",
+ "module": "Access Custom",
+ "name": "Contract Closure",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Contract Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 0,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Employee",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 0,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Team Lead",
+   "share": 1,
+   "submit": 0,
+   "write": 1
+  },
+  {
+   "create": 0,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Legal Approver",
+   "share": 1,
+   "submit": 0,
+   "write": 1
+  },
+  {
+   "create": 0,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Finance Approver",
+   "share": 1,
+   "submit": 0,
+   "write": 1
+  },
+  {
+   "create": 0,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Approver",
+   "share": 1,
+   "submit": 0,
+   "write": 1
+  },
+  {
+   "create": 0,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "CEO Approver",
+   "share": 1,
+   "submit": 0,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "contract, customer_name, project_title",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

@@ -26,7 +26,7 @@ app_license = "mit"
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/access_custom/css/access_custom.css"
-# app_include_js = "/assets/access_custom/js/access_custom.js"
+app_include_js = "/assets/access_custom/js/access_custom.js"
 
 # include js, css files in header of web template
 # web_include_css = "/assets/access_custom/css/access_custom.css"
@@ -117,13 +117,21 @@ app_license = "mit"
 # -----------
 # Permissions evaluated in scripted ways
 
-# permission_query_conditions = {
-#   "Event": "frappe.desk.doctype.event.event.get_permission_query_conditions",
-# }
-#
-# has_permission = {
-#   "Event": "frappe.desk.doctype.event.event.has_permission",
-# }
+permission_query_conditions = {
+    "Test Customer Contract": "access_custom.contract_lifecycle.get_contract_permission_query_conditions",
+    "Contract Amendment": "access_custom.contract_lifecycle.get_contract_permission_query_conditions",
+    "Contract On Hold": "access_custom.contract_lifecycle.get_contract_permission_query_conditions",
+    "Contract Termination": "access_custom.contract_lifecycle.get_contract_permission_query_conditions",
+    "Contract Closure": "access_custom.contract_lifecycle.get_contract_permission_query_conditions",
+}
+
+has_permission = {
+    "Test Customer Contract": "access_custom.contract_lifecycle.has_contract_permission",
+    "Contract Amendment": "access_custom.contract_lifecycle.has_contract_permission",
+    "Contract On Hold": "access_custom.contract_lifecycle.has_contract_permission",
+    "Contract Termination": "access_custom.contract_lifecycle.has_contract_permission",
+    "Contract Closure": "access_custom.contract_lifecycle.has_contract_permission",
+}
 
 # DocType Class
 # ---------------
@@ -140,13 +148,33 @@ override_doctype_class = {
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-#   "*": {
-#       "on_update": "method",
-#       "on_cancel": "method",
-#       "on_trash": "method"
-#   }
-# }
+doc_events = {
+    "Test Customer Contract": {
+        "validate": "access_custom.contract_lifecycle.validate_stage_approver_authorization",
+        "on_update": "access_custom.contract_lifecycle.sync_contract_assignment",
+        "on_trash": "access_custom.contract_lifecycle.on_contract_trash",
+    },
+    "Contract Amendment": {
+        "validate": "access_custom.contract_lifecycle.validate_stage_approver_authorization",
+        "on_update": "access_custom.contract_lifecycle.sync_contract_assignment",
+        "on_trash": "access_custom.contract_lifecycle.on_contract_trash",
+    },
+    "Contract On Hold": {
+        "validate": "access_custom.contract_lifecycle.validate_stage_approver_authorization",
+        "on_update": "access_custom.contract_lifecycle.sync_contract_assignment",
+        "on_trash": "access_custom.contract_lifecycle.on_contract_trash",
+    },
+    "Contract Termination": {
+        "validate": "access_custom.contract_lifecycle.validate_stage_approver_authorization",
+        "on_update": "access_custom.contract_lifecycle.sync_contract_assignment",
+        "on_trash": "access_custom.contract_lifecycle.on_contract_trash",
+    },
+    "Contract Closure": {
+        "validate": "access_custom.contract_lifecycle.validate_stage_approver_authorization",
+        "on_update": "access_custom.contract_lifecycle.sync_contract_assignment",
+        "on_trash": "access_custom.contract_lifecycle.on_contract_trash",
+    },
+}
 
 # Scheduled Tasks
 # ---------------
@@ -177,9 +205,10 @@ override_doctype_class = {
 # Overriding Methods
 # ------------------------------
 #
-# override_whitelisted_methods = {
-#   "frappe.desk.doctype.event.event.get_events": "access_custom.event.get_events"
-# }
+override_whitelisted_methods = {
+    "frappe.model.workflow.get_transitions": "access_custom.contract_lifecycle.custom_get_transitions",
+    "frappe.model.workflow.apply_workflow": "access_custom.contract_lifecycle.custom_apply_workflow"
+}
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,

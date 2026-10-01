@@ -198,3 +198,1348 @@ body {
     align-items: center;
     height: 100%;
 }
+
+/* -----------------------------------------------------------------
+   7. MODAL DIALOG & FREEZE OVERLAY FIX
+   ----------------------------------------------------------------- */
+/* Prevent #freeze overlay from covering, washing out, or blurring interactive dialogs */
+.modal {
+    z-index: 1065 !important;
+}
+
+.modal.show {
+    z-index: 1065 !important;
+    opacity: 1 !important;
+}
+
+.modal-dialog {
+    z-index: 1066 !important;
+    opacity: 1 !important;
+}
+
+.modal-content {
+    opacity: 1 !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3) !important;
+}
+
+.modal-backdrop.show,
+.modal-backdrop.in {
+    z-index: 1050 !important;
+}
+
+#freeze {
+    z-index: 1040 !important;
+}
+
+/* Prevent #freeze from covering or blocking child table row editors */
+#freeze.grid-form {
+    display: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+body.modal-open #freeze {
+    display: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* Beautiful card styling for child table row editor */
+.grid-row-open .form-in-grid,
+.form-in-grid {
+    background-color: #ffffff !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 8px !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12) !important;
+    margin-top: 8px !important;
+    margin-bottom: 8px !important;
+    opacity: 1 !important;
+    position: relative !important;
+}
+
+/* -----------------------------------------------------------------
+   9. CONTRACT LIST VIEW CUSTOM COLUMN SPACING & WIDTHS
+   ----------------------------------------------------------------- */
+.contract-custom-list-view .list-subject,
+.contract-custom-list-view .list-header-subject {
+    flex: 0 0 135px !important;
+    min-width: 135px !important;
+    max-width: 145px !important;
+}
+
+/* 1. Contract ID Column - Room for full ID */
+.contract-custom-list-view .list-row-head .list-row-col:nth-of-type(1),
+.contract-custom-list-view .list-row .list-row-col:nth-of-type(1) {
+    flex: 0 0 160px !important;
+    min-width: 160px !important;
+    max-width: 175px !important;
+}
+
+/* 2. Project Title Column - Expanded / Largest Share */
+.contract-custom-list-view .list-row-head .list-row-col:nth-of-type(2),
+.contract-custom-list-view .list-row .list-row-col:nth-of-type(2) {
+    flex: 2.2 1 240px !important;
+    min-width: 220px !important;
+}
+
+/* 3. Currency Column - Compact */
+.contract-custom-list-view .list-row-head .list-row-col:nth-of-type(3),
+.contract-custom-list-view .list-row .list-row-col:nth-of-type(3) {
+    flex: 0 0 75px !important;
+    min-width: 75px !important;
+    max-width: 85px !important;
+    text-align: center !important;
+}
+
+/* 4. Budget Column */
+.contract-custom-list-view .list-row-head .list-row-col:nth-of-type(4),
+.contract-custom-list-view .list-row .list-row-col:nth-of-type(4) {
+    flex: 0 0 145px !important;
+    min-width: 135px !important;
+    max-width: 160px !important;
+    text-align: right !important;
+    padding-right: 15px !important;
+}
+
+/* 5. Status Column - Compact */
+.contract-custom-list-view .list-row-head .list-row-col:nth-of-type(5),
+.contract-custom-list-view .list-row .list-row-col:nth-of-type(5) {
+    flex: 0 0 120px !important;
+    min-width: 110px !important;
+    max-width: 130px !important;
+}
+/* -----------------------------------------------------------------
+   9. BALANCED CONTRACT LIST VIEW PROPORTIONS (100% Total Width)
+   ----------------------------------------------------------------- */
+.contract-custom-list-view .list-row .level-left,
+.contract-custom-list-view .list-row-head .level-left {
+    display: flex !important;
+    width: 100% !important;
+    align-items: center !important;
+}
+
+/* 1. Customer Id (14%) */
+.contract-custom-list-view .col-party-name,
+.contract-custom-list-view .list-subject.col-party-name {
+    flex: 0 0 14% !important;
+    max-width: 14% !important;
+}
+
+/* 2. Contract ID (16% - Full ID visible without dots) */
+.contract-custom-list-view .col-contract-id {
+    flex: 0 0 16% !important;
+    max-width: 16% !important;
+    font-weight: 500 !important;
+}
+
+/* 3. Project Title (32% - Wide column for long project titles) */
+.contract-custom-list-view .col-project-title {
+    flex: 0 0 32% !important;
+    max-width: 32% !important;
+}
+
+/* 4. Currency (10% - Header fits completely without 'Curr...') */
+.contract-custom-list-view .col-currency {
+    flex: 0 0 10% !important;
+    max-width: 10% !important;
+    text-align: left !important;
+}
+
+/* 5. Budget (15%) */
+.contract-custom-list-view .col-budget {
+    flex: 0 0 15% !important;
+    max-width: 15% !important;
+    text-align: right !important;
+    padding-right: 15px !important;
+}
+
+/* 6. Status (13%) */
+.contract-custom-list-view .col-status {
+    flex: 0 0 13% !important;
+    max-width: 13% !important;
+    text-align: left !important;
+}/* -----------------------------------------------------------------
+   9. PERFECT CONTRACT LIST VIEW ALIGNMENT & SPACING
+   ----------------------------------------------------------------- */
+/* Only target the actual columns container, do NOT force checkbox-actions */
+.contract-custom-list-view .list-row .level-left,
+.contract-custom-list-view .list-row-head .list-header-subject {
+    display: flex !important;
+    width: 100% !important;
+    align-items: center !important;
+}
+
+/* Ensure Frappe's checkbox-actions toggle is preserved */
+.contract-custom-list-view .checkbox-actions {
+    display: none;
+}
+
+/* 1. Customer Id */
+.contract-custom-list-view .col-party-name,
+.contract-custom-list-view .list-subject.col-party-name {
+    flex: 0 0 130px !important;
+    min-width: 130px !important;
+    max-width: 135px !important;
+}
+
+/* 2. Contract ID (Full ID visible) */
+.contract-custom-list-view .col-contract-id {
+    flex: 0 0 155px !important;
+    min-width: 155px !important;
+    max-width: 160px !important;
+    font-weight: 500 !important;
+}
+
+/* 3. Project Title (Flexible - gets remaining space) */
+.contract-custom-list-view .col-project-title {
+    flex: 1 1 180px !important;
+    min-width: 180px !important;
+}
+
+/* 4. Currency (80px - fits 'Currency' header and 'INR' code cleanly) */
+.contract-custom-list-view .col-currency {
+    flex: 0 0 80px !important;
+    min-width: 80px !important;
+    max-width: 85px !important;
+    text-align: center !important;
+}
+
+/* 5. Budget (135px - right aligned) */
+.contract-custom-list-view .col-budget {
+    flex: 0 0 135px !important;
+    min-width: 130px !important;
+    max-width: 140px !important;
+    text-align: right !important;
+    padding-right: 12px !important;
+}
+
+/* 6. Status (135px - full badge visible without clipping) */
+.contract-custom-list-view .col-status {
+    flex: 0 0 135px !important;
+    min-width: 130px !important;
+    max-width: 145px !important;
+    text-align: center !important;
+}
+.contract-custom-list-view .col-status .indicator-pill,
+.contract-custom-list-view .col-status .indicator {
+    display: inline-flex !important;
+    white-space: nowrap !important;
+}/* -----------------------------------------------------------------
+   9. PERFECT CONTRACT LIST VIEW ALIGNMENT & AMPLE SPACING
+   ----------------------------------------------------------------- */
+.contract-custom-list-view .list-row .level-left,
+.contract-custom-list-view .list-row-head .list-header-subject {
+    display: flex !important;
+    width: 100% !important;
+    align-items: center !important;
+}
+
+.contract-custom-list-view .checkbox-actions {
+    display: none;
+}
+
+/* 1. Customer Id (125px) */
+.contract-custom-list-view .col-party-name,
+.contract-custom-list-view .list-subject.col-party-name {
+    flex: 0 0 125px !important;
+    min-width: 125px !important;
+    max-width: 130px !important;
+}
+
+/* 2. Contract ID (150px - Full ID visible without dots) */
+.contract-custom-list-view .col-contract-id {
+    flex: 0 0 150px !important;
+    min-width: 150px !important;
+    max-width: 155px !important;
+    font-weight: 500 !important;
+}
+
+/* 3. Project Title (Flexible - gets remaining 300px+ space) */
+.contract-custom-list-view .col-project-title {
+    flex: 1 1 150px !important;
+    min-width: 150px !important;
+}
+
+/* 4. Currency (65px - compact, fits 'Currency' and 'INR' cleanly) */
+.contract-custom-list-view .col-currency {
+    flex: 0 0 65px !important;
+    min-width: 65px !important;
+    max-width: 70px !important;
+    text-align: center !important;
+}
+
+/* 5. Budget (155px - room for large numbers without '...') */
+.contract-custom-list-view .col-budget {
+    flex: 0 0 155px !important;
+    min-width: 150px !important;
+    max-width: 165px !important;
+    text-align: right !important;
+    padding-right: 12px !important;
+}
+
+/* 6. Status (165px - ample room for long statuses like 'Under Amendment', 'Deliverable Closure') */
+.contract-custom-list-view .col-status {
+    flex: 0 0 165px !important;
+    min-width: 160px !important;
+    max-width: 175px !important;
+    text-align: center !important;
+}
+.contract-custom-list-view .col-status .indicator-pill,
+.contract-custom-list-view .col-status .indicator {
+    display: inline-flex !important;
+    white-space: nowrap !important;
+}/* -----------------------------------------------------------------
+   9. PERFECT CONTRACT LIST VIEW ALIGNMENT & EXTRA WIDE STATUS
+   ----------------------------------------------------------------- */
+.contract-custom-list-view .list-row .level-left,
+.contract-custom-list-view .list-row-head .list-header-subject {
+    display: flex !important;
+    width: 100% !important;
+    align-items: center !important;
+}
+
+.contract-custom-list-view .checkbox-actions {
+    display: none;
+}
+
+/* 1. Customer Id (125px) */
+.contract-custom-list-view .col-party-name,
+.contract-custom-list-view .list-subject.col-party-name {
+    flex: 0 0 125px !important;
+    min-width: 125px !important;
+    max-width: 130px !important;
+}
+
+/* 2. Contract ID (150px) */
+.contract-custom-list-view .col-contract-id {
+    flex: 0 0 150px !important;
+    min-width: 150px !important;
+    max-width: 155px !important;
+    font-weight: 500 !important;
+}
+
+/* 3. Project Title (Flexible - remaining space) */
+.contract-custom-list-view .col-project-title {
+    flex: 1 1 120px !important;
+    min-width: 120px !important;
+}
+
+/* 4. Currency (65px) */
+.contract-custom-list-view .col-currency {
+    flex: 0 0 65px !important;
+    min-width: 65px !important;
+    max-width: 70px !important;
+    text-align: center !important;
+}
+
+/* 5. Budget (155px) */
+.contract-custom-list-view .col-budget {
+    flex: 0 0 155px !important;
+    min-width: 150px !important;
+    max-width: 165px !important;
+    text-align: right !important;
+    padding-right: 12px !important;
+}
+
+/* 6. Status (Extra Wide 215px - generous room for any status) */
+.contract-custom-list-view .col-status {
+    flex: 0 0 215px !important;
+    min-width: 210px !important;
+    max-width: 230px !important;
+    text-align: center !important;
+}
+.contract-custom-list-view .col-status .indicator-pill,
+.contract-custom-list-view .col-status .indicator {
+    display: inline-flex !important;
+    white-space: nowrap !important;
+}/* -----------------------------------------------------------------
+   9. PERFECT CONTRACT LIST VIEW ALIGNMENT & CLICKABLE STATUS
+   ----------------------------------------------------------------- */
+.contract-custom-list-view .list-row .level-left,
+.contract-custom-list-view .list-row-head .list-header-subject {
+    display: flex !important;
+    width: 100% !important;
+    align-items: center !important;
+}
+
+.contract-custom-list-view .checkbox-actions {
+    display: none;
+}
+
+/* 1. Customer Id (125px) */
+.contract-custom-list-view .col-party-name,
+.contract-custom-list-view .list-subject.col-party-name {
+    flex: 0 0 125px !important;
+    min-width: 125px !important;
+    max-width: 130px !important;
+}
+
+/* 2. Contract ID (150px) */
+.contract-custom-list-view .col-contract-id {
+    flex: 0 0 150px !important;
+    min-width: 150px !important;
+    max-width: 155px !important;
+    font-weight: 500 !important;
+}
+
+/* 3. Project Title (Flexible) */
+.contract-custom-list-view .col-project-title {
+    flex: 1 1 120px !important;
+    min-width: 120px !important;
+}
+
+/* 4. Currency (65px) */
+.contract-custom-list-view .col-currency {
+    flex: 0 0 65px !important;
+    min-width: 65px !important;
+    max-width: 70px !important;
+    text-align: center !important;
+}
+
+/* 5. Budget (155px) */
+.contract-custom-list-view .col-budget {
+    flex: 0 0 155px !important;
+    min-width: 150px !important;
+    max-width: 165px !important;
+    text-align: right !important;
+    padding-right: 12px !important;
+}
+
+/* 6. Status (215px Clickable) */
+.contract-custom-list-view .col-status {
+    flex: 0 0 215px !important;
+    min-width: 210px !important;
+    max-width: 230px !important;
+    text-align: center !important;
+}
+.contract-custom-list-view .col-status .indicator-pill,
+.contract-custom-list-view .col-status .indicator {
+    display: inline-flex !important;
+    white-space: nowrap !important;
+}
+.contract-custom-list-view .status-clickable {
+    cursor: pointer !important;
+}
+.contract-custom-list-view .status-clickable:hover .indicator-pill,
+.contract-custom-list-view .status-clickable:hover .indicator {
+    filter: brightness(0.92);
+    transform: scale(1.05);
+    transition: all 0.15s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+}/* -----------------------------------------------------------------
+   9. PERFECT CONTRACT LIST VIEW ALIGNMENT & INTERACTIVE STATUS PILL
+   ----------------------------------------------------------------- */
+.contract-custom-list-view .list-row .level-left,
+.contract-custom-list-view .list-row-head .list-header-subject {
+    display: flex !important;
+    width: 100% !important;
+    align-items: center !important;
+}
+
+.contract-custom-list-view .checkbox-actions {
+    display: none;
+}
+
+/* 1. Customer Id (125px) */
+.contract-custom-list-view .col-party-name,
+.contract-custom-list-view .list-subject.col-party-name {
+    flex: 0 0 125px !important;
+    min-width: 125px !important;
+    max-width: 130px !important;
+}
+
+/* 2. Contract ID (150px) */
+.contract-custom-list-view .col-contract-id {
+    flex: 0 0 150px !important;
+    min-width: 150px !important;
+    max-width: 155px !important;
+    font-weight: 500 !important;
+}
+
+/* 3. Project Title (Flexible) */
+.contract-custom-list-view .col-project-title {
+    flex: 1 1 120px !important;
+    min-width: 120px !important;
+}
+
+/* 4. Currency (65px) */
+.contract-custom-list-view .col-currency {
+    flex: 0 0 65px !important;
+    min-width: 65px !important;
+    max-width: 70px !important;
+    text-align: center !important;
+}
+
+/* 5. Budget (155px) */
+.contract-custom-list-view .col-budget {
+    flex: 0 0 155px !important;
+    min-width: 150px !important;
+    max-width: 165px !important;
+    text-align: right !important;
+    padding-right: 12px !important;
+}
+
+/* 6. Status (215px) */
+.contract-custom-list-view .col-status {
+    flex: 0 0 215px !important;
+    min-width: 210px !important;
+    max-width: 230px !important;
+    text-align: center !important;
+}
+
+/* Custom Status Badges */
+.contract-custom-list-view .custom-status-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 3px 12px !important;
+    border-radius: 12px !important;
+    font-size: 11.5px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    user-select: none !important;
+    line-height: 1.4 !important;
+}
+.contract-custom-list-view .custom-status-pill:hover {
+    filter: brightness(0.90) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important;
+}
+.contract-custom-list-view .custom-status-pill .indicator-dot {
+    width: 7px !important;
+    height: 7px !important;
+    border-radius: 50% !important;
+    display: inline-block !important;
+}
+
+.contract-custom-list-view .badge-green { background: #e6f8ea !important; color: #15803d !important; border: 1px solid #bbf7d0 !important; }
+.contract-custom-list-view .badge-green .indicator-dot { background: #16a34a !important; }
+
+.contract-custom-list-view .badge-yellow { background: #fef9c3 !important; color: #854d0e !important; border: 1px solid #fef08a !important; }
+.contract-custom-list-view .badge-yellow .indicator-dot { background: #ca8a04 !important; }
+
+.contract-custom-list-view .badge-orange { background: #ffedd5 !important; color: #9a3412 !important; border: 1px solid #fed7aa !important; }
+.contract-custom-list-view .badge-orange .indicator-dot { background: #ea580c !important; }
+
+.contract-custom-list-view .badge-red { background: #fee2e2 !important; color: #991b1b !important; border: 1px solid #fecaca !important; }
+.contract-custom-list-view .badge-red .indicator-dot { background: #dc2626 !important; }
+
+.contract-custom-list-view .badge-gray { background: #f3f4f6 !important; color: #4b5563 !important; border: 1px solid #e5e7eb !important; }
+.contract-custom-list-view .badge-gray .indicator-dot { background: #6b7280 !important; }
+
+.contract-custom-list-view .badge-blue { background: #e0f2fe !important; color: #075985 !important; border: 1px solid #bae6fd !important; }
+.contract-custom-list-view .badge-blue .indicator-dot { background: #0284c7 !important; }
+
+.contract-custom-list-view .badge-purple { background: #f3e8ff !important; color: #6b21a8 !important; border: 1px solid #e9d5ff !important; }
+.contract-custom-list-view .badge-purple .indicator-dot { background: #9333ea !important; }/* -----------------------------------------------------------------
+   9. PERFECT CONTRACT LIST VIEW ALIGNMENT & LIGHT HIGHLIGHTED STATUS
+   ----------------------------------------------------------------- */
+.contract-custom-list-view .list-row .level-left,
+.contract-custom-list-view .list-row-head .list-header-subject {
+    display: flex !important;
+    width: 100% !important;
+    align-items: center !important;
+}
+
+.contract-custom-list-view .checkbox-actions {
+    display: none;
+}
+
+/* 1. Customer Id (135px) */
+.contract-custom-list-view .col-party-name,
+.contract-custom-list-view .list-subject.col-party-name {
+    flex: 0 0 135px !important;
+    width: 135px !important;
+    min-width: 135px !important;
+    max-width: 140px !important;
+}
+
+/* 2. Contract ID (155px) */
+.contract-custom-list-view .col-contract-id {
+    flex: 0 0 155px !important;
+    width: 155px !important;
+    min-width: 155px !important;
+    max-width: 160px !important;
+    font-weight: 500 !important;
+}
+
+/* 3. Project Title (Flexible Middle Share) */
+.contract-custom-list-view .col-project-title {
+    flex: 1 1 0% !important;
+    min-width: 180px !important;
+}
+
+/* 4. Currency (75px Centered) */
+.contract-custom-list-view .col-currency {
+    flex: 0 0 75px !important;
+    width: 75px !important;
+    min-width: 75px !important;
+    max-width: 80px !important;
+    text-align: center !important;
+}
+
+/* 5. Budget (140px Right Aligned) */
+.contract-custom-list-view .col-budget {
+    flex: 0 0 140px !important;
+    width: 140px !important;
+    min-width: 140px !important;
+    max-width: 150px !important;
+    text-align: right !important;
+    padding-right: 12px !important;
+}
+
+/* 6. Status (160px Centered) */
+.contract-custom-list-view .col-status {
+    flex: 0 0 160px !important;
+    width: 160px !important;
+    min-width: 160px !important;
+    max-width: 170px !important;
+    text-align: center !important;
+}
+
+/* Light Highlighted Status Badges */
+.contract-custom-list-view .custom-status-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 3px 10px !important;
+    border-radius: 12px !important;
+    font-size: 11.5px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    line-height: 1.4 !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+    transition: all 0.15s ease !important;
+    white-space: nowrap !important;
+}
+.contract-custom-list-view .custom-status-pill:hover {
+    filter: brightness(0.92) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.12) !important;
+}
+.contract-custom-list-view .custom-status-pill .indicator-dot {
+    width: 6px !important;
+    height: 6px !important;
+    border-radius: 50% !important;
+    display: inline-block !important;
+}
+
+/* Soft Light Colors */
+.contract-custom-list-view .badge-green {
+    background-color: #dcfce7 !important;
+    color: #15803d !important;
+    border: 1px solid #bbf7d0 !important;
+}
+.contract-custom-list-view .badge-green .indicator-dot {
+    background-color: #22c55e !important;
+}
+
+.contract-custom-list-view .badge-yellow {
+    background-color: #fef9c3 !important;
+    color: #854d0e !important;
+    border: 1px solid #fde047 !important;
+}
+.contract-custom-list-view .badge-yellow .indicator-dot {
+    background-color: #eab308 !important;
+}
+
+.contract-custom-list-view .badge-orange {
+    background-color: #ffedd5 !important;
+    color: #9a3412 !important;
+    border: 1px solid #fdba74 !important;
+}
+.contract-custom-list-view .badge-orange .indicator-dot {
+    background-color: #f97316 !important;
+}
+
+.contract-custom-list-view .badge-red {
+    background-color: #fee2e2 !important;
+    color: #991b1b !important;
+    border: 1px solid #fca5a5 !important;
+}
+.contract-custom-list-view .badge-red .indicator-dot {
+    background-color: #ef4444 !important;
+}
+
+.contract-custom-list-view .badge-gray {
+    background-color: #f3f4f6 !important;
+    color: #374151 !important;
+    border: 1px solid #d1d5db !important;
+}
+.contract-custom-list-view .badge-gray .indicator-dot {
+    background-color: #6b7280 !important;
+}
+
+.contract-custom-list-view .badge-blue {
+    background-color: #e0f2fe !important;
+    color: #0369a1 !important;
+    border: 1px solid #7dd3fc !important;
+}
+.contract-custom-list-view .badge-blue .indicator-dot {
+    background-color: #0ea5e9 !important;
+}
+
+.contract-custom-list-view .badge-purple {
+    background-color: #f3e8ff !important;
+    color: #6b21a8 !important;
+    border: 1px solid #d8b4fe !important;
+}
+.contract-custom-list-view .badge-purple .indicator-dot {
+    background-color: #a855f7 !important;
+}/* -----------------------------------------------------------------
+   9. PERFECT CONTRACT LIST VIEW ALIGNMENT & FULL STATUS VISIBILITY
+   ----------------------------------------------------------------- */
+.contract-custom-list-view .list-row .level-left,
+.contract-custom-list-view .list-row-head .list-header-subject {
+    display: flex !important;
+    width: 100% !important;
+    align-items: center !important;
+}
+
+.contract-custom-list-view .checkbox-actions {
+    display: none;
+}
+
+/* 1. Customer Id (120px) */
+.contract-custom-list-view .col-party-name,
+.contract-custom-list-view .list-subject.col-party-name {
+    flex: 0 0 120px !important;
+    width: 120px !important;
+    min-width: 120px !important;
+    max-width: 125px !important;
+}
+
+/* 2. Contract ID (140px) */
+.contract-custom-list-view .col-contract-id {
+    flex: 0 0 140px !important;
+    width: 140px !important;
+    min-width: 140px !important;
+    max-width: 145px !important;
+    font-weight: 500 !important;
+}
+
+/* 3. Project Title (Flexible Middle Share) */
+.contract-custom-list-view .col-project-title {
+    flex: 1 1 0% !important;
+    min-width: 140px !important;
+}
+
+/* 4. Currency (60px Centered) */
+.contract-custom-list-view .col-currency {
+    flex: 0 0 60px !important;
+    width: 60px !important;
+    min-width: 60px !important;
+    max-width: 65px !important;
+    text-align: center !important;
+}
+
+/* 5. Budget (130px Right Aligned) */
+.contract-custom-list-view .col-budget {
+    flex: 0 0 130px !important;
+    width: 130px !important;
+    min-width: 130px !important;
+    max-width: 135px !important;
+    text-align: right !important;
+    padding-right: 10px !important;
+}
+
+/* 6. Status (195px - Zero Truncation, 100% Full Text Visibility) */
+.contract-custom-list-view .col-status {
+    flex: 0 0 195px !important;
+    width: 195px !important;
+    min-width: 190px !important;
+    max-width: 205px !important;
+    text-align: center !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+}
+
+/* Light Highlighted Status Badges */
+.contract-custom-list-view .custom-status-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 3px 12px !important;
+    border-radius: 12px !important;
+    font-size: 11.5px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    line-height: 1.4 !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+    transition: all 0.15s ease !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+}
+.contract-custom-list-view .custom-status-pill span {
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+}
+.contract-custom-list-view .custom-status-pill:hover {
+    filter: brightness(0.92) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.12) !important;
+}
+.contract-custom-list-view .custom-status-pill .indicator-dot {
+    width: 6px !important;
+    height: 6px !important;
+    border-radius: 50% !important;
+    display: inline-block !important;
+    flex-shrink: 0 !important;
+}
+
+/* Soft Light Colors */
+.contract-custom-list-view .badge-green {
+    background-color: #dcfce7 !important;
+    color: #15803d !important;
+    border: 1px solid #bbf7d0 !important;
+}
+.contract-custom-list-view .badge-green .indicator-dot {
+    background-color: #22c55e !important;
+}
+
+.contract-custom-list-view .badge-yellow {
+    background-color: #fef9c3 !important;
+    color: #854d0e !important;
+    border: 1px solid #fde047 !important;
+}
+.contract-custom-list-view .badge-yellow .indicator-dot {
+    background-color: #eab308 !important;
+}
+
+.contract-custom-list-view .badge-orange {
+    background-color: #ffedd5 !important;
+    color: #9a3412 !important;
+    border: 1px solid #fdba74 !important;
+}
+.contract-custom-list-view .badge-orange .indicator-dot {
+    background-color: #f97316 !important;
+}
+
+.contract-custom-list-view .badge-red {
+    background-color: #fee2e2 !important;
+    color: #991b1b !important;
+    border: 1px solid #fca5a5 !important;
+}
+.contract-custom-list-view .badge-red .indicator-dot {
+    background-color: #ef4444 !important;
+}
+
+.contract-custom-list-view .badge-gray {
+    background-color: #f3f4f6 !important;
+    color: #374151 !important;
+    border: 1px solid #d1d5db !important;
+}
+.contract-custom-list-view .badge-gray .indicator-dot {
+    background-color: #6b7280 !important;
+}
+
+.contract-custom-list-view .badge-blue {
+    background-color: #e0f2fe !important;
+    color: #0369a1 !important;
+    border: 1px solid #7dd3fc !important;
+}
+.contract-custom-list-view .badge-blue .indicator-dot {
+    background-color: #0ea5e9 !important;
+}
+
+.contract-custom-list-view .badge-purple {
+    background-color: #f3e8ff !important;
+    color: #6b21a8 !important;
+    border: 1px solid #d8b4fe !important;
+}
+.contract-custom-list-view .badge-purple .indicator-dot {
+    background-color: #a855f7 !important;
+}/* -----------------------------------------------------------------
+   9. PERFECT CONTRACT LIST VIEW ALIGNMENT & FULL-WIDTH UTILIZATION
+   ----------------------------------------------------------------- */
+.contract-custom-list-view .list-row,
+.contract-custom-list-view .list-row-head {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+}
+
+.contract-custom-list-view .list-row .level-left,
+.contract-custom-list-view .list-row-head .list-header-subject {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    align-items: center !important;
+    margin-right: 15px !important;
+}
+
+.contract-custom-list-view .list-row .level-right,
+.contract-custom-list-view .list-row-head .level-right {
+    flex: 0 0 110px !important;
+    min-width: 110px !important;
+    max-width: 120px !important;
+    justify-content: flex-end !important;
+}
+
+.contract-custom-list-view .checkbox-actions {
+    display: none;
+}
+
+/* 1. Customer Id (125px) */
+.contract-custom-list-view .col-party-name,
+.contract-custom-list-view .list-subject.col-party-name {
+    flex: 0 0 115px !important;
+    width: 115px !important;
+    min-width: 115px !important;
+    max-width: 120px !important;
+}
+
+/* 2. Contract ID (150px) */
+.contract-custom-list-view .col-contract-id {
+    flex: 0 0 130px !important;
+    width: 130px !important;
+    min-width: 130px !important;
+    max-width: 135px !important;
+    font-weight: 500 !important;
+}
+
+/* 3. Project Title - Expands and absorbs 100% of the unused space across table */
+.contract-custom-list-view .col-project-title {
+    flex: 1 1 0% !important;
+    min-width: 220px !important;
+}
+
+/* 4. Currency (65px) */
+.contract-custom-list-view .col-currency {
+    flex: 0 0 65px !important;
+    width: 65px !important;
+    min-width: 65px !important;
+    max-width: 70px !important;
+    text-align: center !important;
+}
+
+/* 5. Budget (145px) */
+.contract-custom-list-view .col-budget {
+    flex: 0 0 145px !important;
+    width: 145px !important;
+    min-width: 140px !important;
+    max-width: 155px !important;
+    text-align: right !important;
+    padding-right: 12px !important;
+}
+
+/* 6. Status (175px - Sits right before activity section, fully visible) */
+.contract-custom-list-view .col-status {
+    flex: 0 0 205px !important;
+    width: 205px !important;
+    min-width: 200px !important;
+    max-width: 220px !important;
+    text-align: center !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+}
+
+/* Light Highlighted Status Badges */
+.contract-custom-list-view .custom-status-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 3px 12px !important;
+    border-radius: 12px !important;
+    font-size: 11.5px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    line-height: 1.4 !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+    transition: all 0.15s ease !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+}
+.contract-custom-list-view .custom-status-pill span {
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+}
+.contract-custom-list-view .custom-status-pill:hover {
+    filter: brightness(0.92) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.12) !important;
+}
+.contract-custom-list-view .custom-status-pill .indicator-dot {
+    width: 6px !important;
+    height: 6px !important;
+    border-radius: 50% !important;
+    display: inline-block !important;
+    flex-shrink: 0 !important;
+}
+
+/* Soft Light Colors */
+.contract-custom-list-view .badge-green {
+    background-color: #dcfce7 !important;
+    color: #15803d !important;
+    border: 1px solid #bbf7d0 !important;
+}
+.contract-custom-list-view .badge-green .indicator-dot {
+    background-color: #22c55e !important;
+}
+
+.contract-custom-list-view .badge-yellow {
+    background-color: #fef9c3 !important;
+    color: #854d0e !important;
+    border: 1px solid #fde047 !important;
+}
+.contract-custom-list-view .badge-yellow .indicator-dot {
+    background-color: #eab308 !important;
+}
+
+.contract-custom-list-view .badge-orange {
+    background-color: #ffedd5 !important;
+    color: #9a3412 !important;
+    border: 1px solid #fdba74 !important;
+}
+.contract-custom-list-view .badge-orange .indicator-dot {
+    background-color: #f97316 !important;
+}
+
+.contract-custom-list-view .badge-red {
+    background-color: #fee2e2 !important;
+    color: #991b1b !important;
+    border: 1px solid #fca5a5 !important;
+}
+.contract-custom-list-view .badge-red .indicator-dot {
+    background-color: #ef4444 !important;
+}
+
+.contract-custom-list-view .badge-gray {
+    background-color: #f3f4f6 !important;
+    color: #374151 !important;
+    border: 1px solid #d1d5db !important;
+}
+.contract-custom-list-view .badge-gray .indicator-dot {
+    background-color: #6b7280 !important;
+}
+
+.contract-custom-list-view .badge-blue {
+    background-color: #e0f2fe !important;
+    color: #0369a1 !important;
+    border: 1px solid #7dd3fc !important;
+}
+.contract-custom-list-view .badge-blue .indicator-dot {
+    background-color: #0ea5e9 !important;
+}
+
+.contract-custom-list-view .badge-purple {
+    background-color: #f3e8ff !important;
+    color: #6b21a8 !important;
+    border: 1px solid #d8b4fe !important;
+}
+.contract-custom-list-view .badge-purple .indicator-dot {
+    background-color: #a855f7 !important;
+}
+/* -----------------------------------------------------------------
+   10. EMAIL-STYLE STAR BOOKMARK (Replaces Heart Icon with Yellow/Gold Star)
+   ----------------------------------------------------------------- */
+.contract-custom-list-view .like-action svg,
+.contract-custom-list-view .list-row-like svg,
+.contract-custom-list-view .list-liked-by-me svg,
+.contract-custom-list-view [data-action="like"] svg,
+.contract-custom-list-view .liked svg {
+    display: none !important;
+}
+
+.contract-custom-list-view .like-action,
+.contract-custom-list-view .list-row-like,
+.contract-custom-list-view .list-liked-by-me,
+.contract-custom-list-view [data-action="like"] {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    text-decoration: none !important;
+    color: #9ca3af !important;
+    fill: none !important;
+}
+
+/* Default: Clean Outline Star */
+.contract-custom-list-view .like-action::before,
+.contract-custom-list-view .list-row-like .like-action::before,
+.contract-custom-list-view .list-liked-by-me::before,
+.contract-custom-list-view [data-action="like"]::before {
+    content: "☆" !important;
+    font-size: 16px !important;
+    color: #9ca3af !important;
+    display: inline-block !important;
+    transition: all 0.15s ease !important;
+    line-height: 1 !important;
+    font-family: Arial, sans-serif !important;
+}
+
+/* Hover: Bright Yellow / Light Gold Glow */
+.contract-custom-list-view .like-action:hover::before,
+.contract-custom-list-view .list-liked-by-me:hover::before,
+.contract-custom-list-view [data-action="like"]:hover::before {
+    color: #f59e0b !important;
+    transform: scale(1.2) !important;
+}
+
+/* Starred / Bookmarked: Filled Yellow / Light Gold Star (Never Red) */
+.contract-custom-list-view .like-action.liked::before,
+.contract-custom-list-view .list-row-like .like-action.liked::before,
+.contract-custom-list-view .list-liked-by-me.active::before,
+.contract-custom-list-view [data-action="like"].liked::before,
+.contract-custom-list-view .liked::before {
+    content: "★" !important;
+    color: #f59e0b !important;
+    font-size: 16px !important;
+    text-shadow: 0 0 4px rgba(245, 158, 11, 0.45) !important;
+}
+
+.contract-custom-list-view .like-action.liked,
+.contract-custom-list-view .liked {
+    color: #f59e0b !important;
+}
+/* -----------------------------------------------------------------
+   9. TEST CUSTOMER CONTRACT LIST VIEW
+   ----------------------------------------------------------------- */
+
+/* Layout alignment for Test Customer Contract List View */
+[data-page-route*="Test Customer Contract"] .list-row,
+[data-page-route*="Test Customer Contract"] .list-row-head,
+[data-page-route*="test-customer-contract"] .list-row,
+[data-page-route*="test-customer-contract"] .list-row-head,
+.contract-custom-list-view .list-row,
+.contract-custom-list-view .list-row-head {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+[data-page-route*="Test Customer Contract"] .list-row .level-left,
+[data-page-route*="Test Customer Contract"] .list-row-head .list-header-subject,
+[data-page-route*="test-customer-contract"] .list-row .level-left,
+[data-page-route*="test-customer-contract"] .list-row-head .list-header-subject,
+.contract-custom-list-view .list-row .level-left,
+.contract-custom-list-view .list-row-head .list-header-subject {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    flex-grow: 1 !important;
+    align-items: center !important;
+    width: calc(100% - 90px) !important;
+    max-width: calc(100% - 90px) !important;
+    min-width: 0 !important;
+    margin-right: 10px !important;
+    overflow: hidden !important;
+}
+
+[data-page-route*="Test Customer Contract"] .list-row .level-right,
+[data-page-route*="Test Customer Contract"] .list-row-head .level-right,
+[data-page-route*="test-customer-contract"] .list-row .level-right,
+[data-page-route*="test-customer-contract"] .list-row-head .level-right,
+.contract-custom-list-view .list-row .level-right,
+.contract-custom-list-view .list-row-head .level-right {
+    flex: 0 0 80px !important;
+    flex-shrink: 0 !important;
+    min-width: 75px !important;
+    max-width: 85px !important;
+    justify-content: flex-end !important;
+}
+
+[data-page-route*="Test Customer Contract"] .checkbox-actions,
+[data-page-route*="test-customer-contract"] .checkbox-actions,
+.contract-custom-list-view .checkbox-actions {
+    display: none !important;
+}
+
+/* 1. Contract ID (160px) */
+.col-contract-id,
+.list-row-col.col-contract-id,
+.list-subject.col-contract-id {
+    flex: 0 0 160px !important;
+    width: 160px !important;
+    min-width: 160px !important;
+    max-width: 160px !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    padding-right: 8px !important;
+}
+
+/* 2. Customer Id (120px) */
+.col-party-name,
+.list-row-col.col-party-name {
+    flex: 0 0 120px !important;
+    width: 120px !important;
+    min-width: 120px !important;
+    max-width: 120px !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    padding-right: 8px !important;
+}
+
+/* 3. Project Title (Expands to all middle space) */
+.col-project-title,
+.list-row-col.col-project-title {
+    flex: 1 1 auto !important;
+    flex-grow: 1 !important;
+    min-width: 180px !important;
+    width: auto !important;
+    max-width: none !important;
+    padding-right: 15px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.col-project-title *,
+.col-project-title span,
+.col-project-title a {
+    max-width: 100% !important;
+    display: inline !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+.list-row-head .col-project-title,
+.list-row-head .col-project-title span {
+    max-width: 100% !important;
+    display: inline-block !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: nowrap !important;
+}
+
+/* 4. Currency (55px) */
+.col-currency,
+.list-row-col.col-currency {
+    flex: 0 0 55px !important;
+    width: 55px !important;
+    min-width: 55px !important;
+    max-width: 55px !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    text-align: center !important;
+    padding: 0 4px !important;
+}
+
+/* 5. Budget (135px) */
+.col-budget,
+.list-row-col.col-budget {
+    flex: 0 0 135px !important;
+    width: 135px !important;
+    min-width: 135px !important;
+    max-width: 135px !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    text-align: right !important;
+    padding-right: 12px !important;
+    white-space: nowrap !important;
+}
+
+/* 6. Status (150px) */
+.col-status,
+.list-row-col.col-status {
+    flex: 0 0 150px !important;
+    width: 150px !important;
+    min-width: 150px !important;
+    max-width: 150px !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    text-align: center !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+}
+
+.custom-status-pill {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 3px 10px !important;
+    border-radius: 12px !important;
+    font-size: 11.5px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    line-height: 1.35 !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+    transition: all 0.15s ease !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+}
+
+.custom-status-pill span {
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+}
+
+.custom-status-pill:hover {
+    filter: brightness(0.92) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.12) !important;
+}
+
+.custom-status-pill .indicator-dot {
+    width: 6px !important;
+    height: 6px !important;
+    border-radius: 50% !important;
+    display: inline-block !important;
+    flex-shrink: 0 !important;
+}
+
+.badge-green { background-color: #dcfce7 !important; color: #15803d !important; border: 1px solid #bbf7d0 !important; }
+.badge-green .indicator-dot { background-color: #22c55e !important; }
+.badge-yellow { background-color: #fef9c3 !important; color: #854d0e !important; border: 1px solid #fde047 !important; }
+.badge-yellow .indicator-dot { background-color: #eab308 !important; }
+.badge-orange { background-color: #ffedd5 !important; color: #9a3412 !important; border: 1px solid #fdba74 !important; }
+.badge-orange .indicator-dot { background-color: #f97316 !important; }
+.badge-red { background-color: #fee2e2 !important; color: #991b1b !important; border: 1px solid #fca5a5 !important; }
+.badge-red .indicator-dot { background-color: #ef4444 !important; }
+.badge-gray { background-color: #f3f4f6 !important; color: #374151 !important; border: 1px solid #d1d5db !important; }
+.badge-gray .indicator-dot { background-color: #6b7280 !important; }
+.badge-blue { background-color: #e0f2fe !important; color: #0369a1 !important; border: 1px solid #7dd3fc !important; }
+.badge-blue .indicator-dot { background-color: #0ea5e9 !important; }
+.badge-purple { background-color: #f3e8ff !important; color: #6b21a8 !important; border: 1px solid #d8b4fe !important; }
+.badge-purple .indicator-dot { background-color: #a855f7 !important; }
+
+/* Star bookmark styling */
+.like-action svg, .list-row-like svg, .list-liked-by-me svg, [data-action="like"] svg, .liked svg {
+    display: none !important;
+}
+.like-action, .list-row-like, .list-liked-by-me, [data-action="like"] {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    text-decoration: none !important;
+    color: #9ca3af !important;
+    fill: none !important;
+}
+.like-action::before, .list-row-like .like-action::before, .list-liked-by-me::before, [data-action="like"]::before {
+    content: "☆" !important;
+    font-size: 16px !important;
+    color: #9ca3af !important;
+    display: inline-block !important;
+    transition: all 0.15s ease !important;
+    line-height: 1 !important;
+    font-family: Arial, sans-serif !important;
+}
+.like-action:hover::before, .list-liked-by-me:hover::before, [data-action="like"]:hover::before {
+    color: #f59e0b !important;
+    transform: scale(1.2) !important;
+}
+.like-action.liked::before, .list-row-like .like-action.liked::before, .list-liked-by-me.active::before, [data-action="like"].liked::before, .liked::before {
+    content: "★" !important;
+    color: #f59e0b !important;
+    font-size: 16px !important;
+    text-shadow: 0 0 4px rgba(245, 158, 11, 0.45) !important;
+}
+.like-action.liked, .liked {
+    color: #f59e0b !important;
+}
+
+
+/* Hide duplicate old custom progress bar */
+#contract-progress-wrapper,
+#custom-contract-progress {
+    display: none !important;
+}

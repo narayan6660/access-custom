@@ -1,0 +1,61 @@
+{
+ "actions": [],
+ "creation": "2026-09-19 12:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "budget_head",
+  "original_amount",
+  "revised_amount",
+  "variance",
+  "justification"
+ ],
+ "fields": [
+  {
+   "fieldname": "budget_head",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Budget Head / Category",
+   "reqd": 1
+  },
+  {
+   "fieldname": "original_amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Original Amount"
+  },
+  {
+   "fieldname": "revised_amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Revised Amount",
+   "reqd": 1
+  },
+  {
+   "fieldname": "variance",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Variance (+/-)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "justification",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Justification"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-09-19 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Access Custom",
+ "name": "Amendment Budget Reallocation",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

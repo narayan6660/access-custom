@@ -1,0 +1,183 @@
+
+==================== WORKFLOW FOR Contract (Contract Approval Flow) ====================
+STATES:
+  - Draft                               | doc_status: 0 | allow_edit: Employee
+  - Pending Approval                    | doc_status: 0 | allow_edit: System Manager
+  - Approved                            | doc_status: 1 | allow_edit: System Manager
+  - Rejected                            | doc_status: 0 | allow_edit: System Manager
+  - Pending Final Approval              | doc_status: 0 | allow_edit: System Manager
+  - Pending Level 2 (Fin/HR/Legal)      | doc_status: 0 | allow_edit: System Manager
+  - Legal Rejected                      | doc_status: 0 | allow_edit: System Manager
+  - Issued                              | doc_status: 1 | allow_edit: System Manager
+  - Final Rejected                      | doc_status: 0 | allow_edit: System Manager
+  - Team Lead Approved                  | doc_status: 0 | allow_edit: System Manager
+  - Internally Approved                 | doc_status: 0 | allow_edit: System Manager
+  - Active/Amendment Initiated          | doc_status: 1 | allow_edit: System Manager
+  - Amendment Pending Legal Review      | doc_status: 1 | allow_edit: System Manager
+  - Amendment Pending Finance Review    | doc_status: 1 | allow_edit: System Manager
+  - Amendment Pending CEO Approval      | doc_status: 1 | allow_edit: System Manager
+  - Active/Renewal Initiated            | doc_status: 1 | allow_edit: System Manager
+  - Terminated                          | doc_status: 1 | allow_edit: System Manager
+  - Closed                              | doc_status: 1 | allow_edit: System Manager
+  - Pending Team Lead Approval          | doc_status: 0 | allow_edit: System Manager
+  - Team Lead Rejected                  | doc_status: 0 | allow_edit: System Manager
+  - Pending Finance & HR Approval       | doc_status: 0 | allow_edit: System Manager
+  - CEO Approved                        | doc_status: 0 | allow_edit: System Manager
+  - RFP Generated                       | doc_status: 0 | allow_edit: System Manager
+  - Pending CEO Approval                | doc_status: 0 | allow_edit: System Manager
+  - Finance Rejected                    | doc_status: 0 | allow_edit: System Manager
+  - HR Rejected                         | doc_status: 0 | allow_edit: System Manager
+
+TRANSITIONS:
+  Draft                            -> [Submit to Team Lead   ] -> Pending Team Lead Approval       | Role: Employee
+  Pending Team Lead Approval       -> [Approve Team Lead     ] -> Team Lead Approved               | Role: Employee
+  Pending Team Lead Approval       -> [Reject Team Lead      ] -> Team Lead Rejected               | Role: Employee
+  Team Lead Approved               -> [Submit to Fin, HR & Legal] -> Pending Level 2 (Fin/HR/Legal)   | Role: Employee
+  Pending Team Lead Approval       -> [Submit to Finance & HR] -> Pending Finance & HR Approval    | Role: Employee
+  Pending Level 2 (Fin/HR/Legal)   -> [All Level 2 Approved  ] -> Internally Approved              | Role: Employee
+  Pending Finance & HR Approval    -> [All Level 2 Approved  ] -> Internally Approved              | Role: Employee
+  Internally Approved              -> [Final Approve & Issue ] -> Issued                           | Role: Employee
+  Draft                            -> [System Update         ] -> CEO Approved                     | Role: Employee
+  Draft                            -> [System Update         ] -> Pending CEO Approval             | Role: Employee
+  Draft                            -> [System Update         ] -> RFP Generated                    | Role: Employee
+  Pending CEO Approval             -> [System Update         ] -> CEO Approved                     | Role: Employee
+  RFP Generated                    -> [System Update         ] -> Pending CEO Approval             | Role: Employee
+  Pending Team Lead Approval       -> [Submit to Fin, HR & Legal] -> Pending Level 2 (Fin/HR/Legal)   | Role: Employee
+
+==================== WORKFLOW FOR Appraisal (Employee Appraisal Cycle) ====================
+STATES:
+  - Pending                             | doc_status: 0 | allow_edit: All
+  - Pending Manager Review              | doc_status: 0 | allow_edit: Reporting Manager
+  - Completed                           | doc_status: 1 | allow_edit: Reporting Manager
+  - Objective Review Pending            | doc_status: 0 | allow_edit: Reporting Manager
+  - Objectives Approved                 | doc_status: 0 | allow_edit: Employee
+  - Objectives Rejected                 | doc_status: 0 | allow_edit: Employee
+
+TRANSITIONS:
+  Pending                          -> [Submit Objectives     ] -> Objective Review Pending         | Role: Employee
+  Pending Manager Review           -> [Finalize & Complete   ] -> Completed                        | Role: Reporting Manager
+  Objective Review Pending         -> [Approve Objectives    ] -> Objectives Approved              | Role: Reporting Manager
+  Objective Review Pending         -> [Reject Objectives     ] -> Objectives Rejected              | Role: Reporting Manager
+  Objectives Rejected              -> [Resubmit Objectives   ] -> Objective Review Pending         | Role: Employee
+  Objectives Approved              -> [Submit Appraisal      ] -> Pending Manager Review           | Role: Employee
+  Pending                          -> [Submit Appraisal      ] -> Pending Manager Review           | Role: HR Manager
+  Pending                          -> [Submit Appraisal      ] -> Pending Manager Review           | Role: System Manager
+  Pending                          -> [Submit Appraisal      ] -> Pending Manager Review           | Role: Employee
+
+==================== WORKFLOW FOR Job Requisition (Staff Requisition Approva) ====================
+STATES:
+  - Draft                               | doc_status: 0 | allow_edit: HR User
+  - Pending Dept Manager                | doc_status: 0 | allow_edit: Reporting Manager
+  - Pending HR Approval                 | doc_status: 0 | allow_edit: HR Manager
+  - Pending Finance Approval            | doc_status: 0 | allow_edit: Accounts Manager
+  - Pending Director                    | doc_status: 0 | allow_edit: CEO Approver
+  - Approved                            | doc_status: 1 | allow_edit: All
+  - Rejected                            | doc_status: 0 | allow_edit: All
+
+TRANSITIONS:
+  Draft                            -> [Submit to Dept Manager] -> Pending Dept Manager             | Role: HR User
+  Pending Dept Manager             -> [Dept Manager Approve  ] -> Pending HR Approval              | Role: Reporting Manager
+  Pending Dept Manager             -> [Dept Manager Reject   ] -> Rejected                         | Role: Reporting Manager
+  Pending HR Approval              -> [HR Approve            ] -> Pending Finance Approval         | Role: HR Manager
+  Pending HR Approval              -> [HR Reject             ] -> Rejected                         | Role: HR Manager
+  Pending Finance Approval         -> [Finance Approve       ] -> Pending Director                 | Role: Accounts Manager
+  Pending Finance Approval         -> [Finance Reject        ] -> Rejected                         | Role: Accounts Manager
+  Pending Director                 -> [Director Finalize     ] -> Approved                         | Role: CEO Approver
+  Pending Director                 -> [Director Reject       ] -> Rejected                         | Role: CEO Approver
+
+==================== WORKFLOW FOR Test Customer Contract (Customer Contract Workflow) ====================
+STATES:
+  - Draft                               | doc_status: 0 | allow_edit: Employee
+  - Pending Team Lead Approval          | doc_status: 0 | allow_edit: Employee
+  - Pending Level 2.1 Legal Approval    | doc_status: 0 | allow_edit: Employee
+  - Pending Level 2.2 Finance Approval  | doc_status: 0 | allow_edit: Employee
+  - Pending Level 2.3 HR Approval       | doc_status: 0 | allow_edit: Employee
+  - Pending CEO Approval                | doc_status: 0 | allow_edit: Employee
+  - In Progress                         | doc_status: 0 | allow_edit: Employee
+  - Commenced                           | doc_status: 1 | allow_edit: Employee
+  - Active/Amendment Initiated          | doc_status: 1 | allow_edit: Employee
+  - On Hold                             | doc_status: 1 | allow_edit: Employee
+  - Terminated                          | doc_status: 1 | allow_edit: Employee
+  - Closed                              | doc_status: 1 | allow_edit: Employee
+
+TRANSITIONS:
+  Draft                            -> [Submit to Team Lead   ] -> Pending Team Lead Approval       | Role: Employee
+  Pending Team Lead Approval       -> [Approve Team Lead     ] -> Pending Level 2.1 Legal Approval | Role: Employee
+  Pending Team Lead Approval       -> [Reject Team Lead      ] -> Draft                            | Role: Employee
+  Pending Level 2.1 Legal Approval -> [Approve Legal         ] -> Pending Level 2.2 Finance Approval | Role: Employee
+  Pending Level 2.1 Legal Approval -> [Reject Legal          ] -> Draft                            | Role: Employee
+  Pending Level 2.2 Finance Approval -> [Approve Finance       ] -> Pending Level 2.3 HR Approval    | Role: Employee
+  Pending Level 2.2 Finance Approval -> [Reject Finance        ] -> Draft                            | Role: Employee
+  Pending Level 2.3 HR Approval    -> [Approve HR            ] -> Pending CEO Approval             | Role: Employee
+  Pending Level 2.3 HR Approval    -> [Reject HR             ] -> Draft                            | Role: Employee
+  Pending CEO Approval             -> [Approve CEO           ] -> In Progress                      | Role: Employee
+  Pending CEO Approval             -> [Reject CEO            ] -> Draft                            | Role: Employee
+  In Progress                      -> [Commence Contract     ] -> Commenced                        | Role: Employee
+
+==================== WORKFLOW FOR Leave Application (Leave Approval Flow) ====================
+STATES:
+  - Draft                               | doc_status: 0 | allow_edit: Employee
+  - Pending Line Manager Approval       | doc_status: 0 | allow_edit: Leave Approver
+  - Approved                            | doc_status: 1 | allow_edit: Leave Approver
+  - Rejected                            | doc_status: 0 | allow_edit: Leave Approver
+
+TRANSITIONS:
+  Draft                            -> [Submit for Approval   ] -> Pending Line Manager Approval    | Role: Employee
+  Pending Line Manager Approval    -> [Approve               ] -> Approved                         | Role: Leave Approver
+  Pending Line Manager Approval    -> [Reject                ] -> Rejected                         | Role: Leave Approver
+
+==================== WORKFLOW FOR Leave Policy (Leave Policy Approval Workflow) ====================
+STATES:
+  - Draft                               | doc_status: 0 | allow_edit: HR User
+  - Pending CEO Approval                | doc_status: 0 | allow_edit: CEO Approver
+  - Approved                            | doc_status: 1 | allow_edit: CEO Approver
+  - Rejected                            | doc_status: 0 | allow_edit: CEO Approver
+
+TRANSITIONS:
+  Draft                            -> [Submit for Approval   ] -> Pending CEO Approval             | Role: HR User
+  Draft                            -> [Submit for Approval   ] -> Pending CEO Approval             | Role: HR Manager
+  Draft                            -> [Submit for Approval   ] -> Pending CEO Approval             | Role: System Manager
+  Pending CEO Approval             -> [Approve               ] -> Approved                         | Role: CEO Approver
+  Pending CEO Approval             -> [Reject                ] -> Rejected                         | Role: CEO Approver
+
+==================== WORKFLOW FOR Contract Amendment (Contract Amendment Workflow) ====================
+STATES:
+  - Draft                               | doc_status: 0 | allow_edit: Employee
+  - Under Team Lead Review              | doc_status: 0 | allow_edit: Employee
+  - Pending Legal Review                | doc_status: 0 | allow_edit: Employee
+  - Pending Finance Review              | doc_status: 0 | allow_edit: Employee
+  - Pending HR Review                   | doc_status: 0 | allow_edit: Employee
+  - Pending CEO Review                  | doc_status: 0 | allow_edit: Employee
+  - Pending Client Signature            | doc_status: 0 | allow_edit: Employee
+  - Executed                            | doc_status: 1 | allow_edit: System Manager
+  - Returned for Revision               | doc_status: 0 | allow_edit: Employee
+  - Rejected                            | doc_status: 0 | allow_edit: Employee
+
+TRANSITIONS:
+  Draft                            -> [Submit to Team Lead   ] -> Under Team Lead Review           | Role: Employee
+  Under Team Lead Review           -> [Reject Team Lead      ] -> Draft                            | Role: Employee
+  Under Team Lead Review           -> [Return for Revision   ] -> Draft                            | Role: Employee
+  Under Team Lead Review           -> [Approve Team Lead     ] -> Pending Legal Review             | Role: Employee
+  Under Team Lead Review           -> [Approve Team Lead     ] -> Pending HR Review                | Role: Employee
+  Under Team Lead Review           -> [Approve Team Lead     ] -> Pending Finance Review           | Role: Employee
+  Under Team Lead Review           -> [Approve Team Lead     ] -> Pending CEO Review               | Role: Employee
+  Pending Legal Review             -> [Reject Legal          ] -> Draft                            | Role: Employee
+  Pending Legal Review             -> [Return for Revision   ] -> Draft                            | Role: Employee
+  Pending Legal Review             -> [Approve Legal         ] -> Pending Finance Review           | Role: Employee
+  Pending Legal Review             -> [Approve Legal         ] -> Pending HR Review                | Role: Employee
+  Pending Legal Review             -> [Approve Legal         ] -> Pending CEO Review               | Role: Employee
+  Pending Finance Review           -> [Reject Finance        ] -> Draft                            | Role: Employee
+  Pending Finance Review           -> [Return for Revision   ] -> Draft                            | Role: Employee
+  Pending Finance Review           -> [Approve Finance       ] -> Pending HR Review                | Role: Employee
+  Pending Finance Review           -> [Approve Finance       ] -> Pending CEO Review               | Role: Employee
+  Pending HR Review                -> [Reject HR             ] -> Draft                            | Role: Employee
+  Pending HR Review                -> [Return for Revision   ] -> Draft                            | Role: Employee
+  Pending HR Review                -> [Approve HR            ] -> Pending Finance Review           | Role: Employee
+  Pending HR Review                -> [Approve HR            ] -> Pending CEO Review               | Role: Employee
+  Pending CEO Review               -> [Reject CEO            ] -> Draft                            | Role: Employee
+  Pending CEO Review               -> [Return for Revision   ] -> Draft                            | Role: Employee
+  Pending CEO Review               -> [Approve CEO           ] -> Pending Client Signature         | Role: Employee
+  Pending Client Signature         -> [Execute Amendment     ] -> Executed                         | Role: Employee
+  Returned for Revision            -> [Resubmit              ] -> Under Team Lead Review           | Role: Employee
+  Returned for Revision            -> [Return to Draft       ] -> Draft                            | Role: Employee
+  Rejected                         -> [Reopen as Draft       ] -> Draft                            | Role: Employee

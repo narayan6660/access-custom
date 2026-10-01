@@ -3,6 +3,132 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
+  "modified": "2026-09-19 13:17:39.861594",
+  "name": "Pending Finance Review",
+  "style": "Primary",
+  "workflow_state_name": "Pending Finance Review"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-19 13:17:39.867082",
+  "name": "Pending Client Signature",
+  "style": "Info",
+  "workflow_state_name": "Pending Client Signature"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-19 13:17:39.870020",
+  "name": "Returned for Revision",
+  "style": "Warning",
+  "workflow_state_name": "Returned for Revision"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-21 10:40:57.144574",
+  "name": "Termination Under Finance Review",
+  "style": "",
+  "workflow_state_name": "Termination Under Finance Review"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-21 10:40:57.146210",
+  "name": "Termination Under HR Review",
+  "style": "",
+  "workflow_state_name": "Termination Under HR Review"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-21 10:40:57.151136",
+  "name": "Deliverable Closure",
+  "style": "",
+  "workflow_state_name": "Deliverable Closure"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-21 10:40:57.152642",
+  "name": "Document Closure",
+  "style": "",
+  "workflow_state_name": "Document Closure"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-21 10:40:57.154403",
+  "name": "Team Lead Closure",
+  "style": "",
+  "workflow_state_name": "Team Lead Closure"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-21 10:40:57.158596",
+  "name": "Finance Closure",
+  "style": "",
+  "workflow_state_name": "Finance Closure"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-21 10:40:57.160243",
+  "name": "CEO Closure",
+  "style": "",
+  "workflow_state_name": "CEO Closure"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-21 17:37:03.553668",
+  "name": "Resumed",
+  "style": "",
+  "workflow_state_name": "Resumed"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-21 17:37:03.620037",
+  "name": "Termination Executed",
+  "style": "",
+  "workflow_state_name": "Termination Executed"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-28 16:05:07.756007",
+  "name": "Contract Issued",
+  "style": "",
+  "workflow_state_name": "Contract Issued"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-28 16:05:07.837384",
+  "name": "Signed by Consultant",
+  "style": "",
+  "workflow_state_name": "Signed by Consultant"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
   "modified": "2026-06-16 10:59:51.501042",
   "name": "Send for Final Approval",
   "style": "",
@@ -272,15 +398,6 @@
  {
   "docstatus": 0,
   "doctype": "Workflow State",
-  "icon": "ok-sign",
-  "modified": "2026-05-14 15:44:47.361695",
-  "name": "Approved",
-  "style": "Success",
-  "workflow_state_name": "Approved"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
   "icon": "",
   "modified": "2026-06-26 13:49:13.047954",
   "name": "Objectives Rejected",
@@ -448,5 +565,149 @@
   "name": "Draft",
   "style": "Primary",
   "workflow_state_name": "Draft"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-19 13:17:39.858128",
+  "name": "Pending Legal Review",
+  "style": "Primary",
+  "workflow_state_name": "Pending Legal Review"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-19 13:17:39.864024",
+  "name": "Pending HR Review",
+  "style": "Primary",
+  "workflow_state_name": "Pending HR Review"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-19 13:17:39.865611",
+  "name": "Pending CEO Review",
+  "style": "Primary",
+  "workflow_state_name": "Pending CEO Review"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-19 13:17:39.868454",
+  "name": "Executed",
+  "style": "Success",
+  "workflow_state_name": "Executed"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-21 10:40:57.136456",
+  "name": "Termination Requested",
+  "style": "",
+  "workflow_state_name": "Termination Requested"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-21 10:40:57.139676",
+  "name": "Termination Under TL Review",
+  "style": "",
+  "workflow_state_name": "Termination Under TL Review"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-21 10:40:57.141813",
+  "name": "Termination Under Legal Review",
+  "style": "",
+  "workflow_state_name": "Termination Under Legal Review"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-21 10:40:57.147638",
+  "name": "Termination Under CEO Review",
+  "style": "",
+  "workflow_state_name": "Termination Under CEO Review"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-21 10:40:57.149352",
+  "name": "Termination Pending Client Comm",
+  "style": "",
+  "workflow_state_name": "Termination Pending Client Comm"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-21 10:40:57.156592",
+  "name": "Legal Closure",
+  "style": "",
+  "workflow_state_name": "Legal Closure"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-21 17:37:03.622433",
+  "name": "Closure Initiated",
+  "style": "",
+  "workflow_state_name": "Closure Initiated"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "ok-sign",
+  "modified": "2026-05-14 15:44:47.361695",
+  "name": "Approved",
+  "style": "Success",
+  "workflow_state_name": "Approved"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-30 11:09:27.119765",
+  "name": "Revision Pending CEO Approval",
+  "style": "",
+  "workflow_state_name": "Revision Pending CEO Approval"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-30 11:18:17.196417",
+  "name": "Revision Rejected",
+  "style": "",
+  "workflow_state_name": "Revision Rejected"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-19 13:17:39.784053",
+  "name": "Under Team Lead Review",
+  "style": "Primary",
+  "workflow_state_name": "Under Team Lead Review"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-09-30 11:09:27.056909",
+  "name": "Revision in Progress",
+  "style": "",
+  "workflow_state_name": "Revision in Progress"
  }
 ]

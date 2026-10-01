@@ -11,7 +11,13 @@
   "attachment",
   "approved_date",
   "approved_by",
-  "upload_date"
+  "upload_date",
+  "document_number",
+  "version",
+  "effective_from",
+  "signed_by_client",
+  "signed_by_organisation",
+  "remarks"
  ],
  "fields": [
   {
@@ -22,7 +28,8 @@
   {
    "fieldname": "document_type",
    "fieldtype": "Select",
-   "label": "Document Type"
+   "label": "Document Type",
+   "options": "Original Contract\nOriginal Budget\nStatement / Scope of Work\nClient PO\nProposal\nAmendment\nExtension Letter\nNo-Cost Extension Letter\nChange Order\nLegal Correspondence\nOther\nContract Agreement\nBudget Document\nExtension\nTermination Document"
   },
   {
    "fieldname": "attachment",
@@ -43,13 +50,50 @@
    "fieldname": "upload_date",
    "fieldtype": "Date",
    "label": "Upload Date"
+  },
+  {
+   "fieldname": "document_number",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Document Number"
+  },
+  {
+   "fieldname": "version",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Version"
+  },
+  {
+   "fieldname": "effective_from",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Effective From"
+  },
+  {
+   "default": "0",
+   "fieldname": "signed_by_client",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Signed By Client"
+  },
+  {
+   "default": "0",
+   "fieldname": "signed_by_organisation",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Signed By Organisation"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Small Text",
+   "label": "Remarks"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-09-03 13:15:12.464471",
+ "modified": "2026-09-21 10:35:26.412622",
  "modified_by": "Administrator",
  "module": "Access Custom",
  "name": "Test Document Tracking",

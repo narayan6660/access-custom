@@ -17,26 +17,31 @@
   {
    "fieldname": "name1",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Name"
   },
   {
    "fieldname": "designation",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Designation"
   },
   {
    "fieldname": "organisation_name",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Organisation Name"
   },
   {
    "fieldname": "phone_no",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Phone No "
   },
   {
    "fieldname": "email_id",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Email Id"
   },
   {
@@ -49,7 +54,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-06-11 12:34:34.510117",
+ "modified": "2026-09-22 10:30:16.690492",
  "modified_by": "Administrator",
  "module": "Access Custom",
  "name": "Emp Docs Referee Details",

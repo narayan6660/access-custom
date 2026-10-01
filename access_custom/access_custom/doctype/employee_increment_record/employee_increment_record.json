@@ -8,6 +8,7 @@
  "field_order": [
   "entity",
   "date_of_issue",
+  "current_annual_salary",
   "increment_percentage",
   "currency",
   "revised_annual_salary",
@@ -27,25 +28,36 @@
    "label": "Date of Issue"
   },
   {
+   "fieldname": "current_annual_salary",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Current Annual Salary",
+   "options": "currency"
+  },
+  {
    "fieldname": "increment_percentage",
    "fieldtype": "Percent",
+   "in_list_view": 1,
    "label": "Increment Percentage"
   },
   {
    "fieldname": "currency",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Currency",
    "options": "Currency"
   },
   {
    "fieldname": "revised_annual_salary",
    "fieldtype": "Currency",
+   "in_list_view": 1,
    "label": "Revised Annual Salary",
    "options": "Currency"
   },
   {
    "fieldname": "increment_letter_document",
    "fieldtype": "Attach",
+   "in_list_view": 1,
    "label": "Increment Letter Document"
   }
  ],
@@ -53,7 +65,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-02-26 11:17:12.243857",
+ "modified": "2026-09-22 10:44:07.957640",
  "modified_by": "Administrator",
  "module": "Access Custom",
  "name": "Employee Increment Record",

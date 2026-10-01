@@ -3,7 +3,7 @@
  "allow_import": 1,
  "allow_rename": 1,
  "autoname": "TEST-.YYYY.-.#####",
- "creation": "2026-08-20 16:25:20.494352",
+ "creation": "2026-09-24 16:26:02.039176",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
@@ -92,6 +92,7 @@
   "amended_from",
   "contract_status",
   "column_break_0pyk",
+  "commenced_on",
   "signed_by_company",
   "documentation_tab",
   "document_tracking_section",
@@ -99,7 +100,65 @@
   "milestone_tracking_section",
   "project_milestones",
   "financial_tracking_section",
-  "financial_schedule"
+  "financial_schedule",
+  "current_contract_value",
+  "contract_signing_date",
+  "effective_date",
+  "current_end_date",
+  "current_version",
+  "renewal_required",
+  "renewal_status",
+  "section_break_timeline_tree",
+  "timeline_html",
+  "section_break_on_hold",
+  "hold_date",
+  "hold_requested_by",
+  "column_break_hold1",
+  "expected_resume_date",
+  "actual_resume_date",
+  "impact_on_end_date",
+  "column_break_hold2",
+  "hold_approved_by",
+  "hold_supporting_document",
+  "hold_reason",
+  "section_break_termination",
+  "termination_type",
+  "termination_notice_date",
+  "effective_termination_date",
+  "column_break_term1",
+  "financial_settlement_required",
+  "outstanding_payment",
+  "final_settlement_amount",
+  "data_handover_required",
+  "column_break_term2",
+  "termination_approved_by",
+  "termination_supporting_document",
+  "termination_reason",
+  "outstanding_deliverables",
+  "assets_to_be_returned",
+  "section_break_closure",
+  "closure_date",
+  "closure_deliverables_completed",
+  "closure_final_invoice_submitted",
+  "closure_payments_received",
+  "column_break_close1",
+  "closure_reconciliation_completed",
+  "closure_assets_returned",
+  "closure_client_acceptance",
+  "column_break_close2",
+  "closure_final_report_submitted",
+  "closure_documents_archived",
+  "closure_obligations_cleared",
+  "closure_notes",
+  "contract_type",
+  "donor_funding_agency",
+  "department",
+  "contract_owner",
+  "hold_financial_impact",
+  "hold_scope_impact",
+  "contract_resources",
+  "hold_requested_by_name",
+  "contract_owner_name"
  ],
  "fields": [
   {
@@ -121,11 +180,12 @@
   {
    "fieldname": "project_id_by_customer",
    "fieldtype": "Data",
-   "label": "Project Id By Customer"
+   "label": "Contract Reference No."
   },
   {
    "fieldname": "project_title",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Project Title",
    "reqd": 1
   },
@@ -136,6 +196,7 @@
   {
    "fieldname": "party_name",
    "fieldtype": "Dynamic Link",
+   "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Customer Id",
    "options": "party_type",
@@ -154,15 +215,15 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "hidden": 1,
-   "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Status",
    "no_copy": 1,
-   "options": "Unsigned\nActive\nInactive"
+   "options": "\nDraft\nPending Team Lead Approval\nPending Level 2.1 Legal Approval\nPending Level 2.2 Finance Approval\nPending Level 2.3 HR Approval\nPending CEO Approval\nIn Progress\nCommenced\nUnder Amendment Process\nUnder On Hold Process\nOn Hold\nUnder Termination Process\nTerminated\nUnder Closure Process\nClosed"
   },
   {
    "fieldname": "project_currency",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Project Currency",
    "options": "Currency",
    "reqd": 1
@@ -193,8 +254,17 @@
   {
    "fieldname": "project_budget",
    "fieldtype": "Currency",
-   "label": "Project Budget",
+   "in_list_view": 1,
+   "label": "Original Contract Value",
    "reqd": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "current_contract_value",
+   "fieldtype": "Currency",
+   "label": "Current Contract Value (incl. Amendments)",
+   "options": "project_currency",
+   "read_only": 1
   },
   {
    "fieldname": "project_cost",
@@ -269,10 +339,23 @@
   {
    "fieldname": "start_date",
    "fieldtype": "Date",
-   "label": "Start Date",
+   "label": "Original Start Date",
    "reqd": 1
   },
   {
+   "allow_on_submit": 1,
+   "fieldname": "contract_signing_date",
+   "fieldtype": "Date",
+   "label": "Contract Signing Date"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "effective_date",
+   "fieldtype": "Date",
+   "label": "Effective Date"
+  },
+  {
+   "allow_on_submit": 1,
    "fieldname": "project_tenure",
    "fieldtype": "Data",
    "label": "Project Tenure"
@@ -284,8 +367,23 @@
   {
    "fieldname": "end_date",
    "fieldtype": "Date",
-   "label": "End Date",
+   "label": "Original End Date",
    "reqd": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "current_end_date",
+   "fieldtype": "Date",
+   "label": "Current End Date (incl. Extensions)",
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "1.0",
+   "fieldname": "current_version",
+   "fieldtype": "Data",
+   "label": "Current Version",
+   "read_only": 1
   },
   {
    "fieldname": "renewal_date",
@@ -293,10 +391,28 @@
    "label": "Renewal Date"
   },
   {
+   "allow_on_submit": 1,
+   "default": "No",
+   "fieldname": "renewal_required",
+   "fieldtype": "Select",
+   "label": "Renewal Required",
+   "options": "No\nYes"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "Not Started",
+   "depends_on": "eval:doc.renewal_required=='Yes'",
+   "fieldname": "renewal_status",
+   "fieldtype": "Select",
+   "label": "Renewal Status",
+   "options": "Not Started\nUnder Discussion\nRenewal in Progress\nRenewed\nNot Renewed"
+  },
+  {
    "fieldname": "column_break_yqlo",
    "fieldtype": "Column Break"
   },
   {
+   "depends_on": "eval:doc.renewal_required=='Yes'",
    "fieldname": "expiry_alert",
    "fieldtype": "Select",
    "label": "Expiry Alert",
@@ -358,7 +474,6 @@
    "allow_on_submit": 1,
    "fieldname": "signed_on",
    "fieldtype": "Datetime",
-   "in_list_view": 1,
    "label": "Signed On",
    "no_copy": 1
   },
@@ -371,7 +486,6 @@
   {
    "fieldname": "contract_terms",
    "fieldtype": "Text Editor",
-   "in_list_view": 1,
    "label": "Contract Terms"
   },
   {
@@ -551,7 +665,7 @@
    "fieldname": "contract_status",
    "fieldtype": "Select",
    "label": "Contract Status",
-   "options": "Draft\nIn Progress\nCommenced\nOn Hold\nCompleted\nClosed\nTerminated"
+   "options": "Draft\nUnder Review\nPending Approval\nPending Signature\nActive\nOn Hold\nSuspended\nExpired\nRenewal in Progress\nRenewed\nTerminated\nCancelled\nClosed\nIn Progress\nCommenced\nCompleted"
   },
   {
    "fieldname": "column_break_0pyk",
@@ -602,12 +716,333 @@
    "fieldtype": "Table",
    "label": "Financial Schedule",
    "options": "Test Financial Tracking"
+  },
+  {
+   "fieldname": "section_break_timeline_tree",
+   "fieldtype": "Section Break",
+   "label": "Contract Version & Amendment Timeline"
+  },
+  {
+   "fieldname": "timeline_html",
+   "fieldtype": "HTML",
+   "label": "Timeline View"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_on_hold",
+   "fieldtype": "Section Break",
+   "label": "On Hold Details"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "hold_date",
+   "fieldtype": "Date",
+   "label": "Hold Date"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "hold_requested_by",
+   "fieldtype": "Link",
+   "label": "Hold Requested By",
+   "options": "User"
+  },
+  {
+   "fetch_from": "hold_requested_by.employee_name",
+   "fieldname": "hold_requested_by_name",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Hold Requested By Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_hold1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "expected_resume_date",
+   "fieldtype": "Date",
+   "label": "Expected Resume Date"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "actual_resume_date",
+   "fieldtype": "Date",
+   "label": "Actual Resume Date"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "impact_on_end_date",
+   "fieldtype": "Int",
+   "label": "Impact on End Date (Days)"
+  },
+  {
+   "fieldname": "column_break_hold2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "hold_approved_by",
+   "fieldtype": "Link",
+   "label": "Hold Approved By",
+   "options": "User"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "hold_supporting_document",
+   "fieldtype": "Attach",
+   "label": "Hold Supporting Document"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "hold_reason",
+   "fieldtype": "Small Text",
+   "label": "Hold Reason"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_termination",
+   "fieldtype": "Section Break",
+   "label": "Termination / Cancellation Details"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "termination_type",
+   "fieldtype": "Select",
+   "label": "Termination Type",
+   "options": "Client Termination\nOrganisation Termination\nMutual Termination\nTermination for Cause\nTermination for Convenience"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "termination_notice_date",
+   "fieldtype": "Date",
+   "label": "Termination Notice Date"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "effective_termination_date",
+   "fieldtype": "Date",
+   "label": "Effective Termination Date"
+  },
+  {
+   "fieldname": "column_break_term1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "financial_settlement_required",
+   "fieldtype": "Check",
+   "label": "Financial Settlement Required"
+  },
+  {
+   "allow_on_submit": 1,
+   "depends_on": "eval:doc.financial_settlement_required==1",
+   "fieldname": "outstanding_payment",
+   "fieldtype": "Currency",
+   "label": "Outstanding Payment"
+  },
+  {
+   "allow_on_submit": 1,
+   "depends_on": "eval:doc.financial_settlement_required==1",
+   "fieldname": "final_settlement_amount",
+   "fieldtype": "Currency",
+   "label": "Final Settlement Amount"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "data_handover_required",
+   "fieldtype": "Check",
+   "label": "Data Handover Required"
+  },
+  {
+   "fieldname": "column_break_term2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "termination_approved_by",
+   "fieldtype": "Link",
+   "label": "Termination Approved By",
+   "options": "User"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "termination_supporting_document",
+   "fieldtype": "Attach",
+   "label": "Termination Supporting Document"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "termination_reason",
+   "fieldtype": "Small Text",
+   "label": "Termination Reason"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "outstanding_deliverables",
+   "fieldtype": "Small Text",
+   "label": "Outstanding Deliverables"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "assets_to_be_returned",
+   "fieldtype": "Small Text",
+   "label": "Assets to be Returned"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_closure",
+   "fieldtype": "Section Break",
+   "label": "Contract Closure Checklist"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "closure_date",
+   "fieldtype": "Date",
+   "label": "Closure Date"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "closure_deliverables_completed",
+   "fieldtype": "Check",
+   "label": "All deliverables completed"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "closure_final_invoice_submitted",
+   "fieldtype": "Check",
+   "label": "Final invoice submitted"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "closure_payments_received",
+   "fieldtype": "Check",
+   "label": "Payments received"
+  },
+  {
+   "fieldname": "column_break_close1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "closure_reconciliation_completed",
+   "fieldtype": "Check",
+   "label": "Financial reconciliation completed"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "closure_assets_returned",
+   "fieldtype": "Check",
+   "label": "Assets returned"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "closure_client_acceptance",
+   "fieldtype": "Check",
+   "label": "Client acceptance received"
+  },
+  {
+   "fieldname": "column_break_close2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "closure_final_report_submitted",
+   "fieldtype": "Check",
+   "label": "Final report submitted"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "closure_documents_archived",
+   "fieldtype": "Check",
+   "label": "Contract documents archived"
+  },
+  {
+   "allow_on_submit": 1,
+   "default": "0",
+   "fieldname": "closure_obligations_cleared",
+   "fieldtype": "Check",
+   "label": "Outstanding obligations cleared"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "closure_notes",
+   "fieldtype": "Small Text",
+   "label": "Closure Audit Notes"
+  },
+  {
+   "fieldname": "contract_type",
+   "fieldtype": "Select",
+   "label": "Contract Type",
+   "options": "Consulting Agreement\nGrant Agreement\nService Agreement\nMemorandum of Understanding\nFramework Agreement\nImplementation Agreement\nSubcontract\nPartnership Agreement\nVendor Agreement\nOther"
+  },
+  {
+   "fieldname": "donor_funding_agency",
+   "fieldtype": "Link",
+   "label": "Donor / Funding Agency",
+   "options": "Customer"
+  },
+  {
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "label": "Department",
+   "options": "Department"
+  },
+  {
+   "fieldname": "contract_owner",
+   "fieldtype": "Link",
+   "ignore_user_permissions": 1,
+   "label": "Contract Owner",
+   "options": "Employee"
+  },
+  {
+   "fetch_from": "contract_owner.employee_name",
+   "fieldname": "contract_owner_name",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Contract Owner Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "hold_financial_impact",
+   "fieldtype": "Currency",
+   "label": "Financial Impact"
+  },
+  {
+   "fieldname": "hold_scope_impact",
+   "fieldtype": "Small Text",
+   "label": "Scope Impact"
+  },
+  {
+   "fieldname": "contract_resources",
+   "fieldtype": "Table",
+   "label": "Contract Resources",
+   "options": "Contract Resource"
+  },
+  {
+   "allow_on_submit": 1,
+   "description": "Date and time when the contract was commenced",
+   "fieldname": "commenced_on",
+   "fieldtype": "Datetime",
+   "label": "Commenced Date & Time",
+   "no_copy": 1,
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-09-03 10:38:25.042384",
+ "modified": "2026-09-26 14:29:50.355048",
  "modified_by": "Administrator",
  "module": "Access Custom",
  "name": "Test Customer Contract",
@@ -687,10 +1122,34 @@
    "share": 1,
    "submit": 1,
    "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Employee",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "All",
+   "share": 1,
+   "write": 1
   }
  ],
  "row_format": "Dynamic",
- "search_fields": "party_type, party_name, contract_template",
+ "search_fields": "party_name, customer_name, project_title, project_currency, status",
  "show_name_in_global_search": 1,
  "sort_field": "modified",
  "sort_order": "DESC",

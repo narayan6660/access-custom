@@ -1,0 +1,731 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2026-09-28 15:10:19.039564",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "status",
+  "section_a",
+  "request_id",
+  "request_date",
+  "requesting_organization",
+  "requesting_department",
+  "col_break_a",
+  "team_lead",
+  "project_manager",
+  "project",
+  "project_contract",
+  "funding_source",
+  "reason_for_engagement",
+  "section_b",
+  "existing_consultant",
+  "email_id",
+  "col_break_b1",
+  "consultant_id",
+  "contact_number",
+  "col_break_b2",
+  "consultant_name",
+  "area_of_expertise",
+  "col_break_b3",
+  "consultant_cv",
+  "consultant_address",
+  "section_c",
+  "engagement_type",
+  "work_arrangement",
+  "work_location",
+  "initial_tenure_value",
+  "tenure_unit",
+  "proposed_start_date",
+  "proposed_end_date",
+  "col_break_c",
+  "compensation_type",
+  "compensation_amount",
+  "currency",
+  "payment_frequency",
+  "maximum_monthly_amount",
+  "total_contract_value",
+  "gstin_number",
+  "sec_break_expenses",
+  "expenses_allowed",
+  "section_d",
+  "project_allocations",
+  "total_allocation_percent",
+  "section_e",
+  "role",
+  "col_break_e1",
+  "designation",
+  "sec_break_e2",
+  "contract_template",
+  "col_break_e2",
+  "reporting_manager",
+  "sec_break_e_sow",
+  "scope_summary",
+  "key_responsibilities",
+  "deliverables",
+  "milestones",
+  "expected_outputs",
+  "performance_acceptance_criteria",
+  "section_f",
+  "team_lead_approver",
+  "col_break_f1_1",
+  "team_lead_decision",
+  "col_break_f1_2",
+  "team_lead_remarks",
+  "sec_break_f2",
+  "hr_approver",
+  "col_break_f2_1",
+  "hr_decision",
+  "col_break_f2_2",
+  "hr_remarks",
+  "sec_break_f3",
+  "ceo_approver",
+  "col_break_f3_1",
+  "ceo_decision",
+  "col_break_f3_2",
+  "ceo_remarks",
+  "section_g",
+  "consultant_signed_contract",
+  "consultant_signed_date",
+  "consultant_received_date",
+  "col_break_g",
+  "final_executed_contract",
+  "countersigned_date",
+  "sent_to_consultant_date",
+  "section_rfp_summary",
+  "organization",
+  "project_name",
+  "grade",
+  "contract_type",
+  "contract_tenure",
+  "start_date",
+  "end_date",
+  "budget_line_item",
+  "proposed_fee",
+  "scope_deliverables_summary",
+  "justification",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "default": "CC-.YYYY.-.#####.",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Series",
+   "options": "CC-.YYYY.-.#####.\nCC-.#####.\n.#####."
+  },
+  {
+   "default": "Draft",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Draft\nPending Team Lead Approval\nReturned for Revision (Team Lead)\nPending HR Review\nReturned for Revision (HR)\nPending CEO Approval\nReturned for Revision (CEO)\nCEO Approved\nContract Generated\nAwaiting Consultant Signature\nSigned by Consultant\nActive\nExpired\nTerminated\nClosed\nContract Issued\nReturned for Revision\nRejected",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_a",
+   "fieldtype": "Section Break",
+   "label": "Section A \u2014 Request Details"
+  },
+  {
+   "fieldname": "request_id",
+   "fieldtype": "Data",
+   "label": "Request ID",
+   "read_only": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "request_date",
+   "fieldtype": "Date",
+   "label": "Request Date"
+  },
+  {
+   "fieldname": "requesting_organization",
+   "fieldtype": "Link",
+   "label": "Requesting Organization",
+   "options": "Company"
+  },
+  {
+   "fieldname": "requesting_department",
+   "fieldtype": "Link",
+   "label": "Requesting Department",
+   "options": "Department"
+  },
+  {
+   "fieldname": "col_break_a",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "team_lead",
+   "fieldtype": "Link",
+   "label": "Team Lead",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "project_manager",
+   "fieldtype": "Link",
+   "label": "Project Manager",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "label": "Project",
+   "options": "Project"
+  },
+  {
+   "fieldname": "project_contract",
+   "fieldtype": "Data",
+   "label": "Project Contract"
+  },
+  {
+   "fieldname": "funding_source",
+   "fieldtype": "Select",
+   "label": "Funding Source",
+   "options": "Grant\nProject\nOverhead"
+  },
+  {
+   "fieldname": "reason_for_engagement",
+   "fieldtype": "Small Text",
+   "label": "Reason for Engagement"
+  },
+  {
+   "fieldname": "section_b",
+   "fieldtype": "Section Break",
+   "label": "Section B \u2014 Consultant"
+  },
+  {
+   "default": "No",
+   "fieldname": "existing_consultant",
+   "fieldtype": "Select",
+   "label": "Existing Consultant ?",
+   "options": "No\nYes"
+  },
+  {
+   "fieldname": "email_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Email",
+   "options": "Email"
+  },
+  {
+   "fieldname": "col_break_b1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.existing_consultant=='Yes'",
+   "fieldname": "consultant_id",
+   "fieldtype": "Link",
+   "label": "Consultant ID",
+   "options": "Consultant Master"
+  },
+  {
+   "fieldname": "contact_number",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Mobile"
+  },
+  {
+   "fieldname": "col_break_b2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "consultant_name",
+   "fieldtype": "Data",
+   "in_global_search": 1,
+   "in_list_view": 1,
+   "label": "Consultant Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "area_of_expertise",
+   "fieldtype": "Data",
+   "label": "Area of Expertise"
+  },
+  {
+   "fieldname": "col_break_b3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "consultant_cv",
+   "fieldtype": "Attach",
+   "label": "Consultant CV (PDF upload)"
+  },
+  {
+   "fieldname": "consultant_address",
+   "fieldtype": "Small Text",
+   "label": "Address"
+  },
+  {
+   "fieldname": "section_c",
+   "fieldtype": "Section Break",
+   "label": "Section C \u2014 Engagement Details"
+  },
+  {
+   "default": "Full-Time",
+   "fieldname": "engagement_type",
+   "fieldtype": "Select",
+   "label": "Engagement Type",
+   "options": "Full-Time\nPart-Time"
+  },
+  {
+   "default": "On-site",
+   "fieldname": "work_arrangement",
+   "fieldtype": "Select",
+   "label": "Work Arrangement",
+   "options": "Remote\nOn-site\nHybrid"
+  },
+  {
+   "fieldname": "work_location",
+   "fieldtype": "Data",
+   "label": "Work Location"
+  },
+  {
+   "default": "6",
+   "fieldname": "initial_tenure_value",
+   "fieldtype": "Int",
+   "label": "Initial Tenure"
+  },
+  {
+   "default": "Months",
+   "fieldname": "tenure_unit",
+   "fieldtype": "Select",
+   "label": "Tenure Unit",
+   "options": "Months\nDays\nWeeks\nYears"
+  },
+  {
+   "fieldname": "proposed_start_date",
+   "fieldtype": "Date",
+   "label": "Proposed Start Date"
+  },
+  {
+   "fieldname": "proposed_end_date",
+   "fieldtype": "Date",
+   "label": "Proposed End Date (Auto-calculate)"
+  },
+  {
+   "fieldname": "col_break_c",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Monthly",
+   "fieldname": "compensation_type",
+   "fieldtype": "Select",
+   "label": "Compensation Type",
+   "options": "Monthly\nDaily\nHourly\nProject Fee\nMilestone Based\nRetainer"
+  },
+  {
+   "fieldname": "compensation_amount",
+   "fieldtype": "Currency",
+   "label": "Compensation Amount"
+  },
+  {
+   "default": "INR",
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "Currency",
+   "options": "Currency"
+  },
+  {
+   "default": "Monthly",
+   "fieldname": "payment_frequency",
+   "fieldtype": "Select",
+   "label": "Payment Frequency",
+   "options": "Monthly\nMilestone Based\nQuarterly\nLump Sum"
+  },
+  {
+   "fieldname": "maximum_monthly_amount",
+   "fieldtype": "Currency",
+   "label": "Maximum Monthly Amount"
+  },
+  {
+   "fieldname": "total_contract_value",
+   "fieldtype": "Currency",
+   "label": "Total Contract Value"
+  },
+  {
+   "fieldname": "gstin_number",
+   "fieldtype": "Data",
+   "label": "GST # if applicable"
+  },
+  {
+   "fieldname": "sec_break_expenses",
+   "fieldtype": "Section Break",
+   "label": "Expenses Allowed"
+  },
+  {
+   "fieldname": "expenses_allowed",
+   "fieldtype": "Table",
+   "label": "Expenses Allowed",
+   "options": "Consultant Expense Item"
+  },
+  {
+   "fieldname": "section_d",
+   "fieldtype": "Section Break",
+   "label": "Section D \u2014 Project Allocation"
+  },
+  {
+   "fieldname": "project_allocations",
+   "fieldtype": "Table",
+   "label": "Project Allocations",
+   "options": "Project Allocation Item"
+  },
+  {
+   "default": "0",
+   "fieldname": "total_allocation_percent",
+   "fieldtype": "Percent",
+   "label": "Total Allocation % (Auto-calculate)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_e",
+   "fieldtype": "Section Break",
+   "label": "Section E \u2014 Scope of Work (Appendix)"
+  },
+  {
+   "fieldname": "role",
+   "fieldtype": "Data",
+   "label": "Role"
+  },
+  {
+   "fieldname": "col_break_e1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "designation",
+   "fieldtype": "Data",
+   "label": "Designation"
+  },
+  {
+   "fieldname": "sec_break_e2",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "contract_template",
+   "fieldtype": "Select",
+   "label": "Contract Template",
+   "options": "AHS_Contract_Extension_Letter\nRFP_Form\nAQH_Intern_Letter_Non_Financial\nQH_Offer_Letter\nAH_Contract_Extension_Letter\nQH_Service_Contract_for_Vendors\nAHUS_Contract_Extension_Letter\nAQH_Service_Contract\nQH_Consultant_Contract\nAQH_Consultant_Contract\nAHUS_Service_Contract\nAH_Sub_Service_Contract_BMGF_Grants\nAQH_Offer_Letter\nAH_Partime_Consultant_Contract\nQH_Contract_Extension_Letter\nAH_Subcontract_Extension_Amendment\nAHUS_Consultant_Contract\nAHS_Consultant_Contract\nAH_Services_Contract_Vendor\nQH_Paid_Internship_Letter\nAHS_Employment_Contract\nAQH_Contract_Extension_Letter\nAH_Full_Time_Consultant_Contract\nAH_Subcontract_No_Cost_Extension\nQH_Employment_Agreement\nAH_Offer_Letter\nServiceOrder\nAHS_Service_Contract\nAH_Charity_Grant_Agreement\nAHS_Services_Contract_Fintech_Health\nQH_Advisory_Services_Agreement_HCS\nQH_Volunteer_LOI\nAHUS_Fulltime_Employement_Agreement\nAHP_Contract_Extension_Letter\nAH_Advisory_Service_Agreement\nAHP_Consultant_Contract"
+  },
+  {
+   "fieldname": "col_break_e2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "reporting_manager",
+   "fieldtype": "Link",
+   "label": "Reporting Manager",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "sec_break_e_sow",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "scope_summary",
+   "fieldtype": "Text",
+   "label": "Scope Summary"
+  },
+  {
+   "fieldname": "key_responsibilities",
+   "fieldtype": "Text",
+   "label": "Key Responsibilities"
+  },
+  {
+   "fieldname": "deliverables",
+   "fieldtype": "Text",
+   "label": "Deliverables"
+  },
+  {
+   "fieldname": "milestones",
+   "fieldtype": "Text",
+   "label": "Milestones"
+  },
+  {
+   "fieldname": "expected_outputs",
+   "fieldtype": "Text",
+   "label": "Expected Outputs"
+  },
+  {
+   "fieldname": "performance_acceptance_criteria",
+   "fieldtype": "Text",
+   "label": "Performance / Acceptance Criteria"
+  },
+  {
+   "fieldname": "section_f",
+   "fieldtype": "Section Break",
+   "label": "Section F \u2014 Approval Section"
+  },
+  {
+   "fieldname": "team_lead_approver",
+   "fieldtype": "Link",
+   "label": "Level 1 Team Lead Approver",
+   "options": "User"
+  },
+  {
+   "fieldname": "col_break_f1_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Pending",
+   "fieldname": "team_lead_decision",
+   "fieldtype": "Select",
+   "label": "Team Lead Decision",
+   "options": "Pending\nApprove\nReturn for Revision\nReject"
+  },
+  {
+   "fieldname": "col_break_f1_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "team_lead_remarks",
+   "fieldtype": "Small Text",
+   "label": "Team Lead Remarks"
+  },
+  {
+   "fieldname": "sec_break_f2",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "hr_approver",
+   "fieldtype": "Link",
+   "label": "Level 2 HR Approver",
+   "options": "User"
+  },
+  {
+   "fieldname": "col_break_f2_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Pending",
+   "fieldname": "hr_decision",
+   "fieldtype": "Select",
+   "label": "HR Decision",
+   "options": "Pending\nApprove\nReturn for Revision\nReject"
+  },
+  {
+   "fieldname": "col_break_f2_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "hr_remarks",
+   "fieldtype": "Small Text",
+   "label": "HR Remarks"
+  },
+  {
+   "fieldname": "sec_break_f3",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "ceo_approver",
+   "fieldtype": "Link",
+   "label": "Level 3 CEO Approver",
+   "options": "User"
+  },
+  {
+   "fieldname": "col_break_f3_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Pending",
+   "fieldname": "ceo_decision",
+   "fieldtype": "Select",
+   "label": "CEO Decision",
+   "options": "Pending\nApprove\nReturn for Revision\nReject"
+  },
+  {
+   "fieldname": "col_break_f3_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ceo_remarks",
+   "fieldtype": "Small Text",
+   "label": "CEO Remarks"
+  },
+  {
+   "fieldname": "section_g",
+   "fieldtype": "Section Break",
+   "label": "Section G \u2014 Consultant Signed Contract"
+  },
+  {
+   "fieldname": "consultant_signed_contract",
+   "fieldtype": "Attach",
+   "label": "Consultant Signed Contract (Upload PDF)"
+  },
+  {
+   "fieldname": "consultant_signed_date",
+   "fieldtype": "Date",
+   "label": "Consultant Signed Date"
+  },
+  {
+   "fieldname": "consultant_received_date",
+   "fieldtype": "Date",
+   "label": "Received Date"
+  },
+  {
+   "fieldname": "col_break_g",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "final_executed_contract",
+   "fieldtype": "Attach",
+   "label": "Final Executed Contract (Upload PDF)"
+  },
+  {
+   "fieldname": "countersigned_date",
+   "fieldtype": "Date",
+   "label": "Management Countersigned Date"
+  },
+  {
+   "fieldname": "sent_to_consultant_date",
+   "fieldtype": "Date",
+   "label": "Sent to Consultant Date"
+  },
+  {
+   "fieldname": "section_rfp_summary",
+   "fieldtype": "Section Break",
+   "label": "Additional RFP Reference Details",
+   "collapsible": 1,
+   "collapsed": 1
+  },
+  {
+   "fieldname": "organization",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Organization",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "project_name",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Project Name",
+   "options": "Project",
+   "reqd": 1
+  },
+  {
+   "fieldname": "grade",
+   "fieldtype": "Data",
+   "label": "Grade"
+  },
+  {
+   "default": "Full-Time",
+   "fieldname": "contract_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Type of Contract",
+   "options": "Full-Time\nPart-Time"
+  },
+  {
+   "fieldname": "contract_tenure",
+   "fieldtype": "Data",
+   "label": "Contract Tenure"
+  },
+  {
+   "fieldname": "start_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Start Date"
+  },
+  {
+   "fieldname": "end_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "End Date"
+  },
+  {
+   "fieldname": "budget_line_item",
+   "fieldtype": "Data",
+   "label": "Budget Line Item"
+  },
+  {
+   "fieldname": "proposed_fee",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Proposed Fee"
+  },
+  {
+   "fieldname": "scope_deliverables_summary",
+   "fieldtype": "Small Text",
+   "label": "Scope / Deliverables Summary"
+  },
+  {
+   "fieldname": "justification",
+   "fieldtype": "Small Text",
+   "label": "Justification"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Consultant Contract",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-09-28 15:10:19.039564",
+ "modified_by": "Administrator",
+ "module": "Access Custom",
+ "name": "Consultant Contract",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "HR Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Employee",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

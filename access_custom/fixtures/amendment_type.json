@@ -1,0 +1,308 @@
+[
+ {
+  "amendment_type": "Scope Change",
+  "category": "Scope & Service",
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 10:34:12.303660",
+  "name": "Scope Change"
+ },
+ {
+  "amendment_type": "Service Addition",
+  "category": "Scope & Service",
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 10:34:12.318067",
+  "name": "Service Addition"
+ },
+ {
+  "amendment_type": "Service Removal",
+  "category": "Scope & Service",
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 10:34:12.319819",
+  "name": "Service Removal"
+ },
+ {
+  "amendment_type": "Deliverable Change",
+  "category": "Scope & Service",
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 10:34:12.322145",
+  "name": "Deliverable Change"
+ },
+ {
+  "amendment_type": "Milestone Change",
+  "category": "Scope & Service",
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 10:34:12.324213",
+  "name": "Milestone Change"
+ },
+ {
+  "amendment_type": "Geographic/Location Change",
+  "category": "Scope & Service",
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 10:34:12.326185",
+  "name": "Geographic/Location Change"
+ },
+ {
+  "amendment_type": "Beneficiary/Target Change",
+  "category": "Scope & Service",
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 10:34:12.327623",
+  "name": "Beneficiary/Target Change"
+ },
+ {
+  "amendment_type": "Contract Extension",
+  "category": "Time",
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 10:34:12.329002",
+  "name": "Contract Extension"
+ },
+ {
+  "amendment_type": "Contract Reduction",
+  "category": "Time",
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 10:34:12.330217",
+  "name": "Contract Reduction"
+ },
+ {
+  "amendment_type": "No-Cost Extension",
+  "category": "Time",
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 10:34:12.331677",
+  "name": "No-Cost Extension"
+ },
+ {
+  "amendment_type": "Suspension",
+  "category": "Time",
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 10:34:12.332840",
+  "name": "Suspension"
+ },
+ {
+  "amendment_type": "Revised Milestone Dates",
+  "category": "Time",
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 10:34:12.334030",
+  "name": "Revised Milestone Dates"
+ },
+ {
+  "amendment_type": "Contract Value Increase",
+  "category": "Financial",
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 10:34:12.335217",
+  "name": "Contract Value Increase"
+ },
+ {
+  "amendment_type": "Contract Value Reduction",
+  "category": "Financial",
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 10:34:12.336435",
+  "name": "Contract Value Reduction"
+ },
+ {
+  "amendment_type": "Budget Reallocation",
+  "category": "Financial",
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 11:17:24.576543",
+  "name": "Budget Reallocation"
+ },
+ {
+  "amendment_type": "Cost Category Change",
+  "category": "Financial",
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 10:34:12.338889",
+  "name": "Cost Category Change"
+ },
+ {
+  "amendment_type": "Payment Schedule Change",
+  "category": "Financial",
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 10:34:12.340508",
+  "name": "Payment Schedule Change"
+ },
+ {
+  "amendment_type": "Rate Change",
+  "category": "Financial",
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 10:34:12.342296",
+  "name": "Rate Change"
+ },
+ {
+  "amendment_type": "Currency Change",
+  "category": "Financial",
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 10:34:12.343725",
+  "name": "Currency Change"
+ },
+ {
+  "amendment_type": "Staffing Change",
+  "category": "Resources",
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 10:34:12.344965",
+  "name": "Staffing Change"
+ },
+ {
+  "amendment_type": "FTE Change",
+  "category": "Resources",
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 10:34:12.346291",
+  "name": "FTE Change"
+ },
+ {
+  "amendment_type": "Role Change",
+  "category": "Resources",
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 10:34:12.347618",
+  "name": "Role Change"
+ },
+ {
+  "amendment_type": "Personnel Cost Change",
+  "category": "Resources",
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 10:34:12.349580",
+  "name": "Personnel Cost Change"
+ },
+ {
+  "amendment_type": "Consultant Change",
+  "category": "Resources",
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 10:34:12.351064",
+  "name": "Consultant Change"
+ },
+ {
+  "amendment_type": "Governance Change",
+  "category": "Other",
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 10:34:12.352283",
+  "name": "Governance Change"
+ },
+ {
+  "amendment_type": "Reporting Change",
+  "category": "Other",
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 10:34:12.353434",
+  "name": "Reporting Change"
+ },
+ {
+  "amendment_type": "Compliance Change",
+  "category": "Other",
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 10:34:12.354655",
+  "name": "Compliance Change"
+ },
+ {
+  "amendment_type": "Other",
+  "category": "Other",
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 11:17:24.587290",
+  "name": "Other"
+ },
+ {
+  "amendment_type": "Change in Scope / Services",
+  "category": "Scope & Service",
+  "description": "Modifications to deliverables, services or scope",
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 11:17:24.573705",
+  "name": "Change in Scope / Services"
+ },
+ {
+  "amendment_type": "Timeline / Milestone Change",
+  "category": "Time",
+  "description": "Adjustment of milestone schedule or target delivery dates",
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 11:17:24.583337",
+  "name": "Timeline / Milestone Change"
+ },
+ {
+  "amendment_type": "Resource Change",
+  "category": "Resources",
+  "description": "Key personnel, staffing, or FTE allocation changes",
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 11:17:24.581682",
+  "name": "Resource Change"
+ },
+ {
+  "amendment_type": "Payment / Commercial Terms Change",
+  "category": "Financial",
+  "description": "Alteration of payment milestones, invoicing terms or rates",
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 11:17:24.585416",
+  "name": "Payment / Commercial Terms Change"
+ },
+ {
+  "amendment_type": "Cost / Contract Value Change",
+  "category": "Financial",
+  "description": "Increase or decrease in total contract value",
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 11:17:24.579201",
+  "name": "Cost / Contract Value Change"
+ },
+ {
+  "amendment_type": "Contract Extension – No Cost",
+  "category": "Time",
+  "description": "Extension of contract duration with zero cost impact",
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 11:17:24.494273",
+  "name": "Contract Extension – No Cost"
+ }
+]

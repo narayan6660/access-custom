@@ -311,10 +311,12 @@ fixtures = [
     "Client Script",
     "Server Script",
     "Custom DocPerm",
+     "Amendment Type",
     
     # UI & Global Settings
     "Website Settings",
     "Navbar Settings",
+
     
     # Workflows & Rules
     "Workflow",

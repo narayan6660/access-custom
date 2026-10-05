@@ -296,8 +296,7 @@ override_whitelisted_methods = {
 #     "Workflow",
 #     "Workflow State",
 #     "Workflow Action Master",
-#     "Document Naming Rule",
-    
+#     
 #     # Notifications & Email Configuration
 #     "Notification",
     
@@ -321,7 +320,6 @@ fixtures = [
     "Workflow",
     "Workflow State",
     "Workflow Action Master",
-    "Document Naming Rule",
     
     # Notifications & Email Configuration
     "Notification",

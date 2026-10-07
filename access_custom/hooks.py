@@ -331,7 +331,8 @@ fixtures = [
     "Custom HTML Block",
     
     # Leave Management Setup
-    "Leave Type"
+    "Leave Type", 
+    "Email Template" 
 ]
 
 

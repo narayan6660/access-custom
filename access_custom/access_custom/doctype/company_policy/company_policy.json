@@ -23,7 +23,7 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Department",
-   "options": "Human Resource\nFinance\nProcurement\nCommunications",
+   "options": "Human Resource\nFinance\nProcurement\nCommunications\nHoliday Policies",
    "reqd": 1
   },
   {

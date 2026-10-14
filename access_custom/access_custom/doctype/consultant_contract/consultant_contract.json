@@ -11,16 +11,16 @@
   "status",
   "section_a",
   "request_id",
-  "request_date",
-  "requesting_organization",
-  "requesting_department",
-  "col_break_a",
   "team_lead",
-  "project_manager",
-  "project",
-  "project_contract",
   "funding_source",
+  "col_break_a",
+  "request_date",
+  "project_manager",
   "reason_for_engagement",
+  "requesting_organization",
+  "project",
+  "requesting_department",
+  "project_contract",
   "section_b",
   "existing_consultant",
   "email_id",
@@ -35,19 +35,20 @@
   "consultant_address",
   "section_c",
   "engagement_type",
+  "col_break_c",
   "work_arrangement",
   "work_location",
-  "initial_tenure_value",
-  "tenure_unit",
   "proposed_start_date",
-  "proposed_end_date",
-  "col_break_c",
-  "compensation_type",
   "compensation_amount",
-  "currency",
-  "payment_frequency",
   "maximum_monthly_amount",
+  "proposed_end_date",
+  "currency",
   "total_contract_value",
+  "initial_tenure_value",
+  "compensation_type",
+  "expenses_allowed_multiselect",
+  "tenure_unit",
+  "payment_frequency",
   "gstin_number",
   "sec_break_expenses",
   "expenses_allowed",
@@ -87,6 +88,12 @@
   "ceo_decision",
   "col_break_f3_2",
   "ceo_remarks",
+  "sec_break_f4",
+  "final_hr_approver",
+  "col_break_f4_1",
+  "final_hr_decision",
+  "col_break_f4_2",
+  "final_hr_remarks",
   "section_g",
   "consultant_signed_contract",
   "consultant_signed_date",
@@ -125,13 +132,13 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Status",
-   "options": "Draft\nPending Team Lead Approval\nReturned for Revision (Team Lead)\nPending HR Review\nReturned for Revision (HR)\nPending CEO Approval\nReturned for Revision (CEO)\nCEO Approved\nContract Generated\nAwaiting Consultant Signature\nSigned by Consultant\nActive\nExpired\nTerminated\nClosed\nContract Issued\nReturned for Revision\nRejected",
+   "options": "Draft\nPending Team Lead Approval\nReturned for Revision (Team Lead)\nPending HR Review\nReturned for Revision (HR)\nPending CEO Approval\nReturned for Revision (CEO)\nCEO Approved\nPending Final HR Review\nApproved for Issuance\nContract Generated\nAwaiting Consultant Signature\nSigned by Consultant\nActive\nExpired\nTerminated\nClosed\nContract Issued\nReturned for Revision\nRejected",
    "read_only": 1
   },
   {
    "fieldname": "section_a",
    "fieldtype": "Section Break",
-   "label": "Section A \u2014 Request Details"
+   "label": "Section A — Request Details"
   },
   {
    "fieldname": "request_id",
@@ -164,12 +171,14 @@
   {
    "fieldname": "team_lead",
    "fieldtype": "Link",
+   "ignore_user_permissions": 1,
    "label": "Team Lead",
    "options": "Employee"
   },
   {
    "fieldname": "project_manager",
    "fieldtype": "Link",
+   "ignore_user_permissions": 1,
    "label": "Project Manager",
    "options": "Employee"
   },
@@ -198,7 +207,7 @@
   {
    "fieldname": "section_b",
    "fieldtype": "Section Break",
-   "label": "Section B \u2014 Consultant"
+   "label": "Section B — Consultant"
   },
   {
    "default": "No",
@@ -265,7 +274,7 @@
   {
    "fieldname": "section_c",
    "fieldtype": "Section Break",
-   "label": "Section C \u2014 Engagement Details"
+   "label": "Section C — Engagement Details"
   },
   {
    "default": "Full-Time",
@@ -321,6 +330,12 @@
    "options": "Monthly\nDaily\nHourly\nProject Fee\nMilestone Based\nRetainer"
   },
   {
+   "fieldname": "expenses_allowed_multiselect",
+   "fieldtype": "Data",
+   "label": "Expenses Allowed",
+   "options": null
+  },
+  {
    "fieldname": "compensation_amount",
    "fieldtype": "Currency",
    "label": "Compensation Amount"
@@ -357,18 +372,20 @@
   {
    "fieldname": "sec_break_expenses",
    "fieldtype": "Section Break",
+   "hidden": 1,
    "label": "Expenses Allowed"
   },
   {
    "fieldname": "expenses_allowed",
    "fieldtype": "Table",
+   "hidden": 1,
    "label": "Expenses Allowed",
    "options": "Consultant Expense Item"
   },
   {
    "fieldname": "section_d",
    "fieldtype": "Section Break",
-   "label": "Section D \u2014 Project Allocation"
+   "label": "Section D — Project Allocation"
   },
   {
    "fieldname": "project_allocations",
@@ -386,7 +403,7 @@
   {
    "fieldname": "section_e",
    "fieldtype": "Section Break",
-   "label": "Section E \u2014 Scope of Work (Appendix)"
+   "label": "Section E — Scope of Work (Appendix)"
   },
   {
    "fieldname": "role",
@@ -408,9 +425,9 @@
   },
   {
    "fieldname": "contract_template",
-   "fieldtype": "Select",
+   "fieldtype": "Link",
    "label": "Contract Template",
-   "options": "AHS_Contract_Extension_Letter\nRFP_Form\nAQH_Intern_Letter_Non_Financial\nQH_Offer_Letter\nAH_Contract_Extension_Letter\nQH_Service_Contract_for_Vendors\nAHUS_Contract_Extension_Letter\nAQH_Service_Contract\nQH_Consultant_Contract\nAQH_Consultant_Contract\nAHUS_Service_Contract\nAH_Sub_Service_Contract_BMGF_Grants\nAQH_Offer_Letter\nAH_Partime_Consultant_Contract\nQH_Contract_Extension_Letter\nAH_Subcontract_Extension_Amendment\nAHUS_Consultant_Contract\nAHS_Consultant_Contract\nAH_Services_Contract_Vendor\nQH_Paid_Internship_Letter\nAHS_Employment_Contract\nAQH_Contract_Extension_Letter\nAH_Full_Time_Consultant_Contract\nAH_Subcontract_No_Cost_Extension\nQH_Employment_Agreement\nAH_Offer_Letter\nServiceOrder\nAHS_Service_Contract\nAH_Charity_Grant_Agreement\nAHS_Services_Contract_Fintech_Health\nQH_Advisory_Services_Agreement_HCS\nQH_Volunteer_LOI\nAHUS_Fulltime_Employement_Agreement\nAHP_Contract_Extension_Letter\nAH_Advisory_Service_Agreement\nAHP_Consultant_Contract"
+   "options": "Contract Template"
   },
   {
    "fieldname": "col_break_e2",
@@ -419,6 +436,7 @@
   {
    "fieldname": "reporting_manager",
    "fieldtype": "Link",
+   "ignore_user_permissions": 1,
    "label": "Reporting Manager",
    "options": "Employee"
   },
@@ -459,7 +477,7 @@
   {
    "fieldname": "section_f",
    "fieldtype": "Section Break",
-   "label": "Section F \u2014 Approval Section"
+   "label": "Section F — Approval Section"
   },
   {
    "fieldname": "team_lead_approver",
@@ -474,9 +492,8 @@
   {
    "default": "Pending",
    "fieldname": "team_lead_decision",
-   "fieldtype": "Select",
-   "label": "Team Lead Decision",
-   "options": "Pending\nApprove\nReturn for Revision\nReject"
+   "fieldtype": "Data",
+   "label": "Team Lead Decision"
   },
   {
    "fieldname": "col_break_f1_2",
@@ -504,9 +521,8 @@
   {
    "default": "Pending",
    "fieldname": "hr_decision",
-   "fieldtype": "Select",
-   "label": "HR Decision",
-   "options": "Pending\nApprove\nReturn for Revision\nReject"
+   "fieldtype": "Data",
+   "label": "HR Decision"
   },
   {
    "fieldname": "col_break_f2_2",
@@ -534,9 +550,8 @@
   {
    "default": "Pending",
    "fieldname": "ceo_decision",
-   "fieldtype": "Select",
-   "label": "CEO Decision",
-   "options": "Pending\nApprove\nReturn for Revision\nReject"
+   "fieldtype": "Data",
+   "label": "CEO Decision"
   },
   {
    "fieldname": "col_break_f3_2",
@@ -548,50 +563,88 @@
    "label": "CEO Remarks"
   },
   {
+   "fieldname": "sec_break_f4",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "final_hr_approver",
+   "fieldtype": "Link",
+   "label": "Level 4 Final HR Approver",
+   "options": "User"
+  },
+  {
+   "fieldname": "col_break_f4_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Pending",
+   "fieldname": "final_hr_decision",
+   "fieldtype": "Data",
+   "label": "Final HR Decision"
+  },
+  {
+   "fieldname": "col_break_f4_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "final_hr_remarks",
+   "fieldtype": "Small Text",
+   "label": "Final HR Remarks"
+  },
+  {
    "fieldname": "section_g",
    "fieldtype": "Section Break",
-   "label": "Section G \u2014 Consultant Signed Contract"
+   "label": "Section G — Consultant Signed Contract",
+   "hidden": 1
   },
   {
    "fieldname": "consultant_signed_contract",
    "fieldtype": "Attach",
-   "label": "Consultant Signed Contract (Upload PDF)"
+   "label": "Consultant Signed Contract (Upload PDF)",
+   "hidden": 1
   },
   {
    "fieldname": "consultant_signed_date",
    "fieldtype": "Date",
-   "label": "Consultant Signed Date"
+   "label": "Consultant Signed Date",
+   "hidden": 1
   },
   {
    "fieldname": "consultant_received_date",
    "fieldtype": "Date",
-   "label": "Received Date"
+   "label": "Received Date",
+   "hidden": 1
   },
   {
    "fieldname": "col_break_g",
-   "fieldtype": "Column Break"
+   "fieldtype": "Column Break",
+   "hidden": 1
   },
   {
    "fieldname": "final_executed_contract",
    "fieldtype": "Attach",
-   "label": "Final Executed Contract (Upload PDF)"
+   "label": "Final Executed Contract (Upload PDF)",
+   "hidden": 1
   },
   {
    "fieldname": "countersigned_date",
    "fieldtype": "Date",
-   "label": "Management Countersigned Date"
+   "label": "Management Countersigned Date",
+   "hidden": 1
   },
   {
    "fieldname": "sent_to_consultant_date",
    "fieldtype": "Date",
-   "label": "Sent to Consultant Date"
+   "label": "Sent to Consultant Date",
+   "hidden": 1
   },
   {
    "fieldname": "section_rfp_summary",
    "fieldtype": "Section Break",
    "label": "Additional RFP Reference Details",
    "collapsible": 1,
-   "collapsed": 1
+   "collapsed": 1,
+   "hidden": 1
   },
   {
    "fieldname": "organization",
@@ -599,7 +652,7 @@
    "in_list_view": 1,
    "label": "Organization",
    "options": "Company",
-   "reqd": 1
+   "hidden": 1
   },
   {
    "fieldname": "project_name",
@@ -607,12 +660,13 @@
    "in_list_view": 1,
    "label": "Project Name",
    "options": "Project",
-   "reqd": 1
+   "hidden": 1
   },
   {
    "fieldname": "grade",
    "fieldtype": "Data",
-   "label": "Grade"
+   "label": "Grade",
+   "hidden": 1
   },
   {
    "default": "Full-Time",
@@ -620,45 +674,53 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Type of Contract",
-   "options": "Full-Time\nPart-Time"
+   "options": "Full-Time\nPart-Time",
+   "hidden": 1
   },
   {
    "fieldname": "contract_tenure",
    "fieldtype": "Data",
-   "label": "Contract Tenure"
+   "label": "Contract Tenure",
+   "hidden": 1
   },
   {
    "fieldname": "start_date",
    "fieldtype": "Date",
    "in_list_view": 1,
-   "label": "Start Date"
+   "label": "Start Date",
+   "hidden": 1
   },
   {
    "fieldname": "end_date",
    "fieldtype": "Date",
    "in_list_view": 1,
-   "label": "End Date"
+   "label": "End Date",
+   "hidden": 1
   },
   {
    "fieldname": "budget_line_item",
    "fieldtype": "Data",
-   "label": "Budget Line Item"
+   "label": "Budget Line Item",
+   "hidden": 1
   },
   {
    "fieldname": "proposed_fee",
    "fieldtype": "Currency",
    "in_list_view": 1,
-   "label": "Proposed Fee"
+   "label": "Proposed Fee",
+   "hidden": 1
   },
   {
    "fieldname": "scope_deliverables_summary",
    "fieldtype": "Small Text",
-   "label": "Scope / Deliverables Summary"
+   "label": "Scope / Deliverables Summary",
+   "hidden": 1
   },
   {
    "fieldname": "justification",
    "fieldtype": "Small Text",
-   "label": "Justification"
+   "label": "Justification",
+   "hidden": 1
   },
   {
    "fieldname": "amended_from",
@@ -668,7 +730,8 @@
    "options": "Consultant Contract",
    "print_hide": 1,
    "read_only": 1,
-   "search_index": 1
+   "search_index": 1,
+   "hidden": 1
   }
  ],
  "grid_page_length": 50,
@@ -720,6 +783,62 @@
    "role": "Employee",
    "share": 1,
    "write": 1
+  },
+  {
+   "role": "Contract Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 1,
+   "cancel": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "report": 1,
+   "share": 1
+  },
+  {
+   "role": "Team Lead",
+   "read": 1,
+   "write": 1,
+   "create": 0,
+   "submit": 0,
+   "cancel": 0,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "report": 1,
+   "share": 1
+  },
+  {
+   "role": "CEO Approver",
+   "read": 1,
+   "write": 1,
+   "create": 0,
+   "submit": 0,
+   "cancel": 0,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "report": 1,
+   "share": 1
+  },
+  {
+   "role": "HR User",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 1,
+   "cancel": 1,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "report": 1,
+   "share": 1
   }
  ],
  "row_format": "Dynamic",

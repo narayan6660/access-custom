@@ -2,7 +2,30 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on("Consultant Contract", {
+    onload(frm) {
+        // Inject custom scoped CSS for Consultant Contract textareas and UI badges
+        inject_consultant_contract_styles();
+        apply_section_visibility(frm);
+
+        // Pre-fill Request ID with the creator / Contract Manager's name & employee ID
+        if (frm.is_new() && (!frm.doc.request_id || frm.doc.request_id.startsWith("CC-"))) {
+            frappe.db.get_value("Employee", { "user_id": frappe.session.user }, ["name", "employee_name"]).then(r => {
+                if (r && r.message && r.message.name) {
+                    frm.set_value("request_id", `${r.message.employee_name} (${r.message.name})`);
+                } else {
+                    frm.set_value("request_id", frappe.session.user_fullname || frappe.session.user);
+                }
+            });
+        }
+    },
+
     validate(frm) {
+        if (frm.doc.project && !frm.doc.project_name) {
+            frm.doc.project_name = frm.doc.project;
+        }
+        if (frm.doc.requesting_organization && !frm.doc.organization) {
+            frm.doc.organization = frm.doc.requesting_organization;
+        }
         let v1 = validate_pdf_attachment(frm, "consultant_cv");
         let v2 = validate_pdf_attachment(frm, "consultant_signed_contract");
         let v3 = validate_pdf_attachment(frm, "final_executed_contract");
@@ -25,41 +48,258 @@ frappe.ui.form.on("Consultant Contract", {
     },
 
     refresh(frm) {
+        if (frm.wrapper) $(frm.wrapper).addClass("consultant-contract-wrapper");
+        if (frm.page && frm.page.wrapper) $(frm.page.wrapper).addClass("consultant-contract-wrapper");
+        inject_consultant_contract_styles();
+        apply_section_visibility(frm);
+        setup_leadership_queries(frm);
+        setup_expenses_allowed_multiselect(frm);
         setup_status_indicator(frm);
-        enforce_stage_approver_actions(frm);
-        setup_auto_expand_textareas(frm);
+
+        if (frm.is_new()) {
+            // New unsaved contract: hide action buttons, enable save, render progress tracker
+            if (frm.page && frm.page.actions_btn_group) {
+                frm.page.actions_btn_group.addClass("hide hidden-xl").hide();
+                frm.page.actions_btn_group.find(".dropdown-menu").empty();
+            }
+            if (frm.page && frm.page.actions && frm.page.actions.parent) {
+                frm.page.actions.parent().addClass("hide hidden-xl").hide();
+            }
+
+            frm.save_disabled = false;
+            if (typeof frm.enable_save === "function") frm.enable_save();
+            if (frm.page) {
+                frm.page.clear_primary_action();
+                frm.page.set_primary_action(__("Save"), function() {
+                    frm.save();
+                });
+            }
+
+            apply_section_visibility(frm);
+            render_contract_progress_tracker(frm);
+            setup_auto_expand_textareas(frm);
+
+            setTimeout(() => {
+                apply_section_visibility(frm);
+                render_contract_progress_tracker(frm);
+                setup_auto_expand_textareas(frm);
+            }, 80);
+            setTimeout(() => {
+                apply_section_visibility(frm);
+                render_contract_progress_tracker(frm);
+                setup_auto_expand_textareas(frm);
+            }, 250);
+            setTimeout(() => {
+                apply_section_visibility(frm);
+                render_contract_progress_tracker(frm);
+                setup_auto_expand_textareas(frm);
+            }, 600);
+
+            $(frm.wrapper).off("render_complete.cc_lock").on("render_complete.cc_lock", function() {
+                apply_section_visibility(frm);
+                render_contract_progress_tracker(frm);
+                setup_auto_expand_textareas(frm);
+            });
+            return;
+        }
+
+        // Clean up previous banners first
+        if (frm.dashboard && frm.dashboard.parent) {
+            frm.dashboard.clear_headline();
+            frm.dashboard.parent.find(".contract-rejection-banner, .contract-info-banner").remove();
+        }
+
+        // Rejection / Revision banner
+        let rejected_stage = get_contract_rejection_stage(frm);
+        if (rejected_stage) {
+            let banner_html = `
+            <div class="contract-rejection-banner" style="margin-bottom: 15px; padding: 14px 18px; background: #fef2f2; border: 1px solid #f87171; border-left: 6px solid #dc2626; border-radius: 8px; box-shadow: 0 1px 3px rgba(220, 38, 38, 0.08);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 15px; font-weight: 700; color: #dc2626; display: flex; align-items: center; gap: 6px;">
+                            <span>&#10007;</span> Consultant Contract Rejected
+                        </span>
+                        <span class="badge" style="background: #dc2626; color: #ffffff; font-size: 11px; padding: 3px 8px; border-radius: 12px; font-weight: 600;">
+                            Rejected by ${rejected_stage.role}
+                        </span>
+                    </div>
+                    <span style="font-size: 12px; color: #64748b; font-weight: 500;">
+                        Action required: Review feedback and revise contract
+                    </span>
+                </div>
+                <div style="font-size: 13px; color: #1e293b; line-height: 1.5; margin-bottom: 8px;">
+                    <div><b>Approver:</b> ${frappe.utils.escape_html(rejected_stage.user || rejected_stage.role)}</div>
+                    <div style="margin-top: 4px;"><b>Rejection Reason:</b> <span style="color: #b91c1c; font-weight: 600;">"${frappe.utils.escape_html(rejected_stage.review || 'No specific reason provided')}"</span></div>
+                </div>
+            </div>`;
+            if (frm.dashboard && frm.dashboard.parent) {
+                $(banner_html).prependTo(frm.dashboard.parent);
+                frm.dashboard.show();
+                frm.dashboard.parent.show();
+            }
+        } else {
+            let revision_stage = get_contract_revision_stage(frm);
+            if (revision_stage && (frm.doc.workflow_state === "Returned for Revision" || frm.doc.status === "Returned for Revision")) {
+                let banner_html = `
+                <div class="contract-rejection-banner" style="margin-bottom: 15px; padding: 14px 18px; background: #fffbeb; border: 1px solid #fde68a; border-left: 6px solid #d97706; border-radius: 8px; box-shadow: 0 1px 3px rgba(217, 119, 6, 0.08);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 15px; font-weight: 700; color: #d97706; display: flex; align-items: center; gap: 6px;">
+                                <span>&#8635;</span> Returned for Revision
+                            </span>
+                            <span class="badge" style="background: #d97706; color: #ffffff; font-size: 11px; padding: 3px 8px; border-radius: 12px; font-weight: 600;">
+                                Returned by ${revision_stage.role}
+                            </span>
+                        </div>
+                        <span style="font-size: 12px; color: #64748b; font-weight: 500;">
+                            Action required: Update contract and resubmit
+                        </span>
+                    </div>
+                    <div style="font-size: 13px; color: #1e293b; line-height: 1.5; margin-bottom: 8px;">
+                        <div><b>Approver:</b> ${frappe.utils.escape_html(revision_stage.user || revision_stage.role)}</div>
+                        <div style="margin-top: 4px;"><b>Feedback / Reason:</b> <span style="color: #92400e; font-weight: 600;">"${frappe.utils.escape_html(revision_stage.review || 'Please revise and resubmit')}"</span></div>
+                    </div>
+                </div>`;
+                if (frm.dashboard && frm.dashboard.parent) {
+                    $(banner_html).prependTo(frm.dashboard.parent);
+                    frm.dashboard.show();
+                    frm.dashboard.parent.show();
+                }
+            } else if (frm.doc.workflow_state === "CEO Approved") {
+                let current_user = frappe.session.user;
+                let is_ceo = (frm.doc.ceo_approver && current_user === frm.doc.ceo_approver);
+                let is_hr = (frm.doc.hr_approver && current_user === frm.doc.hr_approver) || (frm.doc.final_hr_approver && current_user === frm.doc.final_hr_approver);
+                let is_owner = (current_user === frm.doc.owner);
+                let has_cm_role = frappe.user_roles && frappe.user_roles.includes("Contract Manager");
+                let is_cm_authorized = !is_ceo && !is_hr && (is_owner || has_cm_role || current_user === "Administrator");
+
+                let action_buttons_html = "";
+                if (is_cm_authorized) {
+                    action_buttons_html = `
+                    <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;">
+                        <button type="button" class="btn btn-xs btn-default btn-download-preview-pdf" style="font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
+                            <span>&#128196;</span> Download Preview Form (PDF)
+                        </button>
+                        <button type="button" class="btn btn-xs btn-primary btn-submit-to-final-hr" style="font-weight: 600; background: #0284c7; border-color: #0284c7; display: inline-flex; align-items: center; gap: 5px;">
+                            <span>&#10148;</span> Send to HR Manager for Final Review
+                        </button>
+                    </div>
+                    `;
+                }
+
+                let banner_html = `
+                <div class="contract-info-banner" style="margin-bottom: 15px; padding: 14px 18px; background: #f0fdf4; border: 1px solid #86efac; border-left: 6px solid #16a34a; border-radius: 8px; box-shadow: 0 1px 3px rgba(22, 163, 74, 0.08);">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 15px; font-weight: 700; color: #16a34a; display: flex; align-items: center; gap: 6px;">
+                                <span>&#10003;</span> CEO Approved
+                            </span>
+                            <span class="badge" style="background: #16a34a; color: #ffffff; font-size: 11px; padding: 3px 8px; border-radius: 12px; font-weight: 600;">
+                                Ready for Final HR Review
+                            </span>
+                        </div>
+                    </div>
+                    <div style="font-size: 13px; color: #1e293b; line-height: 1.5; margin-top: 6px;">
+                        The CEO has formally approved this contract. ${is_cm_authorized ? '<b>Contract Manager:</b> Please download and review the agreement preview (verified up to CEO approval), then click <b>Send to HR Manager for Final Review</b> below.' : 'Awaiting Contract Manager to preview the form and submit to HR for Final Review.'}
+                    </div>
+                    ${action_buttons_html}
+                </div>`;
+                if (frm.dashboard && frm.dashboard.parent) {
+                    let $b = $(banner_html).prependTo(frm.dashboard.parent);
+                    if (is_cm_authorized) {
+                        $b.find(".btn-download-preview-pdf").on("click", function(e) {
+                            e.preventDefault();
+                            let url = `/api/method/frappe.utils.print_format.download_pdf?doctype=Consultant+Contract&name=${encodeURIComponent(frm.doc.name)}&format=Consultant+Agreement&no_letterhead=0`;
+                            window.open(url, "_blank");
+                        });
+                        $b.find(".btn-submit-to-final-hr").on("click", function(e) {
+                            e.preventDefault();
+                            trigger_send_to_final_hr(frm);
+                        });
+                    }
+                    frm.dashboard.show();
+                    frm.dashboard.parent.show();
+                }
+            } else if (frm.doc.workflow_state === "Approved for Issuance") {
+                let banner_html = `
+                <div class="contract-info-banner" style="margin-bottom: 15px; padding: 14px 18px; background: #eff6ff; border: 1px solid #93c5fd; border-left: 6px solid #2563eb; border-radius: 8px; box-shadow: 0 1px 3px rgba(37, 99, 235, 0.08);">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 15px; font-weight: 700; color: #2563eb; display: flex; align-items: center; gap: 6px;">
+                                <span>&#10003;</span> Approved for Issuance
+                            </span>
+                            <span class="badge" style="background: #2563eb; color: #ffffff; font-size: 11px; padding: 3px 8px; border-radius: 12px; font-weight: 600;">
+                                Ready to Issue
+                            </span>
+                        </div>
+                    </div>
+                    <div style="font-size: 13px; color: #1e293b; line-height: 1.5; margin-top: 6px;">
+                        Final HR Review has been approved. <b>Contract Manager:</b> You can now issue the contract to the consultant by clicking <b>Actions &rarr; Issue Contract</b>.
+                    </div>
+                </div>`;
+                if (frm.dashboard && frm.dashboard.parent) {
+                    $(banner_html).prependTo(frm.dashboard.parent);
+                    frm.dashboard.show();
+                    frm.dashboard.parent.show();
+                }
+            }
+        }
+
+        // Render progress tracker & formatting & section visibility
+        apply_section_visibility(frm);
+        render_contract_progress_tracker(frm);
         apply_contract_approver_field_locking(frm);
+        setup_auto_expand_textareas(frm);
         setup_print_agreement_button(frm);
+        enforce_stage_approver_actions(frm);
 
         setTimeout(() => {
-            enforce_stage_approver_actions(frm);
-            setup_auto_expand_textareas(frm);
+            apply_section_visibility(frm);
+            render_contract_progress_tracker(frm);
             apply_contract_approver_field_locking(frm);
-        }, 150);
+            setup_auto_expand_textareas(frm);
+            enforce_stage_approver_actions(frm);
+        }, 120);
 
         setTimeout(() => {
+            apply_section_visibility(frm);
+            render_contract_progress_tracker(frm);
+            enforce_stage_approver_actions(frm);
+        }, 300);
+
+        setTimeout(() => {
+            apply_section_visibility(frm);
+            enforce_stage_approver_actions(frm);
+        }, 600);
+
+        // Bind to Frappe's render_complete event
+        $(frm.wrapper).off("render_complete.cc_lock").on("render_complete.cc_lock", function() {
+            apply_section_visibility(frm);
+            render_contract_progress_tracker(frm);
+            apply_contract_approver_field_locking(frm);
             enforce_stage_approver_actions(frm);
             setup_auto_expand_textareas(frm);
-            apply_contract_approver_field_locking(frm);
-        }, 400);
+        });
     },
 
-    onload_post_render(frm) {
-        enforce_stage_approver_actions(frm);
-        setup_auto_expand_textareas(frm);
-        apply_contract_approver_field_locking(frm);
+    after_workflow_action(frm) {
+        setTimeout(() => {
+            frm.reload_doc();
+        }, 150);
     },
 
     before_workflow_action: async function(frm) {
         let action = frm.selected_workflow_action || "";
         let state = frm.doc.workflow_state || "Draft";
         let action_lower = action.toLowerCase();
+        let user = frappe.session.user;
+        let is_admin = (user === "Administrator");
 
-        // 1. If Submitting from Draft
+        // 1. Submit from Draft or Resubmit from Revision
         if (action === "Submit for Approval" || action === "Resubmit for Approval") {
-            let is_authorized = (frappe.session.user === frm.doc.owner) ||
-                (frappe.user_roles && (frappe.user_roles.includes("System Manager") || frappe.user_roles.includes("HR Manager"))) ||
-                (frappe.session.user === "Administrator");
+            let is_authorized = (user === frm.doc.owner) ||
+                (frappe.user_roles && (frappe.user_roles.includes("System Manager") || frappe.user_roles.includes("HR Manager") || frappe.user_roles.includes("Contract Manager"))) ||
+                is_admin;
 
             if (!is_authorized) {
                 frappe.msgprint({
@@ -71,27 +311,97 @@ frappe.ui.form.on("Consultant Contract", {
             }
 
             if (!frm.doc.team_lead_approver && frm.doc.team_lead) {
-                frm.doc.team_lead_approver = frm.doc.team_lead;
+                try {
+                    let r = await frappe.db.get_value("Employee", frm.doc.team_lead, "user_id");
+                    if (r && r.message && r.message.user_id) {
+                        frm.doc.team_lead_approver = r.message.user_id;
+                    }
+                } catch (e) {}
             }
 
             return Promise.resolve();
         }
 
-        // 2. Issue Contract to Consultant (Post-CEO Approval)
-        if (action === "Issue Contract") {
-            if (!frm.doc.sent_to_consultant_date) {
-                frm.doc.sent_to_consultant_date = frappe.datetime.nowdate();
-                frm.refresh_field("sent_to_consultant_date");
+        // 2. Submit for HR Review (Post-CEO Approval: Contract Manager previews and submits to HR)
+        if (action === "Submit for HR Review") {
+            let is_authorized = (user === frm.doc.owner) ||
+                (frappe.user_roles && frappe.user_roles.includes("Contract Manager")) ||
+                is_admin;
+
+            if (!is_authorized) {
+                frappe.msgprint({
+                    title: __("Not Authorized"),
+                    indicator: "red",
+                    message: __("Only the <b>Contract Manager</b> or document creator is authorized to submit for Final HR Review.")
+                });
+                return Promise.reject("NOT_AUTHORIZED");
             }
+
+            if (!frm.doc.final_hr_approver) {
+                frm.doc.final_hr_approver = frm.doc.hr_approver;
+                frm.refresh_field("final_hr_approver");
+            }
+
             frappe.show_alert({
-                message: __("Contract issued. Awaiting signed document from consultant."),
+                message: __("Submitted for Final HR Review."),
                 indicator: "green"
             }, 5);
             return Promise.resolve();
         }
 
-        // 3. Consultant Signed -> Submit for Countersigning
+        // 3. Issue Contract to Consultant (Post-Final HR Review: Strictly Contract Manager)
+        if (action === "Issue Contract") {
+            let is_authorized = (frappe.user_roles && frappe.user_roles.includes("Contract Manager")) || is_admin;
+
+            if (!is_authorized) {
+                frappe.msgprint({
+                    title: __("Not Authorized"),
+                    indicator: "red",
+                    message: __("Only the <b>Contract Manager</b> is authorized to issue the contract to the consultant.")
+                });
+                return Promise.reject("NOT_AUTHORIZED");
+            }
+
+            // Once in Section G all the fields are filled then only the contract manager can issue the contract
+            let missing_fields = [];
+            if (!frm.doc.sent_to_consultant_date) missing_fields.push(__("Sent to Consultant Date"));
+            if (!frm.doc.consultant_signed_contract) missing_fields.push(__("Consultant Signed Contract (Upload PDF)"));
+            if (!frm.doc.consultant_signed_date) missing_fields.push(__("Consultant Signed Date"));
+            if (!frm.doc.consultant_received_date) missing_fields.push(__("Received Date"));
+            if (!frm.doc.final_executed_contract) missing_fields.push(__("Final Executed Contract (Upload PDF)"));
+            if (!frm.doc.countersigned_date) missing_fields.push(__("Management Countersigned Date"));
+
+            if (missing_fields.length > 0) {
+                frappe.msgprint({
+                    title: __("Section G Incomplete"),
+                    indicator: "red",
+                    message: __("Please fill all required fields in <b>Section G &mdash; Consultant Signed Contract</b> before issuing the contract:<br><br><ul style='margin-left: 18px;'><li>" + missing_fields.join("</li><li>") + "</li></ul>")
+                });
+                return Promise.reject("INCOMPLETE_SECTION_G");
+            }
+
+            frappe.show_alert({
+                message: __("Contract issued successfully."),
+                indicator: "green"
+            }, 5);
+            return Promise.resolve();
+        }
+
+        // 4. Consultant Signed -> Submit for Countersigning (Contract Manager)
         if (action === "Submit Signed Contract") {
+            let is_authorized = (user === frm.doc.owner) ||
+                (frappe.user_roles && frappe.user_roles.includes("Contract Manager")) ||
+                is_admin;
+
+            if (!is_authorized) {
+                frappe.msgprint({
+                    title: __("Not Authorized"),
+                    indicator: "red",
+                    message: __("Only the <b>Contract Manager</b> is authorized to submit the signed contract.")
+                });
+                return Promise.reject("NOT_AUTHORIZED");
+            }
+
             if (!frm.doc.consultant_signed_contract) {
                 frappe.msgprint({
                     title: __("Attachment Required"),
@@ -107,8 +417,21 @@ frappe.ui.form.on("Consultant Contract", {
             return Promise.resolve();
         }
 
-        // 4. Countersigning Complete -> Active
+        // 5. Countersigning Complete -> Active (Contract Manager)
         if (action === "Execute Contract") {
+            let is_authorized = (user === frm.doc.owner) ||
+                (frappe.user_roles && frappe.user_roles.includes("Contract Manager")) ||
+                is_admin;
+
+            if (!is_authorized) {
+                frappe.msgprint({
+                    title: __("Not Authorized"),
+                    indicator: "red",
+                    message: __("Only the <b>Contract Manager</b> is authorized to execute the contract.")
+                });
+                return Promise.reject("NOT_AUTHORIZED");
+            }
+
             if (!frm.doc.final_executed_contract) {
                 frappe.msgprint({
                     title: __("Attachment Required"),
@@ -124,211 +447,362 @@ frappe.ui.form.on("Consultant Contract", {
             return Promise.resolve();
         }
 
-        // 5. Identify active approver tier based on current state
+        // 6. Approver Stages (Team Lead, HR, CEO, Final HR)
         let decision_field = "";
         let remarks_field = "";
         let tier_name = "";
+        let is_approver_authorized = false;
 
         if (state === "Pending Team Lead Approval") {
             decision_field = "team_lead_decision";
             remarks_field = "team_lead_remarks";
-            tier_name = "Level 1 Team Lead";
+            tier_name = "Team Lead";
+            let assigned_user = frm.doc.team_lead_approver;
+            let is_tl_assigned = (assigned_user && user === assigned_user);
+            let has_tl_role = frappe.user_roles && frappe.user_roles.includes("Team Lead");
+            is_approver_authorized = is_admin || is_tl_assigned || (has_tl_role && (!assigned_user || user === assigned_user));
         } else if (state === "Pending HR Review") {
             decision_field = "hr_decision";
             remarks_field = "hr_remarks";
-            tier_name = "Level 2 HR";
+            tier_name = "HR Review";
+            let is_hr_approver = (frm.doc.hr_approver && user === frm.doc.hr_approver);
+            let has_hr_role = frappe.user_roles && (frappe.user_roles.includes("HR Manager") || frappe.user_roles.includes("HR User"));
+            is_approver_authorized = is_hr_approver || has_hr_role || is_admin;
         } else if (state === "Pending CEO Approval") {
             decision_field = "ceo_decision";
             remarks_field = "ceo_remarks";
-            tier_name = "Level 3 CEO";
+            tier_name = "CEO Approval";
+            is_approver_authorized = (frm.doc.ceo_approver && user === frm.doc.ceo_approver) || is_admin;
+        } else if (state === "Pending Final HR Review") {
+            decision_field = "final_hr_decision";
+            remarks_field = "final_hr_remarks";
+            tier_name = "Final HR Review";
+            let is_final_hr = (frm.doc.final_hr_approver && user === frm.doc.final_hr_approver) ||
+                              (frm.doc.hr_approver && user === frm.doc.hr_approver);
+            let has_hr_role = frappe.user_roles && (frappe.user_roles.includes("HR Manager") || frappe.user_roles.includes("HR User"));
+            is_approver_authorized = is_final_hr || has_hr_role || is_admin;
         }
 
         if (!decision_field) {
             return Promise.resolve();
         }
 
-        // 6. Handle Approvals: prompt for feedback / remarks and record
-        if (action_lower.startsWith("approve")) {
+        if (!is_approver_authorized) {
+            frappe.msgprint({
+                title: __("Not Authorized"),
+                indicator: "red",
+                message: __(`You are not authorized to take action during the <b>${tier_name}</b> stage.`)
+            });
+            return Promise.reject("NOT_AUTHORIZED");
+        }
+
+        let now_str = frappe.datetime.str_to_user(frappe.datetime.now_datetime());
+
+        // Capture any remarks already typed into the form
+        let existing_comment = "";
+        if (remarks_field) {
+            let field_obj = frm.fields_dict[remarks_field];
+            if (field_obj && field_obj.$wrapper) {
+                existing_comment = field_obj.$wrapper.find("textarea").val() || frm.doc[remarks_field] || "";
+            } else {
+                existing_comment = frm.doc[remarks_field] || "";
+            }
+            existing_comment = (existing_comment || "").trim();
+        }
+
+        // Handle Approvals
+        if (action_lower.includes("approve")) {
+            let status_text = "Approved [" + now_str + "]";
+
             frappe.dom.freeze_count = 0;
             $("#freeze").removeClass("in").remove();
             frappe.dom.unfreeze();
 
             return new Promise((resolve, reject) => {
+                let submitted = false;
                 let dialog = new frappe.ui.Dialog({
                     title: __(`Approve Consultant Contract — ${tier_name}`),
                     fields: [
                         {
-                            label: __("Approval Remarks / Notes (Optional)"),
+                            label: __("Approval Comments / Remarks (Optional)"),
                             fieldname: "comments",
                             fieldtype: "Small Text",
-                            default: frm.doc[remarks_field] || ""
+                            default: existing_comment,
+                            description: __("Add your review remarks or feedback for this approval.")
                         }
                     ],
                     primary_action_label: __("Confirm Approval"),
                     primary_action: async function(values) {
-                        let text = values.comments ? values.comments.trim() : "Approved";
+                        let final_comment = values.comments ? values.comments.trim() : "";
                         frappe.dom.freeze(__("Recording approval..."));
-
                         try {
                             await frappe.call({
                                 method: "access_custom.access_custom.doctype.consultant_contract.consultant_contract.record_consultant_approver_decision",
                                 args: {
                                     name: frm.doc.name,
                                     decision_field: decision_field,
-                                    decision_val: "Approve",
+                                    decision_val: status_text,
                                     remarks_field: remarks_field,
-                                    remarks_val: text
+                                    remarks_val: final_comment
                                 }
                             });
-
-                            frm.doc[decision_field] = "Approve";
-                            frm.doc[remarks_field] = text;
-                            frm.refresh_field(decision_field);
-                            frm.refresh_field(remarks_field);
-                            apply_contract_approver_field_locking(frm);
-
+                            frm.doc[decision_field] = status_text;
+                            if (remarks_field) {
+                                frm.doc[remarks_field] = final_comment;
+                            }
+                            submitted = true;
                             dialog.hide();
                             resolve();
-                        } catch (err) {
+                        } catch (e) {
                             frappe.dom.unfreeze();
-                            frappe.msgprint(__("Error recording approval: ") + (err.message || err));
-                            reject(err);
+                            frappe.msgprint(__("Error recording approval decision."));
+                            reject(e);
                         }
                     }
                 });
+
+                dialog.on_page_show = function() {
+                    frappe.dom.unfreeze();
+                    $("#freeze").removeClass("in").remove();
+                };
+
+                dialog.$wrapper.on("hidden.bs.modal", function() {
+                    if (!submitted) {
+                        frappe.dom.unfreeze();
+                        $("#freeze").removeClass("in").remove();
+                        reject("APPROVAL_CANCELLED");
+                    }
+                });
+
                 dialog.show();
             });
         }
 
-        // 7. Handle Rejection or Return for Revision with Dialog
-        if (action_lower.includes("reject") || action_lower.includes("return")) {
-            let is_return = action_lower.includes("return");
-            let title = is_return
-                ? __(`Return Consultant Contract for Revision — ${tier_name}`)
-                : __(`Reject Consultant Contract — ${tier_name}`);
-            let label = is_return ? __("Revision Feedback / Required Changes") : __("Reason for Rejection");
-            let btn_label = is_return ? __("Return for Revision") : __("Submit Rejection");
-            let decision_val = is_return ? "Return for Revision" : "Reject";
+        // Handle Rejections
+        if (action_lower.includes("reject")) {
+            let status_text = "Rejected [" + now_str + "]";
 
             frappe.dom.freeze_count = 0;
             $("#freeze").removeClass("in").remove();
             frappe.dom.unfreeze();
 
             return new Promise((resolve, reject) => {
+                let submitted = false;
                 let dialog = new frappe.ui.Dialog({
-                    title: title,
+                    title: __(`Reject Consultant Contract — ${tier_name}`),
                     fields: [
                         {
-                            label: label,
+                            label: __("Rejection Reason / Comments (Mandatory)"),
                             fieldname: "comments",
                             fieldtype: "Small Text",
                             reqd: 1,
-                            default: frm.doc[remarks_field] || "",
-                            description: is_return
-                                ? __("Provide detailed instructions for the revisions required before resubmission.")
-                                : __("Provide a clear reason for rejecting this consultant contract proposal.")
+                            default: existing_comment,
+                            description: __("Please specify the reason for rejecting this contract.")
                         }
                     ],
-                    primary_action_label: btn_label,
+                    primary_action_label: __("Confirm Rejection"),
                     primary_action: async function(values) {
-                        let text = values.comments ? values.comments.trim() : "";
-                        if (!text) {
-                            frappe.msgprint(__("Remarks / Reason are mandatory."));
+                        if (!values.comments || !values.comments.trim()) {
+                            frappe.msgprint(__("Rejection comments are mandatory."));
                             return;
                         }
-
-                        frappe.dom.freeze(is_return ? __("Returning for revision...") : __("Submitting rejection..."));
-
+                        let final_comment = values.comments.trim();
+                        frappe.dom.freeze(__("Recording rejection..."));
                         try {
                             await frappe.call({
                                 method: "access_custom.access_custom.doctype.consultant_contract.consultant_contract.record_consultant_approver_decision",
                                 args: {
                                     name: frm.doc.name,
                                     decision_field: decision_field,
-                                    decision_val: decision_val,
+                                    decision_val: status_text,
                                     remarks_field: remarks_field,
-                                    remarks_val: text
+                                    remarks_val: final_comment
                                 }
                             });
-
-                            frm.doc[decision_field] = decision_val;
-                            frm.doc[remarks_field] = text;
-                            frm.refresh_field(decision_field);
-                            frm.refresh_field(remarks_field);
-                            apply_contract_approver_field_locking(frm);
-
+                            frm.doc[decision_field] = status_text;
+                            if (remarks_field) {
+                                frm.doc[remarks_field] = final_comment;
+                            }
+                            submitted = true;
                             dialog.hide();
                             resolve();
-                        } catch (err) {
+                        } catch (e) {
                             frappe.dom.unfreeze();
-                            frappe.msgprint(__("Error recording decision: ") + (err.message || err));
-                            reject(err);
+                            frappe.msgprint(__("Error recording rejection."));
+                            reject(e);
                         }
                     }
                 });
+
+                dialog.on_page_show = function() {
+                    frappe.dom.unfreeze();
+                    $("#freeze").removeClass("in").remove();
+                };
+
+                dialog.$wrapper.on("hidden.bs.modal", function() {
+                    if (!submitted) {
+                        frappe.dom.unfreeze();
+                        $("#freeze").removeClass("in").remove();
+                        reject("REJECTION_CANCELLED");
+                    }
+                });
+
                 dialog.show();
             });
         }
+
+        // Handle Return for Revision
+        if (action_lower.includes("return") || action_lower.includes("revision")) {
+            let status_text = "Returned for Revision [" + now_str + "]";
+
+            frappe.dom.freeze_count = 0;
+            $("#freeze").removeClass("in").remove();
+            frappe.dom.unfreeze();
+
+            return new Promise((resolve, reject) => {
+                let submitted = false;
+                let dialog = new frappe.ui.Dialog({
+                    title: __(`Return for Revision — ${tier_name}`),
+                    fields: [
+                        {
+                            label: __("Revision Feedback / Comments (Mandatory)"),
+                            fieldname: "comments",
+                            fieldtype: "Small Text",
+                            reqd: 1,
+                            default: existing_comment,
+                            description: __("Specify the changes or corrections required.")
+                        }
+                    ],
+                    primary_action_label: __("Confirm Return"),
+                    primary_action: async function(values) {
+                        if (!values.comments || !values.comments.trim()) {
+                            frappe.msgprint(__("Revision feedback is mandatory."));
+                            return;
+                        }
+                        let final_comment = values.comments.trim();
+                        frappe.dom.freeze(__("Recording revision request..."));
+                        try {
+                            await frappe.call({
+                                method: "access_custom.access_custom.doctype.consultant_contract.consultant_contract.record_consultant_approver_decision",
+                                args: {
+                                    name: frm.doc.name,
+                                    decision_field: decision_field,
+                                    decision_val: status_text,
+                                    remarks_field: remarks_field,
+                                    remarks_val: final_comment
+                                }
+                            });
+                            frm.doc[decision_field] = status_text;
+                            if (remarks_field) {
+                                frm.doc[remarks_field] = final_comment;
+                            }
+                            submitted = true;
+                            dialog.hide();
+                            resolve();
+                        } catch (e) {
+                            frappe.dom.unfreeze();
+                            frappe.msgprint(__("Error recording revision request."));
+                            reject(e);
+                        }
+                    }
+                });
+
+                dialog.on_page_show = function() {
+                    frappe.dom.unfreeze();
+                    $("#freeze").removeClass("in").remove();
+                };
+
+                dialog.$wrapper.on("hidden.bs.modal", function() {
+                    if (!submitted) {
+                        frappe.dom.unfreeze();
+                        $("#freeze").removeClass("in").remove();
+                        reject("REVISION_CANCELLED");
+                    }
+                });
+
+                dialog.show();
+            });
+        }
+
+        return Promise.resolve();
     },
 
     team_lead(frm) {
-        if (frm.doc.team_lead && !frm.doc.team_lead_approver) {
-            frm.set_value("team_lead_approver", frm.doc.team_lead);
-        }
-    },
-
-    proposed_start_date(frm) {
-        calculate_end_date(frm);
-        if (frm.doc.proposed_start_date && !frm.doc.start_date) {
-            frm.set_value('start_date', frm.doc.proposed_start_date);
-        }
-    },
-
-    initial_tenure_value(frm) {
-        calculate_end_date(frm);
-        update_tenure_string(frm);
-    },
-
-    tenure_unit(frm) {
-        calculate_end_date(frm);
-        update_tenure_string(frm);
-    },
-
-    start_date(frm) {
-        if (frm.doc.start_date && !frm.doc.proposed_start_date) {
-            frm.set_value('proposed_start_date', frm.doc.start_date);
-        }
-        calculate_end_date(frm);
-    },
-
-    existing_consultant(frm) {
-        if (frm.doc.existing_consultant === "No") {
-            frm.set_value("consultant_id", "");
-        }
-    },
-
-    consultant_id(frm) {
-        if (frm.doc.consultant_id) {
-            frappe.db.get_value("Consultant Master", frm.doc.consultant_id, [
-                "consultant_name", "email", "mobile", "address", "area_of_expertise", "cv_attachment"
-            ]).then(r => {
-                if (r && r.message) {
-                    let d = r.message;
-                    if (d.consultant_name) frm.set_value("consultant_name", d.consultant_name);
-                    if (d.email) frm.set_value("email_id", d.email);
-                    if (d.mobile) frm.set_value("contact_number", d.mobile);
-                    if (d.address) frm.set_value("consultant_address", d.address);
-                    if (d.area_of_expertise) frm.set_value("area_of_expertise", d.area_of_expertise);
-                    if (d.cv_attachment) frm.set_value("consultant_cv", d.cv_attachment);
+        if (frm.doc.team_lead) {
+            frappe.db.get_value("Employee", frm.doc.team_lead, "user_id").then(r => {
+                if (r && r.message && r.message.user_id) {
+                    frm.set_value("team_lead_approver", r.message.user_id);
                 }
             });
         }
     },
 
-    proposed_fee(frm) {
-        if (frm.doc.proposed_fee && !frm.doc.compensation_amount) {
-            frm.set_value("compensation_amount", frm.doc.proposed_fee);
+    existing_consultant(frm) {
+        if (frm.doc.existing_consultant === "No") {
+            frm.set_value("consultant_id", null);
         }
+    },
+
+    consultant_id(frm) {
+        if (frm.doc.consultant_id) {
+            frappe.db.get_doc("Consultant Master", frm.doc.consultant_id).then(cm => {
+                if (cm) {
+                    frm.set_value("consultant_name", cm.consultant_name);
+                    frm.set_value("email_id", cm.email);
+                    frm.set_value("contact_number", cm.mobile);
+                    frm.set_value("consultant_address", cm.address);
+                    frm.set_value("area_of_expertise", cm.area_of_expertise);
+                    frm.set_value("gstin_number", cm.gstin);
+                    if (cm.cv_attachment && !frm.doc.consultant_cv) {
+                        frm.set_value("consultant_cv", cm.cv_attachment);
+                    }
+                }
+            });
+        }
+    },
+
+    proposed_start_date(frm) {
+        calculate_tenure_from_dates(frm);
+    },
+
+    proposed_end_date(frm) {
+        calculate_tenure_from_dates(frm);
+    },
+
+    initial_tenure_value(frm) {
+        calculate_end_date_from_tenure(frm);
+    },
+
+    tenure_unit(frm) {
+        calculate_end_date_from_tenure(frm);
+    },
+
+    start_date(frm) {
+        if (frm.doc.start_date && !frm.doc.proposed_start_date) {
+            frm.set_value("proposed_start_date", frm.doc.start_date);
+        }
+    },
+
+    end_date(frm) {
+        if (frm.doc.end_date && !frm.doc.proposed_end_date) {
+            frm.set_value("proposed_end_date", frm.doc.end_date);
+        }
+    },
+
+    contract_start_date(frm) {
+        if (frm.doc.contract_start_date && !frm.doc.proposed_start_date) {
+            frm.set_value("proposed_start_date", frm.doc.contract_start_date);
+        }
+    },
+
+    contract_end_date(frm) {
+        if (frm.doc.contract_end_date && !frm.doc.proposed_end_date) {
+            frm.set_value("proposed_end_date", frm.doc.contract_end_date);
+        }
+    },
+
+    proposed_fee(frm) {
+        calculate_total_contract_value(frm);
     },
 
     compensation_amount(frm) {
@@ -336,7 +810,16 @@ frappe.ui.form.on("Consultant Contract", {
             frm.set_value("proposed_fee", frm.doc.compensation_amount);
         }
         calculate_total_contract_value(frm);
-    }
+    },
+
+    reason_for_engagement(frm) { trigger_auto_expand(frm, "reason_for_engagement"); },
+    scope_summary(frm) { trigger_auto_expand(frm, "scope_summary"); },
+    key_responsibilities(frm) { trigger_auto_expand(frm, "key_responsibilities"); },
+    deliverables(frm) { trigger_auto_expand(frm, "deliverables"); },
+    milestones(frm) { trigger_auto_expand(frm, "milestones"); },
+    expected_outputs(frm) { trigger_auto_expand(frm, "expected_outputs"); },
+    performance_acceptance_criteria(frm) { trigger_auto_expand(frm, "performance_acceptance_criteria"); },
+    final_hr_remarks(frm) { trigger_auto_expand(frm, "final_hr_remarks"); }
 });
 
 // Child Table Events: Project Allocation
@@ -353,271 +836,1291 @@ frappe.ui.form.on("Project Allocation Item", {
 });
 
 // ==============================================================================
-// 1. Stage Approver Actions Enforcer
+// 1. Rejection Helper & Approval Progress Stepper Tracker
 // ==============================================================================
-function enforce_stage_approver_actions(frm) {
+function get_contract_rejection_stage(frm) {
+    const check_stages = [
+        { name: "Pending Final HR Review", status: frm.doc.final_hr_decision, review: frm.doc.final_hr_remarks, role: "Final HR", user: frm.doc.final_hr_approver || frm.doc.hr_approver },
+        { name: "Pending CEO Approval", status: frm.doc.ceo_decision, review: frm.doc.ceo_remarks, role: "CEO", user: frm.doc.ceo_approver },
+        { name: "Pending HR Review", status: frm.doc.hr_decision, review: frm.doc.hr_remarks, role: "HR", user: frm.doc.hr_approver },
+        { name: "Pending Team Lead Approval", status: frm.doc.team_lead_decision, review: frm.doc.team_lead_remarks, role: "Team Lead", user: frm.doc.team_lead_approver },
+    ];
+    for (let cs of check_stages) {
+        if (cs.status && cs.status.includes("Reject")) {
+            return cs;
+        }
+    }
+    return null;
+}
+
+function get_contract_revision_stage(frm) {
+    const check_stages = [
+        { name: "Pending Final HR Review", status: frm.doc.final_hr_decision, review: frm.doc.final_hr_remarks, role: "Final HR", user: frm.doc.final_hr_approver || frm.doc.hr_approver },
+        { name: "Pending CEO Approval", status: frm.doc.ceo_decision, review: frm.doc.ceo_remarks, role: "CEO", user: frm.doc.ceo_approver },
+        { name: "Pending HR Review", status: frm.doc.hr_decision, review: frm.doc.hr_remarks, role: "HR", user: frm.doc.hr_approver },
+        { name: "Pending Team Lead Approval", status: frm.doc.team_lead_decision, review: frm.doc.team_lead_remarks, role: "Team Lead", user: frm.doc.team_lead_approver },
+    ];
+    for (let cs of check_stages) {
+        if (cs.status && (cs.status.includes("Return") || cs.status.includes("Revision"))) {
+            return cs;
+        }
+    }
+    return null;
+}
+
+function render_contract_progress_tracker(frm) {
+    if (!frm || !frm.wrapper) return;
+
+    try {
+        // Clean up any prior instances
+        $(".contract-progress-container").remove();
+
+        let steps = [
+            { id: "Draft", label: "Draft" },
+            { id: "Pending Team Lead Approval", label: "Team Lead" },
+            { id: "Pending HR Review", label: "HR Review" },
+            { id: "Pending CEO Approval", label: "CEO" },
+            { id: "Pending Final HR Review", label: "Final HR" },
+            { id: "Contract Issued", label: "Issued" },
+            { id: "Signed by Consultant", label: "Consultant Signed" },
+            { id: "Active", label: "Active" }
+        ];
+
+        let current_state = frm.doc.workflow_state || frm.doc.status || "Draft";
+        let is_rejected = current_state.includes("Reject") || (frm.doc.status === "Rejected");
+        let is_revision = (current_state === "Returned for Revision") || (frm.doc.status === "Returned for Revision");
+
+        let rejected_stage = get_contract_rejection_stage(frm);
+        if (rejected_stage) is_rejected = true;
+
+        let revision_stage = get_contract_revision_stage(frm);
+        if (revision_stage && !is_rejected) is_revision = true;
+
+        let active_index = 0;
+        if (current_state === "Active") {
+            active_index = steps.length - 1;
+        } else if (rejected_stage) {
+            active_index = steps.findIndex(s => s.id === rejected_stage.name);
+            if (active_index < 0) active_index = 1;
+        } else if (revision_stage && is_revision) {
+            active_index = steps.findIndex(s => s.id === revision_stage.name);
+            if (active_index < 0) active_index = 1;
+        } else if (current_state === "CEO Approved" || current_state === "Pending Final HR Review") {
+            active_index = 4;
+        } else if (current_state === "Approved for Issuance" || current_state === "Contract Issued") {
+            active_index = 5;
+        } else if (current_state === "Signed by Consultant") {
+            active_index = 6;
+        } else {
+            let idx = steps.findIndex(s => s.id === current_state || current_state.includes(s.label));
+            active_index = idx >= 0 ? idx : 0;
+        }
+
+        let percent = (active_index === steps.length - 1 && current_state === "Active") ? 100 : Math.round((active_index / (steps.length - 1)) * 100);
+
+        let status_bg = "#16a34a";
+        let bar_color = "#16a34a";
+        if (is_rejected) {
+            status_bg = "#dc2626";
+            bar_color = "#dc2626";
+        } else if (is_revision) {
+            status_bg = "#d97706";
+            bar_color = "#d97706";
+        }
+
+        let nodes_html = steps.map((s, idx) => {
+            let is_completed = (idx < active_index) || (active_index === steps.length - 1 && current_state === "Active");
+            let is_active = (idx === active_index) && !(active_index === steps.length - 1 && current_state === "Active");
+
+            let circle_bg = "#f1f5f9";
+            let circle_border = "#cbd5e1";
+            let circle_color = "#64748b";
+            let circle_content = idx + 1;
+            let label_color = "#64748b";
+            let label_weight = "500";
+            let pulse_style = "";
+
+            if (is_completed) {
+                circle_bg = "#16a34a";
+                circle_border = "#16a34a";
+                circle_color = "#ffffff";
+                circle_content = "&#10003;";
+                label_color = "#15803d";
+                label_weight = "600";
+            } else if (is_active) {
+                if (is_rejected) {
+                    circle_bg = "#dc2626";
+                    circle_border = "#dc2626";
+                    circle_color = "#ffffff";
+                    circle_content = "&#10007;";
+                    label_color = "#dc2626";
+                    label_weight = "700";
+                } else if (is_revision) {
+                    circle_bg = "#d97706";
+                    circle_border = "#d97706";
+                    circle_color = "#ffffff";
+                    circle_content = "&#8635;";
+                    label_color = "#d97706";
+                    label_weight = "700";
+                    pulse_style = "box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.25);";
+                } else {
+                    circle_bg = "#16a34a";
+                    circle_border = "#15803d";
+                    circle_color = "#ffffff";
+                    circle_content = idx + 1;
+                    label_color = "#15803d";
+                    label_weight = "700";
+                    pulse_style = "box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.25);";
+                }
+            }
+
+            return `
+            <div style="display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 50px; position: relative; z-index: 2;">
+                <div style="width: 26px; height: 26px; border-radius: 50%; background: ${circle_bg}; border: 2px solid ${circle_border}; color: ${circle_color}; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; margin-bottom: 5px; ${pulse_style}">
+                    ${circle_content}
+                </div>
+                <div style="font-size: 11px; font-weight: ${label_weight}; color: ${label_color}; text-align: center; line-height: 1.2;">
+                    ${s.label}
+                </div>
+            </div>
+            `;
+        }).join("");
+
+        let container_html = `
+        <div class="contract-progress-container" style="margin-bottom: 14px; padding: 12px 18px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <div style="font-weight: 700; font-size: 12px; color: #1e293b; display: flex; align-items: center; gap: 8px;">
+                    <span>Consultant Contract Approval Workflow Route</span>
+                </div>
+                <div>
+                    <span class="badge" style="background: ${status_bg}; color: #fff; font-size: 11px; padding: 3px 9px; border-radius: 12px; font-weight: 600;">
+                        ${frappe.utils.escape_html(current_state)} (${percent}%)
+                    </span>
+                </div>
+            </div>
+
+            <!-- Progress Line Bar -->
+            <div style="position: relative; height: 5px; background: #e2e8f0; border-radius: 3px; margin: 6px 12px 12px 12px;">
+                <div style="position: absolute; top: 0; left: 0; height: 100%; width: ${percent}%; background: ${bar_color}; border-radius: 3px; transition: width 0.3s ease;"></div>
+            </div>
+
+            <!-- Stepper Nodes -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; position: relative;">
+                ${nodes_html}
+            </div>
+        </div>
+        `;
+
+        let $container = $(container_html);
+
+        if (frm.layout && typeof frm.layout.show_dashboard === "function") {
+            frm.layout.show_dashboard();
+        }
+
+        if (frm.dashboard && frm.dashboard.parent && frm.dashboard.parent.length) {
+            $container.prependTo(frm.dashboard.parent);
+            frm.dashboard.show();
+            frm.dashboard.parent.show().removeClass("hide hidden");
+            frm.dashboard.parent.closest(".form-dashboard-wrapper").show().removeClass("hide hidden");
+        } else {
+            let $target = $(frm.wrapper).find(".form-layout");
+            if ($target.length) {
+                $container.insertBefore($target.first());
+            } else {
+                $container.prependTo($(frm.wrapper).find(".form-page"));
+            }
+        }
+    } catch (e) {
+        console.error("Error in render_contract_progress_tracker:", e);
+    }
+}
+
+// ==============================================================================
+// 2. Approver Field Locking & High-Contrast Visual Stamping
+// ==============================================================================
+function apply_contract_approver_field_locking(frm) {
     if (!frm.doc || frm.is_new()) return;
 
-    const state = frm.doc.workflow_state || "Draft";
-    let is_authorized = false;
-    let is_admin = (frappe.session.user === "Administrator");
+    try {
+        let state = frm.doc.workflow_state || "Draft";
+        let user = frappe.session.user;
+        let is_admin = (user === "Administrator");
 
-    if (state === "Draft" || state === "Returned for Revision") {
-        let is_owner = (frappe.session.user === frm.doc.owner);
-        let has_hr_role = frappe.user_roles && (frappe.user_roles.includes("HR Manager") || frappe.user_roles.includes("System Manager"));
-        is_authorized = is_owner || has_hr_role || is_admin;
-    } else if (state === "Pending Team Lead Approval") {
-        let is_lead = (frm.doc.team_lead_approver && frappe.session.user === frm.doc.team_lead_approver) ||
-                      (frm.doc.team_lead && frappe.session.user === frm.doc.team_lead);
-        is_authorized = is_lead || is_admin;
-    } else if (state === "Pending HR Review") {
-        let is_hr_approver = (frm.doc.hr_approver && frappe.session.user === frm.doc.hr_approver);
-        let has_hr_role = frappe.user_roles && (frappe.user_roles.includes("HR User") || frappe.user_roles.includes("HR Manager") || frappe.user_roles.includes("System Manager"));
-        is_authorized = is_hr_approver || has_hr_role || is_admin;
-    } else if (state === "Pending CEO Approval") {
-        let is_ceo = (frm.doc.ceo_approver && frappe.session.user === frm.doc.ceo_approver);
-        is_authorized = is_ceo || is_admin;
-    } else if (state === "CEO Approved" || state === "Contract Issued" || state === "Signed by Consultant") {
-        let has_hr_role = frappe.user_roles && (frappe.user_roles.includes("HR Manager") || frappe.user_roles.includes("System Manager"));
-        is_authorized = has_hr_role || is_admin || (frappe.session.user === frm.doc.owner);
-    } else if (state === "Active" || state === "Rejected") {
-        is_authorized = false;
+        const review_matrix = [
+            { approver: "team_lead_approver", status: "team_lead_decision", review: "team_lead_remarks", state: "Pending Team Lead Approval", role: "Team Lead" },
+            { approver: "hr_approver", status: "hr_decision", review: "hr_remarks", state: "Pending HR Review", role: "HR" },
+            { approver: "ceo_approver", status: "ceo_decision", review: "ceo_remarks", state: "Pending CEO Approval", role: "CEO" },
+            { approver: "final_hr_approver", status: "final_hr_decision", review: "final_hr_remarks", state: "Pending Final HR Review", role: "Final HR" }
+        ];
+
+        review_matrix.forEach(item => {
+            let status_val = frm.doc[item.status] || "";
+            let review_val = frm.doc[item.review] || "";
+
+            frm.set_df_property(item.status, "read_only", 1);
+            let is_active_stage = (state === item.state);
+            let assigned_user = frm.doc[item.approver];
+            if (item.role === "Final HR" && !assigned_user) {
+                assigned_user = frm.doc.hr_approver;
+            }
+
+            // Strict authorization: only assigned user or Administrator (or HR role for HR steps)
+            let is_assigned_user = (assigned_user && user === assigned_user) || is_admin;
+            if (item.role === "HR" || item.role === "Final HR") {
+                if (frappe.user_roles && (frappe.user_roles.includes("HR Manager") || frappe.user_roles.includes("HR User"))) {
+                    is_assigned_user = true;
+                }
+            }
+
+            let can_edit_comment = is_active_stage && is_assigned_user;
+
+            frm.set_df_property(item.review, "read_only", can_edit_comment ? 0 : 1);
+
+            // Visual badge for status
+            let status_field = frm.get_field(item.status);
+            if (status_field && status_field.$wrapper) {
+                status_field.$wrapper.find(".approver-decision-badge").remove();
+                status_field.$wrapper.find(".control-input-wrapper").hide();
+                status_field.$wrapper.find(".control-input").hide();
+                status_field.$wrapper.find(".control-value").hide();
+
+                let $badge = $('<div class="approver-decision-badge" style="margin-top: 4px; display: block !important;"></div>');
+                if (status_val && status_val !== "Pending") {
+                    let badge_bg = "#16a34a";
+                    let text_color = "#ffffff";
+                    let icon = "&#10003;";
+                    if (status_val.includes("Rejected")) {
+                        badge_bg = "#dc2626";
+                        icon = "&#10007;";
+                    } else if (status_val.includes("Returned") || status_val.includes("Revision")) {
+                        badge_bg = "#d97706";
+                        icon = "&#8635;";
+                    }
+                    $badge.html(`
+                        <div style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: ${badge_bg}; color: ${text_color}; border-radius: 6px; font-weight: 600; font-size: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.08);">
+                            <span>${icon}</span>
+                            <span>${frappe.utils.escape_html(status_val)}</span>
+                        </div>
+                    `);
+                } else {
+                    $badge.html(`
+                        <div style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: #f1f5f9; color: #64748b; border: 1px dashed #cbd5e1; border-radius: 6px; font-weight: 500; font-size: 12px;">
+                            <span>Pending Review</span>
+                        </div>
+                    `);
+                }
+                status_field.$wrapper.append($badge);
+            }
+
+            // Visual box for comment / remarks
+            let review_field = frm.get_field(item.review);
+            if (review_field && review_field.$wrapper) {
+                review_field.$wrapper.find(".approver-remarks-content").remove();
+                if (!can_edit_comment) {
+                    review_field.$wrapper.find(".control-input-wrapper").hide();
+                    review_field.$wrapper.find(".control-input").hide();
+                    review_field.$wrapper.find(".control-value").hide();
+
+                    let $rem = $('<div class="approver-remarks-content" style="margin-top: 4px; display: block !important;"></div>');
+                    if (review_val && review_val.trim()) {
+                        let border_color = "#cbd5e1";
+                        let text_color = "#1e293b";
+                        let bg_color = "#f8fafc";
+                        if (status_val && status_val.includes("Rejected")) {
+                            border_color = "#fca5a5";
+                            bg_color = "#fef2f2";
+                            text_color = "#991b1b";
+                        }
+                        $rem.html(`
+                            <div style="padding: 10px 14px; background: ${bg_color}; border: 1px solid ${border_color}; border-radius: 6px; font-size: 13px; color: ${text_color}; white-space: pre-wrap; line-height: 1.5; min-height: 42px;">
+                                ${frappe.utils.escape_html(review_val)}
+                            </div>
+                        `);
+                    } else {
+                        $rem.html(`
+                            <div style="padding: 8px 12px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; font-size: 12px; color: #94a3b8; font-style: italic;">
+                                No comments provided
+                            </div>
+                        `);
+                    }
+                    review_field.$wrapper.append($rem);
+                } else {
+                    review_field.$wrapper.find(".control-input-wrapper").show();
+                    review_field.$wrapper.find(".control-input").show();
+                }
+            }
+        });
+
+        // General field read-only rules across approval stages
+        let is_in_approval = ["Pending Team Lead Approval", "Pending HR Review", "Pending CEO Approval", "Pending Final HR Review"].includes(state);
+        const section_g_fieldnames = [
+            "consultant_signed_contract", "consultant_signed_date", "consultant_received_date",
+            "final_executed_contract", "countersigned_date", "sent_to_consultant_date"
+        ];
+
+        if (is_in_approval || state === "CEO Approved" || state === "Rejected") {
+            const editable_in_approval = ["team_lead_remarks", "hr_remarks", "ceo_remarks", "final_hr_remarks"];
+            (frm.fields || []).forEach(f => {
+                if (f && f.df && f.df.fieldname && !editable_in_approval.includes(f.df.fieldname)) {
+                    frm.set_df_property(f.df.fieldname, "read_only", 1);
+                }
+            });
+        } else if (state === "Approved for Issuance") {
+            // Once in Approved for Issuance, strictly Contract Manager and Admin can fill Section G fields
+            let is_cm = frappe.user_roles && frappe.user_roles.includes("Contract Manager");
+            let is_cm_or_admin = is_admin || is_cm;
+            (frm.fields || []).forEach(f => {
+                if (f && f.df && f.df.fieldname) {
+                    if (section_g_fieldnames.includes(f.df.fieldname)) {
+                        frm.set_df_property(f.df.fieldname, "read_only", is_cm_or_admin ? 0 : 1);
+                    } else {
+                        frm.set_df_property(f.df.fieldname, "read_only", 1);
+                    }
+                }
+            });
+        } else if (state === "Contract Issued" || state === "Signed by Consultant") {
+            let is_cm = frappe.user_roles && frappe.user_roles.includes("Contract Manager");
+            let is_cm_or_admin = is_admin || is_cm;
+            (frm.fields || []).forEach(f => {
+                if (f && f.df && f.df.fieldname) {
+                    if (section_g_fieldnames.includes(f.df.fieldname)) {
+                        frm.set_df_property(f.df.fieldname, "read_only", is_cm_or_admin ? 0 : 1);
+                    } else {
+                        frm.set_df_property(f.df.fieldname, "read_only", 1);
+                    }
+                }
+            });
+        } else if (state === "Draft" || state === "Returned for Revision") {
+            let is_creator_or_hr = (user === frm.doc.owner) ||
+                (frappe.user_roles && (frappe.user_roles.includes("HR Manager") || frappe.user_roles.includes("Contract Manager"))) ||
+                is_admin;
+            if (!is_creator_or_hr) {
+                frm.set_read_only();
+            }
+        }
+    } catch (e) {
+        console.error("Error in apply_contract_approver_field_locking:", e);
+    }
+}
+
+// ==============================================================================
+// 3. Section Visibility Enforcement (Admin Only for Approvals & Cleanup)
+// ==============================================================================
+function apply_section_visibility(frm) {
+    if (!frm.doc) return;
+
+    let state = frm.doc.workflow_state || frm.doc.status || "Draft";
+
+    // 1. Section F (Approval Section): visible
+    frm.toggle_display([
+        "section_f", "sec_break_f2", "sec_break_f3", "sec_break_f4"
+    ], true);
+
+    // 2. Section G (Consultant Signed Contract):
+    // Strictly hidden until Final HR Review is approved (visible ONLY in Approved for Issuance, Contract Issued, Signed by Consultant, Active)
+    let is_after_final_hr = ["Approved for Issuance", "Contract Issued", "Signed by Consultant", "Active"].includes(state);
+
+    const SECTION_G_FIELDS = [
+        "section_g",
+        "consultant_signed_contract",
+        "consultant_signed_date",
+        "consultant_received_date",
+        "col_break_g",
+        "final_executed_contract",
+        "countersigned_date",
+        "sent_to_consultant_date"
+    ];
+
+    SECTION_G_FIELDS.forEach(fn => {
+        frm.toggle_display(fn, is_after_final_hr);
+        frm.set_df_property(fn, "hidden", is_after_final_hr ? 0 : 1);
+    });
+
+    if (frm.wrapper) {
+        if (!is_after_final_hr) {
+            $(frm.wrapper).addClass("hide-section-g");
+        } else {
+            $(frm.wrapper).removeClass("hide-section-g");
+        }
     }
 
-    if (!is_authorized) {
-        frm.page.clear_actions_menu();
-        if (frm.page.actions_btn_group) {
+    // Direct DOM toggle for Section G wrapper
+    let sec_g_field = frm.get_field("section_g");
+    if (sec_g_field && sec_g_field.$wrapper) {
+        sec_g_field.$wrapper.closest(".form-section").toggle(is_after_final_hr);
+        sec_g_field.$wrapper.toggle(is_after_final_hr);
+    }
+    if (frm.wrapper) {
+        let $w = $(frm.wrapper);
+        $w.find('.form-section[data-fieldname="section_g"]').toggle(is_after_final_hr);
+        $w.find('[data-fieldname="section_g"]').closest(".form-section").toggle(is_after_final_hr);
+        $w.find('.section-head:contains("Section G")').closest(".form-section").toggle(is_after_final_hr);
+        $w.find('.section-head:contains("Section G")').toggle(is_after_final_hr);
+    }
+
+    // 3. Legacy RFP fields: NEVER show (redundant legacy fields from previous doctype)
+    const LEGACY_RFP_FIELDS = [
+        "section_rfp_summary", "organization", "project_name", "grade",
+        "contract_type", "contract_tenure", "start_date", "end_date",
+        "budget_line_item", "proposed_fee", "scope_deliverables_summary",
+        "justification", "amended_from"
+    ];
+    LEGACY_RFP_FIELDS.forEach(fn => {
+        frm.set_df_property(fn, "hidden", 1);
+    });
+
+    // 4. Comments and Activity Section: strictly visible ONLY to Admin
+    apply_comments_and_activity_visibility(frm);
+}
+
+
+function apply_comments_and_activity_visibility(frm) {
+    if (!frm) return;
+
+    const user = frappe.session.user;
+    const is_admin = (user === "Administrator") || (frappe.user_roles && frappe.user_roles.includes("System Manager"));
+
+    if (frm.wrapper) {
+        if (!is_admin) {
+            $(frm.wrapper).addClass("hide-comments-activity");
+            $(frm.wrapper).find(".form-footer, .form-timeline, .timeline, .comment-box, .timeline-items, .timeline-actions").hide();
+        } else {
+            $(frm.wrapper).removeClass("hide-comments-activity");
+            $(frm.wrapper).find(".form-footer, .form-timeline, .timeline, .comment-box, .timeline-items, .timeline-actions").show();
+        }
+    }
+
+    if (frm.footer && frm.footer.wrapper) {
+        if (!is_admin) {
+            frm.footer.wrapper.hide();
+        } else {
+            frm.footer.wrapper.show();
+        }
+    }
+}
+
+// ==============================================================================
+// 4. Stage Approver Actions Enforcement (Strict Approver Only)
+// ==============================================================================
+function populate_workflow_actions(frm) {
+    if (!frm.doc || !frm.doc.workflow_state || frm.is_new()) return;
+
+    // Call standard Frappe workflow show_actions if available
+    if (frm.states && typeof frm.states.show_actions === "function") {
+        try {
+            frm.states.show_actions();
+        } catch (e) {
+            console.warn("frm.states.show_actions error:", e);
+        }
+    }
+
+    // Direct fallback: fetch transitions and ensure dropdown has items
+    frappe.workflow.get_transitions(frm.doc).then(transitions => {
+        if (!transitions || !transitions.length) return;
+
+        let $menu = frm.page.actions_btn_group ? frm.page.actions_btn_group.find(".dropdown-menu") : null;
+        if (!$menu) return;
+
+        let existing_actions = [];
+        $menu.find(".menu-item-label, .dropdown-item").each(function() {
+            let t = $(this).text().trim();
+            if (t) existing_actions.push(t);
+        });
+
+        const user = frappe.session.user;
+        const is_admin = (user === "Administrator") || (frappe.user_roles && frappe.user_roles.includes("System Manager"));
+
+        transitions.forEach(d => {
+            let has_role = frappe.user_roles && frappe.user_roles.includes(d.allowed);
+            let has_access = is_admin || d.allow_self_approval || (user !== frm.doc.owner);
+
+            if ((has_role || is_admin) && has_access) {
+                if (!existing_actions.includes(__(d.action)) && !existing_actions.includes(d.action)) {
+                    frm.page.add_action_item(__(d.action), function() {
+                        frappe.dom.freeze();
+                        frm.selected_workflow_action = d.action;
+                        if (!frappe.ui.form.check_mandatory(frm)) return frappe.dom.unfreeze();
+                        frm.script_manager.trigger("before_workflow_action").then(() => {
+                            frappe.xcall("frappe.model.workflow.apply_workflow", {
+                                doc: frm.doc,
+                                action: d.action
+                            }).then(doc => {
+                                frappe.model.sync(doc);
+                                frm.refresh();
+                                frm.selected_workflow_action = null;
+                                frm.script_manager.trigger("after_workflow_action");
+                            }).finally(() => {
+                                frappe.dom.unfreeze();
+                            });
+                        }).catch(() => {
+                            frappe.dom.unfreeze();
+                        });
+                    });
+                }
+            }
+        });
+
+        if ($menu.find("li:not(.dropdown-divider)").length > 0) {
+            frm.page.actions_btn_group.removeClass("hide hidden-xl").show();
+            if (frm.page.actions && frm.page.actions.parent) {
+                frm.page.actions.parent().removeClass("hide hidden-xl").show();
+            }
+        }
+    });
+}
+
+function enforce_stage_approver_actions(frm) {
+    if (!frm.doc || !frm.doc.workflow_state || frm.is_new()) return;
+
+    const state = frm.doc.workflow_state;
+    const user = frappe.session.user;
+    const is_admin = (user === "Administrator") || (frappe.user_roles && frappe.user_roles.includes("System Manager"));
+
+    function hide_actions() {
+        if (frm.page && frm.page.actions_btn_group) {
             frm.page.actions_btn_group.addClass("hide hidden-xl").hide();
         }
-        if (frm.page.actions && frm.page.actions.parent) {
+        if (frm.page && frm.page.actions && frm.page.actions.parent) {
             frm.page.actions.parent().addClass("hide hidden-xl").hide();
         }
-        if (frm.workflow) {
-            frm.workflow.setup_btn = function() {
-                frm.page.clear_actions_menu();
-                if (frm.page.actions_btn_group) frm.page.actions_btn_group.addClass("hide hidden-xl").hide();
-            };
-        }
-    } else {
+    }
+
+    function show_actions() {
         if (frm.page && frm.page.actions_btn_group) {
             frm.page.actions_btn_group.removeClass("hide hidden-xl").show();
         }
         if (frm.page && frm.page.actions && frm.page.actions.parent) {
             frm.page.actions.parent().removeClass("hide hidden-xl").show();
         }
+        populate_workflow_actions(frm);
+    }
+
+    // Active lifecycle actions (Post-Approval / Execution)
+    if (state === "Active" || frm.doc.docstatus === 1) {
+        if (frm.wrapper) $(frm.wrapper).addClass("state-active");
+
+        let is_owner = (user === frm.doc.owner);
+        let has_cm_role = frappe.user_roles && frappe.user_roles.includes("Contract Manager");
+        let is_cm_authorized = is_admin || is_owner || has_cm_role;
+
+        // Hide standalone secondary Cancel button in page header
+        if (frm.page) {
+            frm.page.clear_secondary_action();
+            if (frm.page.btn_secondary) {
+                frm.page.btn_secondary.addClass("hide").hide();
+            }
+        }
+
+        if (!is_cm_authorized) {
+            hide_actions();
+            return;
+        }
+
+        // Show Actions button group with the 3 lifecycle options + Cancel option
+        if (frm.page && frm.page.actions_btn_group) {
+            frm.page.clear_actions_menu();
+            frm.page.actions_btn_group.removeClass("hide hidden-xl").show();
+            if (frm.page.actions && frm.page.actions.parent) {
+                frm.page.actions.parent().removeClass("hide hidden-xl").show();
+            }
+
+            // 1. Contract Extension
+            frm.page.add_action_item(__("Contract Extension"), function() {
+                frappe.new_doc("Consultant Contract Extension", {
+                    contract: frm.doc.name,
+                    consultant_name: frm.doc.consultant_name,
+                    organization: frm.doc.requesting_organization || frm.doc.organization,
+                    project_name: frm.doc.project || frm.doc.project_name,
+                    current_end_date: frm.doc.proposed_end_date || frm.doc.end_date,
+                    current_fee: frm.doc.compensation_amount || frm.doc.proposed_fee
+                });
+            });
+
+            // 2. Contract Amendment
+            frm.page.add_action_item(__("Contract Amendment"), function() {
+                frappe.new_doc("Consultant Contract Amendment", {
+                    contract: frm.doc.name,
+                    consultant_name: frm.doc.consultant_name,
+                    organization: frm.doc.requesting_organization || frm.doc.organization,
+                    current_contract_value: frm.doc.total_contract_value || frm.doc.compensation_amount
+                });
+            });
+
+            // 3. Contract Termination
+            frm.page.add_action_item(__("Contract Termination"), function() {
+                frappe.new_doc("Consultant Contract Termination", {
+                    contract: frm.doc.name,
+                    consultant_name: frm.doc.consultant_name,
+                    organization: frm.doc.requesting_organization || frm.doc.organization
+                });
+            });
+
+        }
+        return;
+    }
+
+    if (frm.wrapper) $(frm.wrapper).removeClass("state-active");
+
+    // 1. If in Draft state or Returned for Revision
+    if (state === "Draft" || state === "Returned for Revision") {
+        let is_owner = (user === frm.doc.owner);
+        let has_cm_role = frappe.user_roles && (frappe.user_roles.includes("Contract Manager") || frappe.user_roles.includes("HR Manager"));
+
+        if (!is_owner && !has_cm_role && !is_admin) {
+            hide_actions();
+        } else {
+            show_actions();
+        }
+        return;
+    }
+
+    // 2. Stage: Pending Team Lead Approval -> ONLY Team Lead Approver
+    if (state === "Pending Team Lead Approval") {
+        let assigned_user = frm.doc.team_lead_approver;
+        let is_tl_assigned = (assigned_user && user === assigned_user);
+        let has_tl_role = frappe.user_roles && frappe.user_roles.includes("Team Lead");
+        let is_tl_authorized = is_admin || is_tl_assigned || (has_tl_role && (!assigned_user || user === assigned_user));
+
+        if (!is_tl_authorized) {
+            hide_actions();
+        } else {
+            show_actions();
+        }
+        return;
+    }
+
+    // 3. Stage: Pending HR Review -> ONLY HR Approver / HR roles
+    if (state === "Pending HR Review") {
+        let assigned_user = frm.doc.hr_approver;
+        let has_hr_role = frappe.user_roles && (frappe.user_roles.includes("HR Manager") || frappe.user_roles.includes("HR User"));
+        let is_hr_authorized = is_admin || (assigned_user && user === assigned_user) || (has_hr_role && (!assigned_user || user === assigned_user));
+        if (!is_hr_authorized) {
+            hide_actions();
+        } else {
+            show_actions();
+        }
+        return;
+    }
+
+    // 4. Stage: Pending CEO Approval -> ONLY CEO Approver
+    if (state === "Pending CEO Approval") {
+        let assigned_user = frm.doc.ceo_approver;
+        let has_ceo_role = frappe.user_roles && frappe.user_roles.includes("CEO Approver");
+        let is_ceo_authorized = is_admin || (assigned_user && user === assigned_user) || (has_ceo_role && (!assigned_user || user === assigned_user));
+        if (!is_ceo_authorized) {
+            hide_actions();
+        } else {
+            show_actions();
+        }
+        return;
+    }
+
+    // 5. Stage: Pending Final HR Review -> ONLY Final HR Approver / HR roles
+    if (state === "Pending Final HR Review") {
+        frm.page.remove_inner_button(__("Download Preview Form (PDF)"));
+        frm.page.remove_inner_button(__("Send to HR for Final Review"));
+
+        let assigned_user = frm.doc.final_hr_approver || frm.doc.hr_approver;
+        let has_hr_role = frappe.user_roles && (frappe.user_roles.includes("HR Manager") || frappe.user_roles.includes("HR User"));
+        let is_final_hr_authorized = is_admin || (assigned_user && user === assigned_user) || (has_hr_role && (!assigned_user || user === assigned_user));
+        if (!is_final_hr_authorized) {
+            hide_actions();
+        } else {
+            show_actions();
+        }
+        return;
+    }
+
+    // 6. Stage: CEO Approved -> Strictly ONLY Contract Manager (CEO and HR must NEVER see action button)
+    if (state === "CEO Approved") {
+        let is_ceo = (frm.doc.ceo_approver && user === frm.doc.ceo_approver);
+        let is_hr = (frm.doc.hr_approver && user === frm.doc.hr_approver) || (frm.doc.final_hr_approver && user === frm.doc.final_hr_approver);
+        if (is_ceo || is_hr) {
+            hide_actions();
+            return;
+        }
+
+        let is_owner = (user === frm.doc.owner);
+        let has_cm_role = frappe.user_roles && frappe.user_roles.includes("Contract Manager");
+        let is_cm_authorized = !is_ceo && !is_hr && (is_owner || has_cm_role || (is_admin && !is_ceo && !is_hr));
+
+        if (!is_cm_authorized) {
+            hide_actions();
+        } else {
+            show_actions();
+        }
+        return;
+    }
+
+    // 7. Stages: Approved for Issuance (Issue Contract)
+    // Strictly ONLY Contract Manager (and System Manager / Admin)
+    if (state === "Approved for Issuance") {
+        let has_cm_role = frappe.user_roles && frappe.user_roles.includes("Contract Manager");
+        let is_cm_authorized = is_admin || has_cm_role;
+
+        if (!is_cm_authorized) {
+            hide_actions();
+        } else {
+            show_actions();
+        }
+        return;
+    }
+
+    // 8. Subsequent execution stages: Contract Issued, Signed by Consultant
+    if (state === "Contract Issued" || state === "Signed by Consultant") {
+        let is_owner = (user === frm.doc.owner);
+        let has_cm_role = frappe.user_roles && frappe.user_roles.includes("Contract Manager");
+        let is_authorized = is_admin || is_owner || has_cm_role;
+
+        if (!is_authorized) {
+            hide_actions();
+        } else {
+            show_actions();
+        }
+        return;
     }
 }
 
 // ==============================================================================
-// 2. Slide 3 Action Buttons (Preview Template, Generate Contract, Download PDF, Send to consultant)
+// 4. Compact 2-Line Initial & Auto-Expanding Textareas
 // ==============================================================================
-function setup_print_agreement_button(frm) {
-    if (frm.is_new()) return;
+const TARGET_TEXT_FIELDS = [
+    "reason_for_engagement", "scope_summary", "key_responsibilities",
+    "deliverables", "milestones", "expected_outputs",
+    "performance_acceptance_criteria",
+    "team_lead_remarks", "hr_remarks", "ceo_remarks", "final_hr_remarks"
+];
 
-    // 1. Preview Template
-    frm.add_custom_button(__("Preview Template"), function() {
-        let url = `/printview?doctype=Consultant Contract&name=${encodeURIComponent(frm.doc.name)}&format=Consultant Agreement`;
-        window.open(url, "_blank");
-    });
-
-    // 2. Generate Contract
-    frm.add_custom_button(__("Generate Contract"), function() {
-        if (!frm.doc.request_id && frm.doc.requesting_organization) {
-            frappe.call({
-                method: "frappe.client.save",
-                args: { doc: frm.doc },
-                callback: function() {
-                    frm.reload_doc();
-                }
-            });
-        }
-        frappe.show_alert({
-            message: __("Contract Agreement generated successfully."),
-            indicator: "green"
-        }, 5);
-    });
-
-    // 3. Download PDF
-    frm.add_custom_button(__("Download PDF"), function() {
-        let url = `/api/method/frappe.utils.print_format.download_pdf?doctype=Consultant Contract&name=${encodeURIComponent(frm.doc.name)}&format=Consultant Agreement&no_letterhead=0`;
-        window.open(url, "_blank");
-    });
-
-    // 4. Send to consultant
-    frm.add_custom_button(__("Send to consultant"), function() {
-        let recipient = frm.doc.email_id;
-        if (!recipient) {
-            frappe.msgprint({
-                title: __("Missing Consultant Email"),
-                indicator: "orange",
-                message: __("Please specify the Consultant's <b>Email</b> in Section B before sending.")
-            });
-            return;
-        }
-
-        new frappe.views.CommunicationComposer({
-            doc: frm.doc,
-            frm: frm,
-            subject: `Consultant Engagement Contract Agreement - ${frm.doc.consultant_name || frm.doc.name}`,
-            recipients: recipient,
-            attach_print: true,
-            print_format: "Consultant Agreement"
-        });
-    });
+function adjust_single_textarea(ta) {
+    if (!ta) return;
+    let val = ta.value || "";
+    if (!val || !val.trim()) {
+        ta.style.setProperty("height", "50px", "important");
+        ta.style.overflowY = "hidden";
+        return;
+    }
+    ta.style.setProperty("height", "auto", "important");
+    let scroll_h = ta.scrollHeight;
+    let new_h = Math.max(50, scroll_h);
+    ta.style.setProperty("height", new_h + "px", "important");
+    ta.style.overflowY = (scroll_h > 350) ? "auto" : "hidden";
 }
 
-// ==============================================================================
-// 3. Auto-Expand All Textareas (Initial 3 Lines, Expands Dynamically on Typing)
-// ==============================================================================
 function setup_auto_expand_textareas(frm) {
     if (!frm || !frm.wrapper) return;
 
-    const $textareas = $(frm.wrapper).find("textarea");
-    $textareas.each(function() {
-        const $ta = $(this);
-        $ta.attr("rows", 3);
-        $ta.css({
-            "min-height": "72px",
-            "line-height": "1.5",
-            "resize": "vertical",
-            "overflow-y": "hidden",
-            "box-sizing": "border-box"
-        });
+    if (frm.wrapper) $(frm.wrapper).addClass("consultant-contract-wrapper");
+    if (frm.page && frm.page.wrapper) $(frm.page.wrapper).addClass("consultant-contract-wrapper");
 
-        const resize = function() {
-            this.style.height = "auto";
-            this.style.height = Math.max(72, this.scrollHeight) + "px";
-        };
-
-        $ta.off("input.auto_expand change.auto_expand").on("input.auto_expand change.auto_expand", resize);
-        resize.call(this);
-    });
-}
-
-// ==============================================================================
-// 4. Approver Field Badges (Only Pill Displayed, Raw Input Hidden)
-// ==============================================================================
-function apply_contract_approver_field_locking(frm) {
-    const approver_matrix = [
-        { approver: "team_lead_approver", decision: "team_lead_decision", remarks: "team_lead_remarks", label: "Team Lead" },
-        { approver: "hr_approver", decision: "hr_decision", remarks: "hr_remarks", label: "HR" },
-        { approver: "ceo_approver", decision: "ceo_decision", remarks: "ceo_remarks", label: "CEO" }
-    ];
-
-    approver_matrix.forEach(item => {
-        frm.set_df_property(item.decision, "read_only", 1);
-
-        let decision_val = frm.doc[item.decision] || "Pending";
-        let field = frm.get_field(item.decision);
-
-        if (field && field.$wrapper) {
-            field.$wrapper.find(".control-input").hide();
-            field.$wrapper.find(".control-value").hide();
-            field.$wrapper.find(".like-disabled-input").hide();
-
-            let $container = field.$wrapper.find(".custom-decision-badge-container");
-            if (!$container.length) {
-                $container = $('<div class="custom-decision-badge-container" style="margin-top: 2px;"></div>');
-                let $target = field.$wrapper.find(".control-input-wrapper");
-                if ($target.length) {
-                    $container.appendTo($target);
-                } else {
-                    $container.appendTo(field.$wrapper);
-                }
-            }
-
-            let badge_bg = "#f1f5f9";
-            let text_color = "#475569";
-            let border_style = "1px dashed #cbd5e1";
-            let icon = "&#9203;";
-            let display_text = "Pending Review";
-
-            if (decision_val === "Approve" || decision_val === "Approved") {
-                badge_bg = "#16a34a";
-                text_color = "#ffffff";
-                border_style = "none";
-                icon = "&#10003;";
-                display_text = "Approved";
-            } else if (decision_val === "Reject" || decision_val === "Rejected") {
-                badge_bg = "#dc2626";
-                text_color = "#ffffff";
-                border_style = "none";
-                icon = "&#10007;";
-                display_text = "Rejected";
-            } else if (decision_val === "Return for Revision" || decision_val === "Returned") {
-                badge_bg = "#d97706";
-                text_color = "#ffffff";
-                border_style = "none";
-                icon = "&#8635;";
-                display_text = "Returned for Revision";
-            }
-
-            $container.html(`
-                <div style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: ${badge_bg}; color: ${text_color}; border: ${border_style}; border-radius: 6px; font-weight: 600; font-size: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.06); letter-spacing: 0.2px;">
-                    <span>${icon}</span>
-                    <span>${display_text}</span>
-                </div>
-            `).show();
-        }
-    });
-}
-
-function calculate_end_date(frm) {
-    let start = frm.doc.proposed_start_date || frm.doc.start_date;
-    let tenure = parseInt(frm.doc.initial_tenure_value || 0);
-    let unit = (frm.doc.tenure_unit || "Months").toLowerCase();
-
-    if (start && tenure > 0) {
-        let calculated_end;
-        if (unit.includes("month")) {
-            calculated_end = frappe.datetime.add_months(start, tenure);
-        } else if (unit.includes("year")) {
-            calculated_end = frappe.datetime.add_months(start, tenure * 12);
-        } else if (unit.includes("week")) {
-            calculated_end = frappe.datetime.add_days(start, tenure * 7);
+    TARGET_TEXT_FIELDS.forEach(fieldname => {
+        let field = frm.get_field(fieldname);
+        let $ta = null;
+        if (field && field.$input && field.$input.length) {
+            $ta = field.$input;
+        } else if (field && field.$wrapper && field.$wrapper.length) {
+            $ta = field.$wrapper.find("textarea");
         } else {
-            calculated_end = frappe.datetime.add_days(start, tenure);
+            $ta = $(frm.wrapper).find(`[data-fieldname="${fieldname}"] textarea`);
         }
-        frm.set_value("proposed_end_date", calculated_end);
-        frm.set_value("end_date", calculated_end);
+
+        if ($ta && $ta.length) {
+            $ta.attr("rows", 2);
+            $ta.css({
+                "min-height": "50px",
+                "line-height": "1.45",
+                "font-size": "13px",
+                "padding": "6px 10px",
+                "resize": "vertical",
+                "box-sizing": "border-box"
+            });
+
+            $ta.off("input.auto_expand change.auto_expand keyup.auto_expand paste.auto_expand")
+               .on("input.auto_expand change.auto_expand keyup.auto_expand paste.auto_expand", function() {
+                   adjust_single_textarea(this);
+               });
+
+            $ta.each(function() {
+                adjust_single_textarea(this);
+            });
+        }
+    });
+
+    $(frm.wrapper).off("click.cc_expand").on("click.cc_expand", ".section-head, .nav-link, .tab-link", function() {
+        setTimeout(() => {
+            TARGET_TEXT_FIELDS.forEach(fn => trigger_auto_expand(frm, fn));
+        }, 50);
+    });
+}
+
+function trigger_auto_expand(frm, fieldname) {
+    if (!frm || !frm.wrapper) return;
+    let field = frm.get_field(fieldname);
+    let $ta = null;
+    if (field && field.$input && field.$input.length) {
+        $ta = field.$input;
+    } else if (field && field.$wrapper && field.$wrapper.length) {
+        $ta = field.$wrapper.find("textarea");
+    } else {
+        $ta = $(frm.wrapper).find(`[data-fieldname="${fieldname}"] textarea`);
+    }
+    if ($ta && $ta.length) {
+        $ta.each(function() {
+            adjust_single_textarea(this);
+        });
+    }
+}
+
+function inject_consultant_contract_styles() {
+    $("#cc-custom-ui-style").remove();
+
+    $(`
+    <style id="cc-custom-ui-style">
+        .consultant-contract-wrapper [data-fieldname="reason_for_engagement"] textarea,
+        .consultant-contract-wrapper [data-fieldname="scope_summary"] textarea,
+        .consultant-contract-wrapper [data-fieldname="key_responsibilities"] textarea,
+        .consultant-contract-wrapper [data-fieldname="deliverables"] textarea,
+        .consultant-contract-wrapper [data-fieldname="milestones"] textarea,
+        .consultant-contract-wrapper [data-fieldname="expected_outputs"] textarea,
+        .consultant-contract-wrapper [data-fieldname="performance_acceptance_criteria"] textarea,
+        .consultant-contract-wrapper [data-fieldname="team_lead_remarks"] textarea,
+        .consultant-contract-wrapper [data-fieldname="hr_remarks"] textarea,
+        .consultant-contract-wrapper [data-fieldname="ceo_remarks"] textarea,
+        .consultant-contract-wrapper [data-fieldname="final_hr_remarks"] textarea,
+        .form-page[data-page-route*="consultant_contract"] [data-fieldname="reason_for_engagement"] textarea,
+        .form-page[data-page-route*="consultant_contract"] [data-fieldname="scope_summary"] textarea,
+        .form-page[data-page-route*="consultant_contract"] [data-fieldname="key_responsibilities"] textarea,
+        .form-page[data-page-route*="consultant_contract"] [data-fieldname="deliverables"] textarea,
+        .form-page[data-page-route*="consultant_contract"] [data-fieldname="milestones"] textarea,
+        .form-page[data-page-route*="consultant_contract"] [data-fieldname="expected_outputs"] textarea,
+        .form-page[data-page-route*="consultant_contract"] [data-fieldname="performance_acceptance_criteria"] textarea,
+        .form-page[data-page-route*="consultant_contract"] [data-fieldname="team_lead_remarks"] textarea,
+        .form-page[data-page-route*="consultant_contract"] [data-fieldname="hr_remarks"] textarea,
+        .form-page[data-page-route*="consultant_contract"] [data-fieldname="ceo_remarks"] textarea,
+        .form-page[data-page-route*="consultant_contract"] [data-fieldname="final_hr_remarks"] textarea {
+            height: 50px !important;
+            min-height: 50px !important;
+            line-height: 1.45 !important;
+            font-size: 13px !important;
+            padding: 6px 10px !important;
+            resize: vertical !important;
+            box-sizing: border-box !important;
+        }
+        /* Form Controls Outer Border Styling */
+        .consultant-contract-wrapper .form-control {
+            border: 1px solid #d1d5db !important;
+            border-radius: 6px !important;
+        }
+        .consultant-contract-wrapper .form-control:focus {
+            border-color: #2563eb !important;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15) !important;
+        }
+
+        /* Prevent duplicate display: strictly hide control-value when control-input is active or hidden */
+        .consultant-contract-wrapper .frappe-control .control-input:not([style*="none"]):not(.hide) ~ .control-value,
+        .consultant-contract-wrapper .frappe-control .control-input-wrapper:not([style*="none"]):not(.hide) ~ .control-value,
+        .consultant-contract-wrapper .control-value[style*="none"],
+        .consultant-contract-wrapper .control-value.hide,
+        .consultant-contract-wrapper .control-value.hidden {
+            display: none !important;
+        }
+
+        /* When field is read-only and control-value is shown, keep visible clean border box */
+        .consultant-contract-wrapper .control-value.like-disabled-input {
+            border: 1px solid #d1d5db !important;
+            background-color: #f8fafc !important;
+            border-radius: 6px !important;
+            padding: 6px 12px !important;
+            min-height: 32px !important;
+            font-size: 13px !important;
+            color: #1e293b !important;
+            box-sizing: border-box !important;
+            width: 100% !important;
+        }
+        .consultant-contract-wrapper [data-fieldtype="Small Text"] .control-value.like-disabled-input,
+        .consultant-contract-wrapper [data-fieldtype="Long Text"] .control-value.like-disabled-input,
+        .consultant-contract-wrapper [data-fieldtype="Text"] .control-value.like-disabled-input {
+            min-height: 52px !important;
+            white-space: pre-wrap !important;
+        }
+        .consultant-contract-wrapper [data-fieldname="team_lead_decision"] .control-value.like-disabled-input,
+        .consultant-contract-wrapper [data-fieldname="hr_decision"] .control-value.like-disabled-input,
+        .consultant-contract-wrapper [data-fieldname="ceo_decision"] .control-value.like-disabled-input,
+        .consultant-contract-wrapper [data-fieldname="final_hr_decision"] .control-value.like-disabled-input,
+        .consultant-contract-wrapper [data-fieldname="team_lead_remarks"] .control-value.like-disabled-input,
+        .consultant-contract-wrapper [data-fieldname="hr_remarks"] .control-value.like-disabled-input,
+        .consultant-contract-wrapper [data-fieldname="ceo_remarks"] .control-value.like-disabled-input,
+        .consultant-contract-wrapper [data-fieldname="final_hr_remarks"] .control-value.like-disabled-input {
+            border: none !important;
+            background: transparent !important;
+            padding: 0 !important;
+        }
+
+        /* Hide Comments and Activity / Timeline for Non-Admin users */
+        .consultant-contract-wrapper.hide-comments-activity .form-footer,
+        .consultant-contract-wrapper.hide-comments-activity .form-timeline,
+        .consultant-contract-wrapper.hide-comments-activity .timeline,
+        .consultant-contract-wrapper.hide-comments-activity .comment-box,
+        .consultant-contract-wrapper.hide-comments-activity .timeline-items,
+        .consultant-contract-wrapper.hide-comments-activity .timeline-actions {
+            display: none !important;
+        }
+
+        /* Strictly Hide Section G and all its fields until Final HR Review is approved */
+        .consultant-contract-wrapper.hide-section-g .form-section[data-fieldname="section_g"],
+        .consultant-contract-wrapper.hide-section-g [data-fieldname="section_g"],
+        .consultant-contract-wrapper.hide-section-g .form-section:has([data-fieldname="section_g"]),
+        .consultant-contract-wrapper.hide-section-g [data-fieldname="consultant_signed_contract"],
+        .consultant-contract-wrapper.hide-section-g [data-fieldname="consultant_signed_date"],
+        .consultant-contract-wrapper.hide-section-g [data-fieldname="consultant_received_date"],
+        .consultant-contract-wrapper.hide-section-g [data-fieldname="col_break_g"],
+        .consultant-contract-wrapper.hide-section-g [data-fieldname="final_executed_contract"],
+        .consultant-contract-wrapper.hide-section-g [data-fieldname="countersigned_date"],
+        .consultant-contract-wrapper.hide-section-g [data-fieldname="sent_to_consultant_date"] {
+            display: none !important;
+        }
+        .consultant-contract-wrapper.hide-section-g .form-section:has([data-fieldname="section_g"]) {
+            display: none !important;
+        }
+
+        /* In Active state, hide standalone secondary Cancel button from page header */
+        .consultant-contract-wrapper.state-active .page-actions > .btn-secondary,
+        .consultant-contract-wrapper.state-active .page-actions > [data-label="Cancel"] {
+            display: none !important;
+        }
+
+        /* Child Table Row Popup Styling */
+        .consultant-contract-wrapper .grid-row-open .form-in-grid,
+        .consultant-contract-wrapper .form-in-grid {
+            background-color: #ffffff !important;
+            border: 1.5px solid #00B800 !important;
+            border-radius: 8px !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+            max-height: 420px !important;
+            overflow-y: scroll !important;
+            overflow-x: hidden !important;
+            scrollbar-width: thin !important;
+            scrollbar-color: #00B800 #f1f5f9 !important;
+        }
+
+        .consultant-contract-wrapper .form-in-grid::-webkit-scrollbar {
+            width: 9px !important;
+            display: block !important;
+        }
+
+        .consultant-contract-wrapper .form-in-grid::-webkit-scrollbar-thumb {
+            background-color: #00B800 !important;
+            border-radius: 5px !important;
+        }
+
+        .consultant-contract-wrapper .form-in-grid::-webkit-scrollbar-track {
+            background-color: #f1f5f9 !important;
+            border-radius: 5px !important;
+        }
+
+        .consultant-contract-wrapper .form-in-grid .grid-form-heading {
+            position: sticky !important;
+            top: 0 !important;
+            background: #ffffff !important;
+            z-index: 10 !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+        }
+    </style>
+    `).appendTo("head");
+}
+
+// ==============================================================================
+// 5. Calculations & Utilities
+// ==============================================================================
+function calculate_tenure_from_dates(frm) {
+    if (frm.doc.proposed_start_date && frm.doc.proposed_end_date) {
+        let start = frappe.datetime.str_to_obj(frm.doc.proposed_start_date);
+        let end = frappe.datetime.str_to_obj(frm.doc.proposed_end_date);
+
+        if (end < start) {
+            frappe.msgprint({
+                title: __("Invalid Date Range"),
+                indicator: "red",
+                message: __("Proposed End Date cannot be earlier than Proposed Start Date.")
+            });
+            frm.set_value("proposed_end_date", null);
+            return;
+        }
+
+        let diff_days = frappe.datetime.get_diff(frm.doc.proposed_end_date, frm.doc.proposed_start_date) + 1;
+        let approx_months = Math.max(1, Math.round(diff_days / 30.4375));
+        let exact_months = (diff_days / 30.4375).toFixed(1);
+        if (exact_months.endsWith(".0")) exact_months = exact_months.slice(0, -2);
+
+        frm.set_value("initial_tenure_value", approx_months);
+        frm.set_value("tenure_unit", "Months");
+        frm.set_value("contract_tenure", `${approx_months} Months (${diff_days} Days)`);
+        frm.set_value("start_date", frm.doc.proposed_start_date);
+        frm.set_value("end_date", frm.doc.proposed_end_date);
+
         calculate_total_contract_value(frm);
     }
 }
 
-function update_tenure_string(frm) {
-    if (frm.doc.initial_tenure_value) {
-        let str = `${frm.doc.initial_tenure_value} ${frm.doc.tenure_unit || "Months"}`;
-        frm.set_value("contract_tenure", str);
+function calculate_end_date_from_tenure(frm) {
+    if (frm.doc.proposed_start_date && frm.doc.initial_tenure_value) {
+        let tenure = cint(frm.doc.initial_tenure_value);
+        let unit = (frm.doc.tenure_unit || "Months").toLowerCase();
+        let s_obj = frappe.datetime.str_to_obj(frm.doc.proposed_start_date);
+        let end_obj = new Date(s_obj.getTime());
+
+        if (unit.includes("month")) {
+            end_obj.setMonth(end_obj.getMonth() + tenure);
+            end_obj.setDate(end_obj.getDate() - 1);
+        } else if (unit.includes("year")) {
+            end_obj.setFullYear(end_obj.getFullYear() + tenure);
+            end_obj.setDate(end_obj.getDate() - 1);
+        } else if (unit.includes("week")) {
+            end_obj.setDate(end_obj.getDate() + (tenure * 7) - 1);
+        } else {
+            end_obj.setDate(end_obj.getDate() + tenure - 1);
+        }
+
+        let end_str = frappe.datetime.obj_to_str(end_obj);
+        frm.set_value("proposed_end_date", end_str);
+        frm.set_value("end_date", end_str);
+        frm.set_value("start_date", frm.doc.proposed_start_date);
+        let diff_days = frappe.datetime.get_diff(end_str, frm.doc.proposed_start_date) + 1;
+        frm.set_value("contract_tenure", `${tenure} ${frm.doc.tenure_unit || 'Months'} (${diff_days} Days)`);
+        calculate_total_contract_value(frm);
     }
 }
 
 function calculate_total_contract_value(frm) {
-    let comp = parseFloat(frm.doc.compensation_amount || frm.doc.proposed_fee || 0);
-    let tenure = parseInt(frm.doc.initial_tenure_value || 0);
-    let unit = (frm.doc.tenure_unit || "Months").toLowerCase();
+    let fee = flt(frm.doc.proposed_fee) || flt(frm.doc.compensation_amount) || 0;
+    let tenure = cint(frm.doc.initial_tenure_value) || 1;
     let comp_type = (frm.doc.compensation_type || "").toLowerCase();
 
-    if (comp > 0) {
-        if (comp_type.includes("month") && unit.includes("month") && tenure > 0) {
-            frm.set_value("total_contract_value", comp * tenure);
-        } else {
-            frm.set_value("total_contract_value", comp);
-        }
+    if (comp_type.includes("month")) {
+        frm.set_value("total_contract_value", fee * tenure);
+    } else {
+        frm.set_value("total_contract_value", fee);
     }
 }
 
 function calculate_total_allocation(frm) {
-    let total = 0.0;
+    let total = 0;
     (frm.doc.project_allocations || []).forEach(row => {
-        total += parseFloat(row.allocation_percent || 0);
+        total += flt(row.allocation_percent);
     });
     frm.set_value("total_allocation_percent", total);
-
     if (total > 100) {
         frappe.show_alert({
-            message: __(`Warning: Total allocation is ${total}%, exceeding 100%!`),
+            message: __("Warning: Total project allocation exceeds 100% (currently {0}%)", [total]),
             indicator: "orange"
         }, 5);
+    }
+}
+
+function setup_leadership_queries(frm) {
+    frm.set_query("team_lead", function() {
+        return {
+            query: "access_custom.access_custom.doctype.consultant_contract.consultant_contract.get_leadership_employees",
+            filters: { role: "Team Lead" }
+        };
+    });
+
+    frm.set_query("project_manager", function() {
+        return {
+            query: "access_custom.access_custom.doctype.consultant_contract.consultant_contract.get_leadership_employees",
+            filters: { role: "Projects Manager" }
+        };
+    });
+}
+
+function setup_expenses_allowed_multiselect(frm) {
+    try {
+        let field = frm.get_field("expenses_allowed_multiselect");
+        if (!field || !field.$wrapper) return;
+
+        const expense_options = ["Travel", "Accommodation", "Meals", "Per Diem", "Communication", "Supplies", "Other"];
+
+        let $input = field.$input;
+        let $input_wrapper = field.$wrapper.find(".control-input-wrapper");
+        if (!$input || !$input.length || !$input_wrapper.length) return;
+
+        // Clean up any previously attached elements
+        $input_wrapper.find(".custom-expenses-multiselect").remove();
+        $input_wrapper.find(".expenses-dropdown-menu").remove();
+        $input_wrapper.find(".expenses-dd-caret").remove();
+        let doc_key = (frm.doc && frm.doc.name) ? frm.doc.name : "new";
+        $(document).off("click.expenses_dd_" + doc_key);
+
+        $input_wrapper.css({ position: "relative" });
+
+        function get_selected_array() {
+            let raw_val = frm.doc.expenses_allowed_multiselect || "";
+            return (typeof raw_val === "string" && raw_val.trim())
+                ? raw_val.split(",").map(s => s.trim()).filter(Boolean)
+                : [];
+        }
+
+        function update_input_display() {
+            let selected = get_selected_array();
+            $input.val(selected.length > 0 ? selected.join(", ") : "");
+        }
+
+        update_input_display();
+
+        let is_readonly = field.df.read_only || (frm.doc.__islocal === undefined && frm.doc.docstatus > 0);
+        if (is_readonly) {
+            $input.attr("readonly", "readonly").css({ cursor: "default" });
+            return;
+        }
+
+        // Configure input as interactive dropdown trigger
+        $input.attr("readonly", "readonly");
+        $input.attr("placeholder", __("Select Expenses Allowed (Multiselect)..."));
+        $input.css({
+            cursor: "pointer",
+            backgroundColor: "#ffffff",
+            paddingRight: "30px",
+            userSelect: "none"
+        });
+
+        // Dropdown caret icon inside input box
+        let $caret = $(`
+            <span class="expenses-dd-caret" style="
+                position: absolute;
+                right: 12px;
+                top: 50%;
+                transform: translateY(-50%);
+                pointer-events: none;
+                color: #64748b;
+                font-size: 11px;
+                transition: transform 0.2s ease;
+            ">&#9660;</span>
+        `);
+        $input_wrapper.append($caret);
+
+        // Dropdown menu element
+        let $menu = $(`
+            <div class="expenses-dropdown-menu" style="
+                position: absolute;
+                top: calc(100% + 4px);
+                left: 0;
+                right: 0;
+                z-index: 1050;
+                background: #ffffff;
+                border: 1px solid #d1d5db;
+                border-radius: 6px;
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+                padding: 6px 0;
+                display: none;
+            ">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 14px 8px 14px; border-bottom: 1px solid #f1f5f9; font-size: 12px; color: #64748b;">
+                    <span style="font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;">Select Expenses</span>
+                    <div>
+                        <a href="javascript:void(0)" class="expenses-select-all" style="color: #2563eb; text-decoration: none; margin-right: 12px; font-weight: 500;">Select All</a>
+                        <a href="javascript:void(0)" class="expenses-clear-all" style="color: #dc2626; text-decoration: none; font-weight: 500;">Clear</a>
+                    </div>
+                </div>
+                <div class="expenses-items-list" style="max-height: 220px; overflow-y: auto; padding: 4px 0;"></div>
+            </div>
+        `);
+
+        function render_dropdown_items() {
+            let selected = get_selected_array();
+            let $list = $menu.find(".expenses-items-list");
+            $list.empty();
+
+            expense_options.forEach(opt => {
+                let is_sel = selected.includes(opt);
+                let $item = $(`
+                    <div class="expenses-dd-item" data-value="${opt}" style="
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                        padding: 8px 14px;
+                        cursor: pointer;
+                        font-size: 13px;
+                        color: ${is_sel ? '#1e40af' : '#1e293b'};
+                        background: ${is_sel ? '#eff6ff' : 'transparent'};
+                        user-select: none;
+                        transition: background 0.12s ease;
+                    ">
+                        <input type="checkbox" ${is_sel ? "checked" : ""} style="cursor: pointer; width: 16px; height: 16px; accent-color: #2563eb; pointer-events: none;">
+                        <span style="flex: 1; font-weight: ${is_sel ? '600' : '400'};">${opt}</span>
+                        ${is_sel ? '<span style="color: #2563eb; font-weight: 700; font-size: 14px;">&#10003;</span>' : ''}
+                    </div>
+                `);
+
+                $item.on("mouseenter", function() {
+                    if (!is_sel) $(this).css({ background: "#f8fafc" });
+                }).on("mouseleave", function() {
+                    if (!is_sel) $(this).css({ background: "transparent" });
+                });
+
+                $item.on("click", function(e) {
+                    e.stopPropagation();
+                    let current_selected = get_selected_array();
+                    let idx = current_selected.indexOf(opt);
+                    if (idx >= 0) {
+                        current_selected.splice(idx, 1);
+                    } else {
+                        current_selected.push(opt);
+                    }
+                    let new_val = current_selected.join(", ");
+                    frm.set_value("expenses_allowed_multiselect", new_val);
+                    update_input_display();
+                    render_dropdown_items();
+                });
+
+                $list.append($item);
+            });
+        }
+
+        render_dropdown_items();
+
+        // Select All link
+        $menu.find(".expenses-select-all").on("click", function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            let all_val = expense_options.join(", ");
+            frm.set_value("expenses_allowed_multiselect", all_val);
+            update_input_display();
+            render_dropdown_items();
+        });
+
+        // Clear All link
+        $menu.find(".expenses-clear-all").on("click", function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            frm.set_value("expenses_allowed_multiselect", "");
+            update_input_display();
+            render_dropdown_items();
+        });
+
+        $input_wrapper.append($menu);
+
+        // Toggle dropdown on input click
+        $input.off("click.expenses_toggle").on("click.expenses_toggle", function(e) {
+            e.stopPropagation();
+            let is_visible = $menu.is(":visible");
+            if (is_visible) {
+                $menu.hide();
+                $caret.css({ transform: "translateY(-50%) rotate(0deg)" });
+            } else {
+                render_dropdown_items();
+                $menu.show();
+                $caret.css({ transform: "translateY(-50%) rotate(180deg)" });
+            }
+        });
+
+        // Close on clicking outside
+        $(document).off("click.expenses_dd_" + doc_key).on("click.expenses_dd_" + doc_key, function(e) {
+            if (!$(e.target).closest($input_wrapper).length) {
+                $menu.hide();
+                $caret.css({ transform: "translateY(-50%) rotate(0deg)" });
+            }
+        });
+
+    } catch (e) {
+        console.warn("setup_expenses_allowed_multiselect warning:", e);
     }
 }
 
@@ -632,9 +2135,6 @@ function setup_status_indicator(frm) {
     frm.page.set_indicator(__(s), color);
 }
 
-// ==============================================================================
-// 5. Strict PDF Only Attachment Validator
-// ==============================================================================
 function validate_pdf_attachment(frm, fieldname) {
     let file_url = frm.doc[fieldname];
     if (!file_url) return true;
@@ -645,12 +2145,99 @@ function validate_pdf_attachment(frm, fieldname) {
     if (ext !== "pdf") {
         let field_label = frm.get_docfield(fieldname)?.label || fieldname;
         frm.set_value(fieldname, null);
-        frappe.msgprint({
-            title: __("Invalid Document Format"),
-            indicator: "red",
-            message: __("<b>{0}</b> only accepts PDF (.pdf) files.<br><br>The uploaded file (.<b>{1}</b>) is not permitted and has been removed.", [field_label, ext])
-        });
+
+        // Deduplicate: prevent firing duplicate popups within 1.5 seconds
+        let now = Date.now();
+        if (frm._last_pdf_err_time && (now - frm._last_pdf_err_time < 1500) && frm._last_pdf_err_field === fieldname) {
+            return false;
+        }
+        frm._last_pdf_err_time = now;
+        frm._last_pdf_err_field = fieldname;
+
+        // Cancel previous timer if still pending
+        if (frm._pdf_err_timer) {
+            clearTimeout(frm._pdf_err_timer);
+        }
+
+        frm._pdf_err_timer = setTimeout(() => {
+            // Clear any previously accumulated text in the dialog
+            if (frappe.msg_dialog && typeof frappe.msg_dialog.clear === "function") {
+                frappe.msg_dialog.clear();
+            }
+
+            frappe.msgprint({
+                title: __("Invalid Document Format"),
+                indicator: "red",
+                message: __(
+                    "<div style='font-size: 14px; line-height: 1.6; padding: 4px 0;'>" +
+                    "<p style='margin-bottom: 8px;'><b>" + frappe.utils.escape_html(field_label) + "</b> only accepts <b>PDF (.pdf)</b> files.</p>" +
+                    "<p style='color: #dc2626; margin-bottom: 8px;'>The uploaded file (<b>." + frappe.utils.escape_html(ext) + "</b>) is not permitted and has been removed.</p>" +
+                    "<p style='color: #475569; font-size: 13px;'>Please select and upload a valid PDF document.</p>" +
+                    "</div>"
+                ),
+                primary_action: {
+                    label: __("Understood"),
+                    action: function() {
+                        frappe.hide_msgprint(true);
+                        if (frappe.msg_dialog && typeof frappe.msg_dialog.hide === "function") {
+                            frappe.msg_dialog.hide();
+                        }
+                    }
+                }
+            });
+        }, 400);
+
         return false;
     }
     return true;
+}
+
+function setup_print_agreement_button(frm) {
+    if (frm.is_new()) return;
+    let state = frm.doc.workflow_state || frm.doc.status || "Draft";
+    let user = frappe.session.user;
+    let is_ceo = (frm.doc.ceo_approver && user === frm.doc.ceo_approver);
+    let is_hr = (frm.doc.hr_approver && user === frm.doc.hr_approver) || (frm.doc.final_hr_approver && user === frm.doc.final_hr_approver);
+    let is_owner = (user === frm.doc.owner);
+    let has_cm_role = frappe.user_roles && frappe.user_roles.includes("Contract Manager");
+    let is_cm_authorized = !is_ceo && !is_hr && (is_owner || has_cm_role || (user === "Administrator" && !is_ceo && !is_hr));
+
+    // Clear previous custom buttons to prevent duplicates
+    frm.page.remove_inner_button(__("Download Preview Form (PDF)"));
+    frm.page.remove_inner_button(__("Send to HR for Final Review"));
+
+    // If CEO Approved: show primary action button to send directly to HR ONLY for Contract Manager
+    if (state === "CEO Approved" && is_cm_authorized) {
+        frm.add_custom_button(__("Send to HR for Final Review"), function() {
+            trigger_send_to_final_hr(frm);
+        }).addClass("btn-primary").css({"background-color": "#0284c7", "color": "#ffffff", "border-color": "#0284c7"});
+    }
+}
+
+function trigger_send_to_final_hr(frm) {
+    let hr_name = frm.doc.final_hr_approver || frm.doc.hr_approver || "Assigned HR Manager";
+    frappe.confirm(
+        __(`Are you sure you want to submit this contract to <b>${frappe.utils.escape_html(hr_name)}</b> for <b>Final HR Review</b>?`),
+        function() {
+            frm.selected_workflow_action = "Submit for HR Review";
+            if (!frm.doc.final_hr_approver) {
+                frm.doc.final_hr_approver = frm.doc.hr_approver;
+            }
+            frappe.dom.freeze(__("Submitting for Final HR Review..."));
+            frappe.xcall("frappe.model.workflow.apply_workflow", {
+                doc: frm.doc,
+                action: "Submit for HR Review"
+            }).then(() => {
+                frappe.dom.unfreeze();
+                frappe.show_alert({
+                    message: __("Submitted for Final HR Review and notification sent to HR."),
+                    indicator: "green"
+                }, 5);
+                frm.reload_doc();
+            }).catch(e => {
+                frappe.dom.unfreeze();
+                frappe.msgprint(__("Error submitting for HR Review: ") + (e.message || e));
+            });
+        }
+    );
 }

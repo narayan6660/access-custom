@@ -248,13 +248,45 @@ body.modal-open #freeze {
 .grid-row-open .form-in-grid,
 .form-in-grid {
     background-color: #ffffff !important;
-    border: 1px solid #d1d5db !important;
+    border: 1.5px solid #00B800 !important;
     border-radius: 8px !important;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12) !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
     margin-top: 8px !important;
     margin-bottom: 8px !important;
     opacity: 1 !important;
     position: relative !important;
+    max-height: 420px !important;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: #00B800 #f1f5f9 !important;
+}
+
+.form-in-grid::-webkit-scrollbar {
+    width: 9px !important;
+    display: block !important;
+}
+
+.form-in-grid::-webkit-scrollbar-thumb {
+    background-color: #00B800 !important;
+    border-radius: 5px !important;
+}
+
+.form-in-grid::-webkit-scrollbar-thumb:hover {
+    background-color: #007A00 !important;
+}
+
+.form-in-grid::-webkit-scrollbar-track {
+    background-color: #f1f5f9 !important;
+    border-radius: 5px !important;
+}
+
+.form-in-grid .grid-form-heading {
+    position: sticky !important;
+    top: 0 !important;
+    background: #ffffff !important;
+    z-index: 10 !important;
+    border-bottom: 1px solid #f1f5f9 !important;
 }
 
 /* -----------------------------------------------------------------
@@ -1543,3 +1575,143 @@ body.modal-open #freeze {
 #custom-contract-progress {
     display: none !important;
 }
+
+/* ============================================================
+   EXTERNAL WORK HISTORY: Vertical Stacked Card Layout
+   Strictly scoped ONLY to [data-fieldname="external_work_history"]
+   ============================================================ */
+
+/* 1. Hide the horizontal column header row */
+[data-fieldname="external_work_history"] .grid-heading-row {
+    display: none !important;
+}
+
+/* 2. Format each row as an individual vertical card */
+[data-fieldname="external_work_history"] .grid-body .rows .grid-row {
+    background: #ffffff !important;
+    border: 1.5px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+    margin-bottom: 12px !important;
+    padding: 14px 16px !important;
+    position: relative !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+[data-fieldname="external_work_history"] .grid-body .rows .grid-row:hover {
+    border-color: #00B800 !important;
+    box-shadow: 0 4px 12px rgba(0, 184, 0, 0.08) !important;
+}
+
+/* 3. Stack cells vertically inside the row */
+[data-fieldname="external_work_history"] .grid-body .rows .grid-row .data-row {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+}
+
+/* Checkbox at top-left */
+[data-fieldname="external_work_history"] .grid-body .rows .grid-row .data-row > .grid-row-check {
+    position: absolute !important;
+    top: 14px !important;
+    left: 14px !important;
+    width: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    z-index: 2 !important;
+}
+
+/* Experience Number heading */
+[data-fieldname="external_work_history"] .grid-body .rows .grid-row .data-row > .grid-static-col:not([data-fieldname]) {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    color: #1e293b !important;
+    margin-left: 26px !important;
+    margin-bottom: 6px !important;
+    padding: 0 !important;
+    width: auto !important;
+}
+
+[data-fieldname="external_work_history"] .grid-body .rows .grid-row .data-row > .grid-static-col:not([data-fieldname])::before {
+    content: "Experience #" !important;
+    font-weight: 600 !important;
+    color: #00B800 !important;
+}
+
+/* Edit / Open row icon at top-right */
+[data-fieldname="external_work_history"] .grid-body .rows .grid-row .data-row > .grid-edit-row {
+    position: absolute !important;
+    top: 12px !important;
+    right: 14px !important;
+    width: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    z-index: 2 !important;
+}
+
+/* 4. Format each field cell as a clear label-value line */
+[data-fieldname="external_work_history"] .grid-body .rows .grid-row .data-row > .grid-static-col[data-fieldname] {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: baseline !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 0 0 100% !important;
+    padding: 3px 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+    color: #0f172a !important;
+}
+
+/* Field labels on the left of each value */
+[data-fieldname="external_work_history"] .grid-body .rows .grid-row .data-row > .grid-static-col[data-fieldname]::before {
+    font-weight: 600 !important;
+    color: #64748b !important;
+    min-width: 160px !important;
+    max-width: 180px !important;
+    flex-shrink: 0 !important;
+    display: inline-block !important;
+}
+
+[data-fieldname="external_work_history"] .grid-static-col[data-fieldname="company_name"]::before {
+    content: "Company: " !important;
+}
+
+[data-fieldname="external_work_history"] .grid-static-col[data-fieldname="designation"]::before {
+    content: "Designation: " !important;
+}
+
+[data-fieldname="external_work_history"] .grid-static-col[data-fieldname="salary"]::before {
+    content: "Salary: " !important;
+}
+
+[data-fieldname="external_work_history"] .grid-static-col[data-fieldname="address"]::before {
+    content: "Address: " !important;
+}
+
+[data-fieldname="external_work_history"] .grid-static-col[data-fieldname="contact"]::before {
+    content: "Contact: " !important;
+}
+
+[data-fieldname="external_work_history"] .grid-static-col[data-fieldname="total_experience"]::before {
+    content: "Total Experience: " !important;
+}
+
+[data-fieldname="external_work_history"] .grid-static-col[data-fieldname="relieving_letter_and_experience_letter"]::before {
+    content: "Relieving / Exp Letter: " !important;
+}
+
+[data-fieldname="external_work_history"] .grid-static-col[data-fieldname="previous_ctc_proof_offerincrement_letter"]::before {
+    content: "Previous CTC Proof: " !important;
+}
+
+/* 5. When card is open in full form edit mode, hide the collapsed preview line */
+[data-fieldname="external_work_history"] .grid-row.grid-row-open > .data-row {
+    display: none !important;
+}
+

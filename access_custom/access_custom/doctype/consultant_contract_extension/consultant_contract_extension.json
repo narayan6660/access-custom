@@ -27,7 +27,20 @@
   "extension_reason",
   "revised_scope",
   "extension_appendix",
-  "amended_from"
+  "amended_from",
+  "workflow_state",
+  "sec_approvals",
+  "team_lead_approver",
+  "team_lead_decision",
+  "team_lead_remarks",
+  "col_break_appr_1",
+  "hr_approver",
+  "hr_decision",
+  "hr_remarks",
+  "col_break_appr_2",
+  "ceo_approver",
+  "ceo_decision",
+  "ceo_remarks"
  ],
  "fields": [
   {
@@ -83,7 +96,7 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "Draft\nPending Team Lead Approval\nPending HR Review\nPending CEO Approval\nApproved\nRejected",
+   "options": "Draft\nPending Team Lead Approval\nPending HR Review\nPending CEO Approval\nApproved\nRejected\nReturned for Revision",
    "default": "Draft"
   },
   {
@@ -161,6 +174,83 @@
    "no_copy": 1,
    "print_hide": 1,
    "read_only": 1
+  },
+  {
+   "fieldname": "workflow_state",
+   "fieldtype": "Link",
+   "label": "Workflow State",
+   "options": "Workflow State",
+   "hidden": 1
+  },
+  {
+   "fieldname": "sec_approvals",
+   "fieldtype": "Section Break",
+   "label": "Approver Details & Stage Decisions"
+  },
+  {
+   "fieldname": "team_lead_approver",
+   "fieldtype": "Link",
+   "label": "Team Lead Approver",
+   "options": "User",
+   "read_only": 1,
+   "fetch_from": "contract.team_lead_approver"
+  },
+  {
+   "fieldname": "team_lead_decision",
+   "fieldtype": "Data",
+   "label": "Team Lead Decision",
+   "read_only": 1
+  },
+  {
+   "fieldname": "team_lead_remarks",
+   "fieldtype": "Small Text",
+   "label": "Team Lead Remarks"
+  },
+  {
+   "fieldname": "col_break_appr_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "hr_approver",
+   "fieldtype": "Link",
+   "label": "HR Approver",
+   "options": "User",
+   "read_only": 1,
+   "fetch_from": "contract.hr_approver"
+  },
+  {
+   "fieldname": "hr_decision",
+   "fieldtype": "Data",
+   "label": "HR Decision",
+   "read_only": 1
+  },
+  {
+   "fieldname": "hr_remarks",
+   "fieldtype": "Small Text",
+   "label": "HR Remarks"
+  },
+  {
+   "fieldname": "col_break_appr_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ceo_approver",
+   "fieldtype": "Link",
+   "label": "CEO Approver",
+   "options": "User",
+   "read_only": 1,
+   "fetch_from": "contract.ceo_approver"
+  },
+  {
+   "fieldname": "ceo_decision",
+   "fieldtype": "Data",
+   "label": "CEO Decision",
+   "read_only": 1
+  },
+  {
+   "fieldname": "ceo_remarks",
+   "fieldtype": "Small Text",
+   "label": "CEO Remarks"
   }
  ],
  "is_submittable": 1,

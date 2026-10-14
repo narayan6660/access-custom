@@ -2,307 +2,6 @@
  {
   "docstatus": 0,
   "doctype": "Workflow Action Master",
-  "modified": "2026-09-19 13:17:39.874627",
-  "name": "Return for Revision",
-  "workflow_action_name": "Return for Revision"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-09-19 13:17:39.881272",
-  "name": "Execute Amendment",
-  "workflow_action_name": "Execute Amendment"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-09-19 13:17:39.882840",
-  "name": "Resubmit",
-  "workflow_action_name": "Resubmit"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-09-19 17:14:06.735515",
-  "name": "Put On Hold",
-  "workflow_action_name": "Put On Hold"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-09-19 17:14:06.956862",
-  "name": "Resume Contract",
-  "workflow_action_name": "Resume Contract"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-09-21 10:40:57.165041",
-  "name": "Request Termination",
-  "workflow_action_name": "Request Termination"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-09-21 10:40:57.179573",
-  "name": "Submit to TL",
-  "workflow_action_name": "Submit to TL"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-09-21 10:40:57.181457",
-  "name": "Approve Termination TL",
-  "workflow_action_name": "Approve Termination TL"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-09-21 10:40:57.183612",
-  "name": "Approve Termination Legal",
-  "workflow_action_name": "Approve Termination Legal"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-09-21 10:40:57.185590",
-  "name": "Approve Termination Finance",
-  "workflow_action_name": "Approve Termination Finance"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-09-21 10:40:57.187348",
-  "name": "Approve Termination HR",
-  "workflow_action_name": "Approve Termination HR"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-09-21 10:40:57.189230",
-  "name": "Approve Termination CEO",
-  "workflow_action_name": "Approve Termination CEO"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-09-21 10:40:57.190909",
-  "name": "Finalize Termination",
-  "workflow_action_name": "Finalize Termination"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-09-21 10:40:57.192332",
-  "name": "Initiate Closure",
-  "workflow_action_name": "Initiate Closure"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-09-21 10:40:57.193846",
-  "name": "Deliverables Confirmed",
-  "workflow_action_name": "Deliverables Confirmed"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-09-21 10:40:57.195248",
-  "name": "Documents Archived",
-  "workflow_action_name": "Documents Archived"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-09-21 10:40:57.196672",
-  "name": "Approve Closure TL",
-  "workflow_action_name": "Approve Closure TL"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-09-21 10:40:57.198129",
-  "name": "Approve Closure Legal",
-  "workflow_action_name": "Approve Closure Legal"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-09-21 10:40:57.199408",
-  "name": "Approve Closure Finance",
-  "workflow_action_name": "Approve Closure Finance"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-09-21 10:40:57.200678",
-  "name": "Final Close Contract",
-  "workflow_action_name": "Final Close Contract"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-09-21 17:37:03.631847",
-  "name": "Submit Termination",
-  "workflow_action_name": "Submit Termination"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-09-21 17:37:03.635368",
-  "name": "Upload Client Communication",
-  "workflow_action_name": "Upload Client Communication"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-09-21 17:37:03.636913",
-  "name": "Execute Termination",
-  "workflow_action_name": "Execute Termination"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-09-21 17:37:03.638987",
-  "name": "Confirm Deliverables",
-  "workflow_action_name": "Confirm Deliverables"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-09-21 17:37:03.641633",
-  "name": "Archive Documents",
-  "workflow_action_name": "Archive Documents"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-09-21 17:37:03.644113",
-  "name": "Approve Closure CEO",
-  "workflow_action_name": "Approve Closure CEO"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-09-21 17:37:03.645498",
-  "name": "Final Close",
-  "workflow_action_name": "Final Close"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-09-22 18:38:08.516014",
-  "name": "Return to Draft",
-  "workflow_action_name": "Return to Draft"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-09-22 18:38:08.657672",
-  "name": "Reopen as Draft",
-  "workflow_action_name": "Reopen as Draft"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-09-28 15:52:34.421572",
-  "name": "Resubmit for Approval",
-  "workflow_action_name": "Resubmit for Approval"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-09-28 16:05:07.861098",
-  "name": "Issue Contract",
-  "workflow_action_name": "Issue Contract"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-09-28 16:05:07.871932",
-  "name": "Submit Signed Contract",
-  "workflow_action_name": "Submit Signed Contract"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-09-28 16:05:07.873538",
-  "name": "Execute Contract",
-  "workflow_action_name": "Execute Contract"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-05-14 15:44:47.386883",
-  "name": "Review",
-  "workflow_action_name": "Review"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-06-11 15:39:13.102115",
-  "name": "Submit to Manager",
-  "workflow_action_name": "Submit to Manager"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-06-11 15:39:55.660554",
-  "name": "Finalize Appraisal",
-  "workflow_action_name": "Finalize Appraisal"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-06-17 11:21:35.799861",
-  "name": "Submit to Parallel",
-  "workflow_action_name": "Submit to Parallel"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-06-18 13:01:45.223664",
-  "name": "Route Customer Contract",
-  "workflow_action_name": "Route Customer Contract"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-06-18 13:02:38.806870",
-  "name": "Route Internal/Supplier",
-  "workflow_action_name": "Route Internal/Supplier"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-06-18 13:04:21.723548",
-  "name": "Submit to Finance & HR",
-  "workflow_action_name": "Submit to Finance & HR"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-06-18 13:06:14.357863",
-  "name": "All Level 2 Approved",
-  "workflow_action_name": "All Level 2 Approved"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-07-19 22:36:32.153327",
-  "name": "Submit to Dept Manager",
-  "workflow_action_name": "Submit to Dept Manager"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
-  "modified": "2026-07-19 22:38:22.161989",
-  "name": "Dept Manager Approve",
-  "workflow_action_name": "Dept Manager Approve"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow Action Master",
   "modified": "2026-07-19 22:38:32.253592",
   "name": "Dept Manager Reject",
   "workflow_action_name": "Dept Manager Reject"
@@ -429,9 +128,37 @@
  {
   "docstatus": 0,
   "doctype": "Workflow Action Master",
+  "modified": "2026-09-19 13:17:39.874627",
+  "name": "Return for Revision",
+  "workflow_action_name": "Return for Revision"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-19 13:17:39.881272",
+  "name": "Execute Amendment",
+  "workflow_action_name": "Execute Amendment"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
   "modified": "2026-08-21 16:16:06.866437",
   "name": "Approve Legal",
   "workflow_action_name": "Approve Legal"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-19 13:17:39.882840",
+  "name": "Resubmit",
+  "workflow_action_name": "Resubmit"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-19 17:14:06.735515",
+  "name": "Put On Hold",
+  "workflow_action_name": "Put On Hold"
  },
  {
   "docstatus": 0,
@@ -443,9 +170,23 @@
  {
   "docstatus": 0,
   "doctype": "Workflow Action Master",
+  "modified": "2026-09-19 17:14:06.956862",
+  "name": "Resume Contract",
+  "workflow_action_name": "Resume Contract"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
   "modified": "2026-08-21 16:16:39.601734",
   "name": "Reject Finance",
   "workflow_action_name": "Reject Finance"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-21 10:40:57.165041",
+  "name": "Request Termination",
+  "workflow_action_name": "Request Termination"
  },
  {
   "docstatus": 0,
@@ -457,9 +198,37 @@
  {
   "docstatus": 0,
   "doctype": "Workflow Action Master",
+  "modified": "2026-09-21 10:40:57.179573",
+  "name": "Submit to TL",
+  "workflow_action_name": "Submit to TL"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-21 10:40:57.181457",
+  "name": "Approve Termination TL",
+  "workflow_action_name": "Approve Termination TL"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
   "modified": "2026-08-21 16:16:52.917006",
   "name": "Reject HR",
   "workflow_action_name": "Reject HR"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-21 10:40:57.183612",
+  "name": "Approve Termination Legal",
+  "workflow_action_name": "Approve Termination Legal"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-21 10:40:57.185590",
+  "name": "Approve Termination Finance",
+  "workflow_action_name": "Approve Termination Finance"
  },
  {
   "docstatus": 0,
@@ -471,9 +240,30 @@
  {
   "docstatus": 0,
   "doctype": "Workflow Action Master",
+  "modified": "2026-09-21 10:40:57.187348",
+  "name": "Approve Termination HR",
+  "workflow_action_name": "Approve Termination HR"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
   "modified": "2026-08-21 16:17:35.366927",
   "name": "Initiate Amendment",
   "workflow_action_name": "Initiate Amendment"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-21 10:40:57.189230",
+  "name": "Approve Termination CEO",
+  "workflow_action_name": "Approve Termination CEO"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-21 10:40:57.190909",
+  "name": "Finalize Termination",
+  "workflow_action_name": "Finalize Termination"
  },
  {
   "docstatus": 0,
@@ -485,9 +275,30 @@
  {
   "docstatus": 0,
   "doctype": "Workflow Action Master",
+  "modified": "2026-09-21 10:40:57.192332",
+  "name": "Initiate Closure",
+  "workflow_action_name": "Initiate Closure"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
   "modified": "2026-09-02 14:26:53.325223",
   "name": "Commence Contract",
   "workflow_action_name": "Commence Contract"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-21 10:40:57.193846",
+  "name": "Deliverables Confirmed",
+  "workflow_action_name": "Deliverables Confirmed"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-21 10:40:57.195248",
+  "name": "Documents Archived",
+  "workflow_action_name": "Documents Archived"
  },
  {
   "docstatus": 0,
@@ -499,9 +310,30 @@
  {
   "docstatus": 0,
   "doctype": "Workflow Action Master",
+  "modified": "2026-09-21 10:40:57.196672",
+  "name": "Approve Closure TL",
+  "workflow_action_name": "Approve Closure TL"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
   "modified": "2026-06-26 13:51:45.335677",
   "name": "Resubmit Objectives",
   "workflow_action_name": "Resubmit Objectives"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-21 10:40:57.198129",
+  "name": "Approve Closure Legal",
+  "workflow_action_name": "Approve Closure Legal"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-21 10:40:57.199408",
+  "name": "Approve Closure Finance",
+  "workflow_action_name": "Approve Closure Finance"
  },
  {
   "docstatus": 0,
@@ -513,9 +345,37 @@
  {
   "docstatus": 0,
   "doctype": "Workflow Action Master",
+  "modified": "2026-09-21 10:40:57.200678",
+  "name": "Final Close Contract",
+  "workflow_action_name": "Final Close Contract"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
   "modified": "2026-08-21 16:15:02.847274",
   "name": "Finalize Amendment",
   "workflow_action_name": "Finalize Amendment"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-21 17:37:03.631847",
+  "name": "Submit Termination",
+  "workflow_action_name": "Submit Termination"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-21 17:37:03.635368",
+  "name": "Upload Client Communication",
+  "workflow_action_name": "Upload Client Communication"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-21 17:37:03.636913",
+  "name": "Execute Termination",
+  "workflow_action_name": "Execute Termination"
  },
  {
   "docstatus": 0,
@@ -527,9 +387,51 @@
  {
   "docstatus": 0,
   "doctype": "Workflow Action Master",
+  "modified": "2026-09-21 17:37:03.638987",
+  "name": "Confirm Deliverables",
+  "workflow_action_name": "Confirm Deliverables"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-21 17:37:03.641633",
+  "name": "Archive Documents",
+  "workflow_action_name": "Archive Documents"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-21 17:37:03.644113",
+  "name": "Approve Closure CEO",
+  "workflow_action_name": "Approve Closure CEO"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-21 17:37:03.645498",
+  "name": "Final Close",
+  "workflow_action_name": "Final Close"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
   "modified": "2026-06-26 13:52:43.709257",
   "name": "Submit Objectives",
   "workflow_action_name": "Submit Objectives"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-22 18:38:08.516014",
+  "name": "Return to Draft",
+  "workflow_action_name": "Return to Draft"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-22 18:38:08.657672",
+  "name": "Reopen as Draft",
+  "workflow_action_name": "Reopen as Draft"
  },
  {
   "docstatus": 0,
@@ -541,9 +443,44 @@
  {
   "docstatus": 0,
   "doctype": "Workflow Action Master",
+  "modified": "2026-09-28 15:52:34.421572",
+  "name": "Resubmit for Approval",
+  "workflow_action_name": "Resubmit for Approval"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-28 16:05:07.861098",
+  "name": "Issue Contract",
+  "workflow_action_name": "Issue Contract"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-28 16:05:07.871932",
+  "name": "Submit Signed Contract",
+  "workflow_action_name": "Submit Signed Contract"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
   "modified": "2026-08-21 16:14:40.828418",
   "name": "Reject Amendment",
   "workflow_action_name": "Reject Amendment"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-09-28 16:05:07.873538",
+  "name": "Execute Contract",
+  "workflow_action_name": "Execute Contract"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-05-14 15:44:47.386883",
+  "name": "Review",
+  "workflow_action_name": "Review"
  },
  {
   "docstatus": 0,
@@ -555,9 +492,30 @@
  {
   "docstatus": 0,
   "doctype": "Workflow Action Master",
+  "modified": "2026-06-11 15:39:13.102115",
+  "name": "Submit to Manager",
+  "workflow_action_name": "Submit to Manager"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-06-11 15:39:55.660554",
+  "name": "Finalize Appraisal",
+  "workflow_action_name": "Finalize Appraisal"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
   "modified": "2026-08-21 16:17:20.415871",
   "name": "Reject CEO",
   "workflow_action_name": "Reject CEO"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-06-17 11:21:35.799861",
+  "name": "Submit to Parallel",
+  "workflow_action_name": "Submit to Parallel"
  },
  {
   "docstatus": 0,
@@ -569,9 +527,30 @@
  {
   "docstatus": 0,
   "doctype": "Workflow Action Master",
+  "modified": "2026-06-18 13:01:45.223664",
+  "name": "Route Customer Contract",
+  "workflow_action_name": "Route Customer Contract"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-06-18 13:02:38.806870",
+  "name": "Route Internal/Supplier",
+  "workflow_action_name": "Route Internal/Supplier"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
   "modified": "2026-06-26 13:53:49.613955",
   "name": "Finalize & Complete",
   "workflow_action_name": "Finalize & Complete"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-06-18 13:04:21.723548",
+  "name": "Submit to Finance & HR",
+  "workflow_action_name": "Submit to Finance & HR"
  },
  {
   "docstatus": 0,
@@ -583,9 +562,30 @@
  {
   "docstatus": 0,
   "doctype": "Workflow Action Master",
+  "modified": "2026-06-18 13:06:14.357863",
+  "name": "All Level 2 Approved",
+  "workflow_action_name": "All Level 2 Approved"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-07-19 22:36:32.153327",
+  "name": "Submit to Dept Manager",
+  "workflow_action_name": "Submit to Dept Manager"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
   "modified": "2026-09-30 11:09:40.355367",
   "name": "Request Revision",
   "workflow_action_name": "Request Revision"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-07-19 22:38:22.161989",
+  "name": "Dept Manager Approve",
+  "workflow_action_name": "Dept Manager Approve"
  },
  {
   "docstatus": 0,
@@ -621,5 +621,47 @@
   "modified": "2026-09-30 11:18:17.273740",
   "name": "Dismiss Revision",
   "workflow_action_name": "Dismiss Revision"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-10-09 11:18:39.083444",
+  "name": "Submit for HR Review",
+  "workflow_action_name": "Submit for HR Review"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-10-12 11:26:44.398612",
+  "name": "Submit for Review",
+  "workflow_action_name": "Submit for Review"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-10-12 11:26:44.457418",
+  "name": "Approve (Team Lead)",
+  "workflow_action_name": "Approve (Team Lead)"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-10-12 11:26:44.459844",
+  "name": "Approve (HR)",
+  "workflow_action_name": "Approve (HR)"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-10-12 11:26:44.464635",
+  "name": "Approve (CEO)",
+  "workflow_action_name": "Approve (CEO)"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-10-12 11:26:44.469378",
+  "name": "Resubmit for Review",
+  "workflow_action_name": "Resubmit for Review"
  }
 ]

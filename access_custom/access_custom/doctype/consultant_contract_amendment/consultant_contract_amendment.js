@@ -6,7 +6,16 @@ frappe.ui.form.on("Consultant Contract Amendment", {
         inject_amendment_styles();
         setup_value_calculation(frm);
         apply_form_lockdown(frm);
+        enforce_amendment_stage_actions(frm);
         setup_auto_expand_textareas(frm, ["amendment_reason", "scope_change_summary"]);
+        setTimeout(() => {
+            render_amendment_progress_tracker(frm);
+            apply_amendment_approver_styling(frm);
+            enforce_amendment_stage_actions(frm);
+        }, 120);
+        setTimeout(() => {
+            enforce_amendment_stage_actions(frm);
+        }, 400);
     },
 
     refresh(frm) {
@@ -14,7 +23,16 @@ frappe.ui.form.on("Consultant Contract Amendment", {
         setup_value_calculation(frm);
         apply_status_indicator(frm);
         apply_form_lockdown(frm);
+        enforce_amendment_stage_actions(frm);
         setup_auto_expand_textareas(frm, ["amendment_reason", "scope_change_summary"]);
+        setTimeout(() => {
+            render_amendment_progress_tracker(frm);
+            apply_amendment_approver_styling(frm);
+            enforce_amendment_stage_actions(frm);
+        }, 120);
+        setTimeout(() => {
+            enforce_amendment_stage_actions(frm);
+        }, 400);
     },
 
     contract(frm) {
@@ -108,6 +126,22 @@ frappe.ui.form.on("Consultant Contract Amendment", {
             let is_ceo_assigned = (frm.doc.ceo_approver && user === frm.doc.ceo_approver);
             let has_ceo_role = frappe.user_roles && frappe.user_roles.includes("CEO Approver");
             is_authorized = is_admin || is_ceo_assigned || has_ceo_role;
+        }
+
+                if (action === "Resubmit for Review" || action === "Submit for Review") {
+            let is_cm_authorized = (user === frm.doc.owner) ||
+                (frappe.user_roles && frappe.user_roles.includes("Contract Manager")) ||
+                is_admin;
+
+            if (!is_cm_authorized) {
+                frappe.msgprint({
+                    title: __("Not Authorized"),
+                    indicator: "red",
+                    message: __("Only the <b>Contract Manager</b> is authorized to resubmit this amendment after revision.")
+                });
+                return Promise.reject("NOT_AUTHORIZED");
+            }
+            return Promise.resolve();
         }
 
         // If not in an approver decision stage (e.g. initial submit from Draft), proceed normally
@@ -490,4 +524,424 @@ function setup_auto_expand_textareas(frm, fieldnames) {
     apply_resize();
     setTimeout(apply_resize, 100);
     setTimeout(apply_resize, 300);
+}
+
+
+// ==============================================================================
+// Amendment UI Enhancement: Progress Tracker & Approver State Cards
+// ==============================================================================
+
+function render_amendment_progress_tracker(frm) {
+    if (!frm || !frm.wrapper) return;
+
+    try {
+        $(frm.wrapper).find(".contract-progress-container").remove();
+
+        let steps = [
+            { id: "Draft", label: "Draft" },
+            { id: "Pending Team Lead Approval", label: "Team Lead" },
+            { id: "Pending HR Review", label: "HR Review" },
+            { id: "Pending CEO Approval", label: "CEO" },
+            { id: "Approved", label: "Approved" }
+        ];
+
+        let current_state = frm.doc.workflow_state || frm.doc.status || "Draft";
+        let is_rejected = current_state.includes("Reject") || (frm.doc.status === "Rejected");
+        let is_revision = (current_state === "Returned for Revision") || (frm.doc.status === "Returned for Revision");
+
+        let rejected_stage = get_amendment_rejection_stage(frm);
+        if (rejected_stage) is_rejected = true;
+
+        let revision_stage = get_amendment_revision_stage(frm);
+        if (revision_stage && !is_rejected) is_revision = true;
+
+        let active_index = 0;
+        if (current_state === "Approved") {
+            active_index = steps.length - 1;
+        } else if (rejected_stage) {
+            active_index = steps.findIndex(s => s.id === rejected_stage.name);
+            if (active_index < 0) active_index = 1;
+        } else if (revision_stage && is_revision) {
+            active_index = steps.findIndex(s => s.id === revision_stage.name);
+            if (active_index < 0) active_index = 1;
+        } else {
+            let idx = steps.findIndex(s => s.id === current_state || current_state.includes(s.label));
+            active_index = idx >= 0 ? idx : 0;
+        }
+
+        let percent = (active_index === steps.length - 1 && current_state === "Approved") ? 100 : Math.round((active_index / (steps.length - 1)) * 100);
+
+        let status_bg = "#16a34a";
+        let bar_color = "#16a34a";
+        if (is_rejected) {
+            status_bg = "#dc2626";
+            bar_color = "#dc2626";
+        } else if (is_revision) {
+            status_bg = "#d97706";
+            bar_color = "#d97706";
+        }
+
+        let nodes_html = steps.map((s, idx) => {
+            let is_completed = (idx < active_index) || (active_index === steps.length - 1 && current_state === "Approved");
+            let is_active = (idx === active_index) && !(active_index === steps.length - 1 && current_state === "Approved");
+
+            let circle_bg = "#f1f5f9";
+            let circle_border = "#cbd5e1";
+            let circle_color = "#64748b";
+            let circle_content = idx + 1;
+            let label_color = "#64748b";
+            let label_weight = "500";
+            let pulse_style = "";
+
+            if (is_completed) {
+                circle_bg = "#16a34a";
+                circle_border = "#16a34a";
+                circle_color = "#ffffff";
+                circle_content = "&#10003;";
+                label_color = "#15803d";
+                label_weight = "600";
+            } else if (is_active) {
+                if (is_rejected) {
+                    circle_bg = "#dc2626";
+                    circle_border = "#dc2626";
+                    circle_color = "#ffffff";
+                    circle_content = "&#10007;";
+                    label_color = "#dc2626";
+                    label_weight = "700";
+                } else if (is_revision) {
+                    circle_bg = "#d97706";
+                    circle_border = "#d97706";
+                    circle_color = "#ffffff";
+                    circle_content = "&#8635;";
+                    label_color = "#d97706";
+                    label_weight = "700";
+                    pulse_style = "box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.25);";
+                } else {
+                    circle_bg = "#16a34a";
+                    circle_border = "#15803d";
+                    circle_color = "#ffffff";
+                    circle_content = idx + 1;
+                    label_color = "#15803d";
+                    label_weight = "700";
+                    pulse_style = "box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.25);";
+                }
+            }
+
+            return `
+            <div style="display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 50px; position: relative; z-index: 2;">
+                <div style="width: 26px; height: 26px; border-radius: 50%; background: ${circle_bg}; border: 2px solid ${circle_border}; color: ${circle_color}; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; margin-bottom: 5px; ${pulse_style}">
+                    ${circle_content}
+                </div>
+                <div style="font-size: 11px; font-weight: ${label_weight}; color: ${label_color}; text-align: center; line-height: 1.2;">
+                    ${s.label}
+                </div>
+            </div>
+            `;
+        }).join("");
+
+        let container_html = `
+        <div class="contract-progress-container" style="margin-bottom: 14px; padding: 12px 18px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <div style="font-weight: 700; font-size: 12px; color: #1e293b; display: flex; align-items: center; gap: 8px;">
+                    <span>Consultant Contract Amendment Workflow Route</span>
+                </div>
+                <div>
+                    <span class="badge" style="background: ${status_bg}; color: #fff; font-size: 11px; padding: 3px 9px; border-radius: 12px; font-weight: 600;">
+                        ${frappe.utils.escape_html(current_state)} (${percent}%)
+                    </span>
+                </div>
+            </div>
+
+            <!-- Progress Line Bar -->
+            <div style="position: relative; height: 5px; background: #e2e8f0; border-radius: 3px; margin: 6px 12px 12px 12px;">
+                <div style="position: absolute; top: 0; left: 0; height: 100%; width: ${percent}%; background: ${bar_color}; border-radius: 3px; transition: width 0.3s ease;"></div>
+            </div>
+
+            <!-- Stepper Nodes -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; position: relative;">
+                ${nodes_html}
+            </div>
+        </div>
+        `;
+
+        let $container = $(container_html);
+
+        if (frm.layout && typeof frm.layout.show_dashboard === "function") {
+            frm.layout.show_dashboard();
+        }
+
+        if (frm.dashboard && frm.dashboard.parent && frm.dashboard.parent.length) {
+            $container.prependTo(frm.dashboard.parent);
+            frm.dashboard.show();
+            frm.dashboard.parent.show().removeClass("hide hidden");
+            frm.dashboard.parent.closest(".form-dashboard-wrapper").show().removeClass("hide hidden");
+        } else {
+            let $target = $(frm.wrapper).find(".form-layout");
+            if ($target.length) {
+                $container.insertBefore($target.first());
+            } else {
+                $container.prependTo($(frm.wrapper).find(".form-page"));
+            }
+        }
+    } catch (e) {
+        console.error("Error in render_amendment_progress_tracker:", e);
+    }
+}
+
+function get_amendment_rejection_stage(frm) {
+    const check_stages = [
+        { name: "Pending CEO Approval", status: frm.doc.ceo_decision, review: frm.doc.ceo_remarks, role: "CEO", user: frm.doc.ceo_approver },
+        { name: "Pending HR Review", status: frm.doc.hr_decision, review: frm.doc.hr_remarks, role: "HR", user: frm.doc.hr_approver },
+        { name: "Pending Team Lead Approval", status: frm.doc.team_lead_decision, review: frm.doc.team_lead_remarks, role: "Team Lead", user: frm.doc.team_lead_approver },
+    ];
+    for (let cs of check_stages) {
+        if (cs.status && cs.status.includes("Reject")) {
+            return cs;
+        }
+    }
+    return null;
+}
+
+function get_amendment_revision_stage(frm) {
+    const check_stages = [
+        { name: "Pending CEO Approval", status: frm.doc.ceo_decision, review: frm.doc.ceo_remarks, role: "CEO", user: frm.doc.ceo_approver },
+        { name: "Pending HR Review", status: frm.doc.hr_decision, review: frm.doc.hr_remarks, role: "HR", user: frm.doc.hr_approver },
+        { name: "Pending Team Lead Approval", status: frm.doc.team_lead_decision, review: frm.doc.team_lead_remarks, role: "Team Lead", user: frm.doc.team_lead_approver },
+    ];
+    for (let cs of check_stages) {
+        if (cs.status && (cs.status.includes("Return") || cs.status.includes("Revision"))) {
+            return cs;
+        }
+    }
+    return null;
+}
+
+function apply_amendment_approver_styling(frm) {
+    if (!frm || !frm.wrapper) return;
+
+    if (frm.is_new()) {
+        $(frm.wrapper).find(".approver-decision-badge, .approver-remarks-content").remove();
+        $(frm.wrapper).find(".control-input-wrapper, .control-input, .control-value").show();
+        return;
+    }
+
+    try {
+        let state = frm.doc.workflow_state || frm.doc.status || "Draft";
+        let user = frappe.session.user;
+        let is_admin = (user === "Administrator") || (frappe.user_roles && frappe.user_roles.includes("System Manager"));
+
+        const stage_mapping = [
+            {
+                role: "Team Lead",
+                state: "Pending Team Lead Approval",
+                approver: "team_lead_approver",
+                status: "team_lead_decision",
+                review: "team_lead_remarks"
+            },
+            {
+                role: "HR",
+                state: "Pending HR Review",
+                approver: "hr_approver",
+                status: "hr_decision",
+                review: "hr_remarks"
+            },
+            {
+                role: "CEO",
+                state: "Pending CEO Approval",
+                approver: "ceo_approver",
+                status: "ceo_decision",
+                review: "ceo_remarks"
+            }
+        ];
+
+        stage_mapping.forEach(item => {
+            let status_val = frm.doc[item.status] || "";
+            let review_val = frm.doc[item.review] || "";
+
+            frm.set_df_property(item.status, "read_only", 1);
+            let is_active_stage = (state === item.state);
+            let assigned_user = frm.doc[item.approver];
+
+            let is_assigned_user = (assigned_user && user === assigned_user) || is_admin;
+            if (item.role === "HR") {
+                if (frappe.user_roles && (frappe.user_roles.includes("HR Manager") || frappe.user_roles.includes("HR User"))) {
+                    is_assigned_user = true;
+                }
+            } else if (item.role === "Team Lead") {
+                if (frappe.user_roles && frappe.user_roles.includes("Team Lead")) {
+                    is_assigned_user = true;
+                }
+            } else if (item.role === "CEO") {
+                if (frappe.user_roles && frappe.user_roles.includes("CEO Approver")) {
+                    is_assigned_user = true;
+                }
+            }
+
+            let can_edit_comment = is_active_stage && is_assigned_user;
+            frm.set_df_property(item.review, "read_only", can_edit_comment ? 0 : 1);
+
+            // Visual badge for decision status
+            let status_field = frm.get_field(item.status);
+            if (status_field && status_field.$wrapper) {
+                status_field.$wrapper.find(".approver-decision-badge").remove();
+                status_field.$wrapper.find(".control-input-wrapper").hide();
+                status_field.$wrapper.find(".control-input").hide();
+                status_field.$wrapper.find(".control-value").hide();
+
+                let $badge = $('<div class="approver-decision-badge" style="margin-top: 4px; display: block !important;"></div>');
+                if (status_val && status_val !== "Pending") {
+                    let badge_bg = "#16a34a";
+                    let text_color = "#ffffff";
+                    let icon = "&#10003;";
+                    if (status_val.includes("Reject")) {
+                        badge_bg = "#dc2626";
+                        icon = "&#10007;";
+                    } else if (status_val.includes("Return") || status_val.includes("Revision")) {
+                        badge_bg = "#d97706";
+                        icon = "&#8635;";
+                    }
+                    $badge.html(`
+                        <div style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: ${badge_bg}; color: ${text_color}; border-radius: 6px; font-weight: 600; font-size: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.08);">
+                            <span>${icon}</span>
+                            <span>${frappe.utils.escape_html(status_val)}</span>
+                        </div>
+                    `);
+                } else {
+                    $badge.html(`
+                        <div style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: #f1f5f9; color: #64748b; border: 1px dashed #cbd5e1; border-radius: 6px; font-weight: 500; font-size: 12px;">
+                            <span>Pending Review</span>
+                        </div>
+                    `);
+                }
+                status_field.$wrapper.append($badge);
+            }
+
+            // Visual box for comment / remarks
+            let review_field = frm.get_field(item.review);
+            if (review_field && review_field.$wrapper) {
+                review_field.$wrapper.find(".approver-remarks-content").remove();
+                if (!can_edit_comment) {
+                    review_field.$wrapper.find(".control-input-wrapper").hide();
+                    review_field.$wrapper.find(".control-input").hide();
+                    review_field.$wrapper.find(".control-value").hide();
+
+                    let $rem = $('<div class="approver-remarks-content" style="margin-top: 4px; display: block !important;"></div>');
+                    if (review_val && review_val.trim()) {
+                        let border_color = "#cbd5e1";
+                        let text_color = "#1e293b";
+                        let bg_color = "#f8fafc";
+                        if (status_val && status_val.includes("Reject")) {
+                            border_color = "#fca5a5";
+                            bg_color = "#fef2f2";
+                            text_color = "#991b1b";
+                        }
+                        $rem.html(`
+                            <div style="padding: 10px 14px; background: ${bg_color}; border: 1px solid ${border_color}; border-radius: 6px; font-size: 13px; color: ${text_color}; white-space: pre-wrap; line-height: 1.5; min-height: 42px;">
+                                ${frappe.utils.escape_html(review_val)}
+                            </div>
+                        `);
+                    } else {
+                        $rem.html(`
+                            <div style="padding: 8px 12px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; font-size: 12px; color: #94a3b8; font-style: italic;">
+                                No comments provided
+                            </div>
+                        `);
+                    }
+                    review_field.$wrapper.append($rem);
+                } else {
+                    review_field.$wrapper.find(".control-input-wrapper").show();
+                    review_field.$wrapper.find(".control-input").show();
+                }
+            }
+        });
+    } catch (e) {
+        console.error("Error in apply_amendment_approver_styling:", e);
+    }
+}
+
+
+function enforce_amendment_stage_actions(frm) {
+    if (!frm.doc || frm.is_new()) return;
+
+    const state = frm.doc.workflow_state || frm.doc.status || "Draft";
+    const user = frappe.session.user;
+    const is_admin = (user === "Administrator") || (frappe.user_roles && frappe.user_roles.includes("System Manager"));
+
+    function hide_actions() {
+        if (frm.page && frm.page.actions_btn_group) {
+            frm.page.actions_btn_group.addClass("hide hidden-xl").hide();
+        }
+        if (frm.page && frm.page.actions && frm.page.actions.parent) {
+            frm.page.actions.parent().addClass("hide hidden-xl").hide();
+        }
+    }
+
+    function show_actions() {
+        if (frm.page && frm.page.actions_btn_group) {
+            frm.page.actions_btn_group.removeClass("hide hidden-xl").show();
+        }
+        if (frm.page && frm.page.actions && frm.page.actions.parent) {
+            frm.page.actions.parent().removeClass("hide hidden-xl").show();
+        }
+    }
+
+    // 1. If in Draft state or Returned for Revision -> ONLY Contract Manager / Owner / Admin
+    if (state === "Draft" || state === "Returned for Revision") {
+        let is_owner = (user === frm.doc.owner);
+        let has_cm_role = frappe.user_roles && frappe.user_roles.includes("Contract Manager");
+
+        if (!is_owner && !has_cm_role && !is_admin) {
+            hide_actions();
+        } else {
+            show_actions();
+        }
+        return;
+    }
+
+    // 2. Stage: Pending Team Lead Approval -> ONLY assigned Team Lead / Admin
+    if (state === "Pending Team Lead Approval") {
+        let assigned_user = frm.doc.team_lead_approver;
+        let is_tl_assigned = (assigned_user && user === assigned_user);
+        let has_tl_role = frappe.user_roles && frappe.user_roles.includes("Team Lead");
+        let is_tl_authorized = is_admin || is_tl_assigned || (has_tl_role && (!assigned_user || user === assigned_user));
+
+        if (!is_tl_authorized) {
+            hide_actions();
+        } else {
+            show_actions();
+        }
+        return;
+    }
+
+    // 3. Stage: Pending HR Review -> ONLY assigned HR Approver / Admin
+    if (state === "Pending HR Review") {
+        let assigned_user = frm.doc.hr_approver;
+        let has_hr_role = frappe.user_roles && (frappe.user_roles.includes("HR Manager") || frappe.user_roles.includes("HR User"));
+        let is_hr_authorized = is_admin || (assigned_user && user === assigned_user) || (has_hr_role && (!assigned_user || user === assigned_user));
+        if (!is_hr_authorized) {
+            hide_actions();
+        } else {
+            show_actions();
+        }
+        return;
+    }
+
+    // 4. Stage: Pending CEO Approval -> ONLY assigned CEO Approver / Admin
+    if (state === "Pending CEO Approval") {
+        let assigned_user = frm.doc.ceo_approver;
+        let has_ceo_role = frappe.user_roles && frappe.user_roles.includes("CEO Approver");
+        let is_ceo_authorized = is_admin || (assigned_user && user === assigned_user) || (has_ceo_role && (!assigned_user || user === assigned_user));
+        if (!is_ceo_authorized) {
+            hide_actions();
+        } else {
+            show_actions();
+        }
+        return;
+    }
+
+    // Completed or rejected states -> Hide Actions
+    if (state === "Approved" || state === "Terminated" || state === "Rejected") {
+        hide_actions();
+        return;
+    }
 }

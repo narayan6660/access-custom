@@ -10,6 +10,7 @@ class ConsultantContract(Document):
         self.calculate_tenure_and_end_date()
         self.calculate_allocation_totals()
         self.sync_rfp_and_sections()
+        self.compile_consultant_address()
         self.set_request_id_as_requester()
         self.sync_workflow_status()
         self.validate_pdf_attachments()
@@ -18,46 +19,49 @@ class ConsultantContract(Document):
     def calculate_tenure_and_end_date(self):
         start = self.proposed_start_date or self.start_date
         end = self.proposed_end_date or self.end_date
-        unit = (self.tenure_unit or "Months").lower()
 
-        # 1. If start and end date are both provided, auto-calculate tenure
+        # If start and end date are both provided, auto-calculate Contract Tenure exactly like Customer Contract
         if start and end:
             s_date = getdate(start)
             e_date = getdate(end)
-            diff_days = (e_date - s_date).days + 1
-            if diff_days > 0:
-                months = max(1, round(diff_days / 30.4375))
-                self.initial_tenure_value = months
-                self.tenure_unit = "Months"
-                self.contract_tenure = f"{months} Months ({diff_days} Days)"
+            if e_date >= s_date:
+                from dateutil.relativedelta import relativedelta
+                r = relativedelta(e_date, s_date)
+                years = r.years
+                months = r.months
+                days = r.days
+
+                parts = []
+                if years > 0:
+                    parts.append(f"{years} Year" if years == 1 else f"{years} Years")
+                if months > 0:
+                    parts.append(f"{months} Month" if months == 1 else f"{months} Months")
+                if days > 0:
+                    parts.append(f"{days} Day" if days == 1 else f"{days} Days")
+
+                self.contract_tenure = ", ".join(parts) if parts else "0 Days"
                 self.start_date = start
                 self.end_date = end
                 self.proposed_start_date = start
                 self.proposed_end_date = end
-        elif start and self.initial_tenure_value and not end:
-            s_date = getdate(start)
-            tenure_val = int(self.initial_tenure_value)
-            if "month" in unit:
-                self.proposed_end_date = add_days(add_months(s_date, tenure_val), -1)
-            elif "year" in unit:
-                self.proposed_end_date = add_days(add_years(s_date, tenure_val), -1)
-            elif "week" in unit:
-                self.proposed_end_date = add_days(s_date, tenure_val * 7 - 1)
-            else:
-                self.proposed_end_date = add_days(s_date, tenure_val - 1)
-            self.end_date = self.proposed_end_date
-            self.start_date = start
-            diff_days = (getdate(self.proposed_end_date) - s_date).days + 1
-            self.contract_tenure = f"{tenure_val} {self.tenure_unit or 'Months'} ({diff_days} Days)"
 
-        # 2. Total contract value estimation if compensation given
-        tenure_val = self.initial_tenure_value or 0
-        if self.compensation_amount and tenure_val > 0 and not self.total_contract_value:
-            comp_type = (self.compensation_type or "").lower()
-            if "month" in comp_type and "month" in unit:
-                self.total_contract_value = float(self.compensation_amount) * int(tenure_val)
-            else:
-                self.total_contract_value = float(self.compensation_amount)
+                total_months = (years * 12) + months
+                if days >= 28:
+                    total_months += 1
+                elif days > 0:
+                    total_months += (days / 30.0)
+                self.initial_tenure_value = max(1, round(total_months))
+
+                # Calculate total contract value on the basis of Contract Tenure
+                fee = float(self.compensation_amount or self.proposed_fee or 0)
+                comp_type = (self.compensation_type or "Monthly").lower()
+                if "month" in comp_type:
+                    self.total_contract_value = round(fee * total_months, 2)
+                elif "day" in comp_type:
+                    diff_days = (e_date - s_date).days + 1
+                    self.total_contract_value = fee * diff_days
+                elif not self.total_contract_value:
+                    self.total_contract_value = fee
 
     def calculate_allocation_totals(self):
         total = 0.0
@@ -73,11 +77,11 @@ class ConsultantContract(Document):
             )
 
     def sync_rfp_and_sections(self):
-        # Synchronize fields between Section 1 (RFP summary) and detailed sections
-        if self.organization and not self.requesting_organization:
-            self.requesting_organization = self.organization
-        elif self.requesting_organization and not self.organization:
+        # Section A requesting_organization is primary; sync to organization for list views
+        if self.requesting_organization:
             self.organization = self.requesting_organization
+        elif self.organization:
+            self.requesting_organization = self.organization
 
         if self.project_name and not self.project:
             self.project = self.project_name
@@ -127,9 +131,39 @@ class ConsultantContract(Document):
                         title=frappe._("PDF Validation Error")
                     )
 
+    def compile_consultant_address(self):
+        parts = []
+        if self.address_line_1:
+            parts.append(self.address_line_1.strip())
+        if getattr(self, "address_line_2", None) and self.address_line_2:
+            parts.append(self.address_line_2.strip())
+        if self.city:
+            parts.append(self.city.strip())
+        if self.state:
+            parts.append(self.state.strip())
+        
+        country_pin = []
+        if self.country:
+            country_pin.append(self.country.strip())
+        if self.pin_code:
+            country_pin.append(self.pin_code.strip())
+        
+        if country_pin:
+            parts.append(" – ".join(country_pin) if (self.country and self.pin_code) else country_pin[0])
+            
+        if parts:
+            self.consultant_address = ", ".join(parts)
+
+    def autoname(self):
+        # Name format: <company_abbr>/<YYMMDD>/<serial_number> (e.g. AQH-IND/261016/1)
+        company = self.requesting_organization or self.organization
+        if not company:
+            frappe.throw(frappe._("Please select Requesting Organization (Company) before saving the contract."))
+        self.name = generate_consultant_contract_number(company, self.request_date or self.creation)
+
     def set_request_id_as_requester(self):
         # Request ID is the Contract Manager / Requester who created the contract request
-        if not self.request_id or self.request_id.startswith("CC-"):
+        if not self.request_id or self.request_id.startswith("CC-") or "/" in str(self.request_id):
             user = self.owner or frappe.session.user
             emp = frappe.db.get_value("Employee", {"user_id": user}, ["name", "employee_name"], as_dict=True)
             if emp:
@@ -197,8 +231,8 @@ class ConsultantContract(Document):
                 if not is_admin:
                     frappe.throw(frappe._("Approver remarks cannot be modified at this stage."))
 
-        # Enforce all Section G fields must be filled before Contract Manager can issue contract
-        if self.workflow_state in ["Contract Issued", "Signed by Consultant", "Active"]:
+        # Enforce all Section G fields must be filled before Contract Manager can execute/activate contract
+        if self.workflow_state == "Active":
             missing_g = []
             if not self.sent_to_consultant_date:
                 missing_g.append("Sent to Consultant Date")
@@ -213,7 +247,7 @@ class ConsultantContract(Document):
             if not self.countersigned_date:
                 missing_g.append("Management Countersigned Date")
             if missing_g:
-                frappe.throw(frappe._("Cannot issue contract until all fields in Section G — Consultant Signed Contract are filled: {0}").format(", ".join(missing_g)))
+                frappe.throw(frappe._("Cannot activate contract until all fields in Section G — Consultant Signed Contract are filled: {0}").format(", ".join(missing_g)))
 
     def on_update(self):
         self.handle_workflow_email_notifications()
@@ -237,8 +271,8 @@ class ConsultantContract(Document):
         elif new_state == "Pending Final HR Review":
             self.send_final_hr_review_emails()
 
-        # 3. State changed to Approved for Issuance
-        elif new_state == "Approved for Issuance":
+        # 3. State changed to Signed by Consultant (post-Final HR review)
+        elif new_state in ["Signed by Consultant", "Approved for Issuance"]:
             self.send_approved_for_issuance_emails()
 
     def send_ceo_approved_emails(self):
@@ -519,6 +553,9 @@ def check_and_mark_expired_contracts():
 
     expired_count = 0
     for c in active_contracts:
+        if not c.end_date:
+            continue
+
         has_extension = frappe.db.exists("Consultant Contract Extension", {
             "contract": c.name,
             "status": "Approved",
@@ -636,3 +673,43 @@ def get_project_managers(doctype, txt, searchfield, start, page_len, filters=Non
         ORDER BY e.employee_name ASC
         LIMIT %(start)s, %(page_len)s
     """, {"txt": f"%{txt or ''}%", "start": start, "page_len": page_len})
+
+
+def generate_consultant_contract_number(company, request_date=None, current_docname=None):
+    if not company:
+        return ""
+
+    abbr = frappe.db.get_value("Company", company, "abbr")
+    if not abbr:
+        abbr = company[:4].upper()
+
+    if not request_date:
+        request_date = nowdate()
+
+    date_obj = getdate(request_date)
+    yymmdd = date_obj.strftime("%y%m%d")
+
+    prefix = f"{abbr}/"
+    existing = frappe.db.sql("""
+        SELECT name FROM `tabConsultant Contract`
+        WHERE name LIKE %s
+    """, (f"{prefix}%",), as_dict=True)
+
+    max_serial = 0
+    for r in existing:
+        doc_name = (r.get("name") or "").strip()
+        if current_docname and doc_name == current_docname:
+            continue
+        parts = doc_name.split("/")
+        if len(parts) >= 3 and parts[-1].isdigit():
+            val = int(parts[-1])
+            if val > max_serial:
+                max_serial = val
+
+    next_serial = max_serial + 1
+    return f"{abbr}/{yymmdd}/{next_serial}"
+
+
+@frappe.whitelist()
+def get_next_contract_number(company, request_date=None, docname=None):
+    return generate_consultant_contract_number(company, request_date, current_docname=docname)

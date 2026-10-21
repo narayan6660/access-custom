@@ -8,7 +8,7 @@ frappe.ui.form.on("Consultant Contract", {
         apply_section_visibility(frm);
 
         // Pre-fill Request ID with the creator / Contract Manager's name & employee ID
-        if (frm.is_new() && (!frm.doc.request_id || frm.doc.request_id.startsWith("CC-"))) {
+        if (frm.is_new() && (!frm.doc.request_id || frm.doc.request_id.startsWith("CC-") || frm.doc.request_id.includes("/"))) {
             frappe.db.get_value("Employee", { "user_id": frappe.session.user }, ["name", "employee_name"]).then(r => {
                 if (r && r.message && r.message.name) {
                     frm.set_value("request_id", `${r.message.employee_name} (${r.message.name})`);
@@ -16,6 +16,30 @@ frappe.ui.form.on("Consultant Contract", {
                     frm.set_value("request_id", frappe.session.user_fullname || frappe.session.user);
                 }
             });
+        }
+    },
+
+
+
+    requesting_organization(frm) {
+        if (frm.doc.requesting_organization) {
+            frm.set_value("organization", frm.doc.requesting_organization);
+        }
+    },
+
+    address_line_1(frm) { update_consultant_full_address(frm); },
+    address_line_2(frm) { update_consultant_full_address(frm); },
+    city(frm) { update_consultant_full_address(frm); },
+    state(frm) { update_consultant_full_address(frm); },
+    country(frm) { update_consultant_full_address(frm); },
+    pin_code(frm) { update_consultant_full_address(frm); },
+
+    contract_template(frm) {
+        if (frm.doc.contract_template) {
+            frappe.show_alert({
+                message: __(`Selected Template: <b>${frappe.utils.escape_html(frm.doc.contract_template)}</b>`),
+                indicator: "green"
+            }, 3);
         }
     },
 
@@ -168,10 +192,12 @@ frappe.ui.form.on("Consultant Contract", {
             } else if (frm.doc.workflow_state === "CEO Approved") {
                 let current_user = frappe.session.user;
                 let is_ceo = (frm.doc.ceo_approver && current_user === frm.doc.ceo_approver);
+                let is_lead = (frm.doc.team_lead_approver && current_user === frm.doc.team_lead_approver);
                 let is_hr = (frm.doc.hr_approver && current_user === frm.doc.hr_approver) || (frm.doc.final_hr_approver && current_user === frm.doc.final_hr_approver);
                 let is_owner = (current_user === frm.doc.owner);
                 let has_cm_role = frappe.user_roles && frappe.user_roles.includes("Contract Manager");
-                let is_cm_authorized = !is_ceo && !is_hr && (is_owner || has_cm_role || current_user === "Administrator");
+                let is_admin = (current_user === "Administrator" || (frappe.user_roles && frappe.user_roles.includes("System Manager")));
+                let is_cm_authorized = !is_ceo && !is_lead && !is_hr && (is_owner || has_cm_role || is_admin);
 
                 let action_buttons_html = "";
                 if (is_cm_authorized) {
@@ -209,32 +235,51 @@ frappe.ui.form.on("Consultant Contract", {
                     if (is_cm_authorized) {
                         $b.find(".btn-download-preview-pdf").on("click", function(e) {
                             e.preventDefault();
-                            let url = `/api/method/frappe.utils.print_format.download_pdf?doctype=Consultant+Contract&name=${encodeURIComponent(frm.doc.name)}&format=Consultant+Agreement&no_letterhead=0`;
-                            window.open(url, "_blank");
+                            e.stopPropagation();
+                            download_contract_preview_pdf(frm);
                         });
                         $b.find(".btn-submit-to-final-hr").on("click", function(e) {
                             e.preventDefault();
+                            e.stopPropagation();
                             trigger_send_to_final_hr(frm);
                         });
                     }
                     frm.dashboard.show();
                     frm.dashboard.parent.show();
                 }
-            } else if (frm.doc.workflow_state === "Approved for Issuance") {
+            } else if (["Signed by Consultant", "Approved for Issuance", "Contract Issued"].includes(frm.doc.workflow_state)) {
+                let has_all_section_g = !!(
+                    frm.doc.sent_to_consultant_date &&
+                    frm.doc.consultant_signed_contract &&
+                    frm.doc.consultant_signed_date &&
+                    frm.doc.consultant_received_date &&
+                    frm.doc.final_executed_contract &&
+                    frm.doc.countersigned_date
+                );
+
+                let banner_bg = has_all_section_g ? "#f0fdf4" : "#eff6ff";
+                let banner_border = has_all_section_g ? "#86efac" : "#93c5fd";
+                let accent_color = has_all_section_g ? "#16a34a" : "#2563eb";
+                let badge_text = has_all_section_g ? "Ready to Activate" : "Pending Section G Uploads";
+
+                let instruction = has_all_section_g ?
+                    "All 6 Section G documents and dates have been verified. <b>Contract Manager:</b> You can now activate the contract by clicking <b>Actions &rarr; Execute Contract</b>." :
+                    "Final HR Review has been approved. <b>Contract Manager:</b> Please upload the signed contract documents and fill in all dates in <b>Section G &mdash; Consultant Signed Contract</b> below. Once all 6 fields are completed, click <b>Actions &rarr; Execute Contract</b> to activate.";
+
                 let banner_html = `
-                <div class="contract-info-banner" style="margin-bottom: 15px; padding: 14px 18px; background: #eff6ff; border: 1px solid #93c5fd; border-left: 6px solid #2563eb; border-radius: 8px; box-shadow: 0 1px 3px rgba(37, 99, 235, 0.08);">
+                <div class="contract-info-banner" style="margin-bottom: 15px; padding: 14px 18px; background: ${banner_bg}; border: 1px solid ${banner_border}; border-left: 6px solid ${accent_color}; border-radius: 8px; box-shadow: 0 1px 3px rgba(37, 99, 235, 0.08);">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <span style="font-size: 15px; font-weight: 700; color: #2563eb; display: flex; align-items: center; gap: 6px;">
-                                <span>&#10003;</span> Approved for Issuance
+                            <span style="font-size: 15px; font-weight: 700; color: ${accent_color}; display: flex; align-items: center; gap: 6px;">
+                                <span>&#128221;</span> Signed Contract &mdash; Section G
                             </span>
-                            <span class="badge" style="background: #2563eb; color: #ffffff; font-size: 11px; padding: 3px 8px; border-radius: 12px; font-weight: 600;">
-                                Ready to Issue
+                            <span class="badge" style="background: ${accent_color}; color: #ffffff; font-size: 11px; padding: 3px 8px; border-radius: 12px; font-weight: 600;">
+                                ${badge_text}
                             </span>
                         </div>
                     </div>
                     <div style="font-size: 13px; color: #1e293b; line-height: 1.5; margin-top: 6px;">
-                        Final HR Review has been approved. <b>Contract Manager:</b> You can now issue the contract to the consultant by clicking <b>Actions &rarr; Issue Contract</b>.
+                        ${instruction}
                     </div>
                 </div>`;
                 if (frm.dashboard && frm.dashboard.parent) {
@@ -258,6 +303,7 @@ frappe.ui.form.on("Consultant Contract", {
             render_contract_progress_tracker(frm);
             apply_contract_approver_field_locking(frm);
             setup_auto_expand_textareas(frm);
+            setup_print_agreement_button(frm);
             enforce_stage_approver_actions(frm);
         }, 120);
 
@@ -294,6 +340,24 @@ frappe.ui.form.on("Consultant Contract", {
         let action_lower = action.toLowerCase();
         let user = frappe.session.user;
         let is_admin = (user === "Administrator");
+
+        // Fast check: if the contract already transitioned in DB (e.g. from multiple clicks), reload cleanly
+        if (frm.doc && frm.doc.name && !frm.is_new()) {
+            try {
+                let r = await frappe.db.get_value(frm.doctype, frm.doc.name, "workflow_state");
+                let db_state = r && r.message ? r.message.workflow_state : null;
+                if (db_state && db_state !== state) {
+                    frappe.show_alert({
+                        message: __(`Contract is already in status: <b>${frappe.utils.escape_html(db_state)}</b>. Refreshing...`),
+                        indicator: "blue"
+                    }, 4);
+                    frm.reload_doc();
+                    return Promise.reject("ALREADY_TRANSITIONED");
+                }
+            } catch (e) {
+                console.warn("Could not check current workflow_state:", e);
+            }
+        }
 
         // 1. Submit from Draft or Resubmit from Revision
         if (action === "Submit for Approval" || action === "Resubmit for Approval") {
@@ -432,18 +496,24 @@ frappe.ui.form.on("Consultant Contract", {
                 return Promise.reject("NOT_AUTHORIZED");
             }
 
-            if (!frm.doc.final_executed_contract) {
+            // Enforce all 6 Section G fields before activating
+            let missing_fields = [];
+            if (!frm.doc.sent_to_consultant_date) missing_fields.push(__("Sent to Consultant Date"));
+            if (!frm.doc.consultant_signed_contract) missing_fields.push(__("Consultant Signed Contract (Upload PDF)"));
+            if (!frm.doc.consultant_signed_date) missing_fields.push(__("Consultant Signed Date"));
+            if (!frm.doc.consultant_received_date) missing_fields.push(__("Received Date"));
+            if (!frm.doc.final_executed_contract) missing_fields.push(__("Final Executed Contract (Upload PDF)"));
+            if (!frm.doc.countersigned_date) missing_fields.push(__("Management Countersigned Date"));
+
+            if (missing_fields.length > 0) {
                 frappe.msgprint({
-                    title: __("Attachment Required"),
+                    title: __("Section G Incomplete"),
                     indicator: "red",
-                    message: __("Please upload the <b>Final Executed Contract (PDF)</b> in Section G before completing execution.")
+                    message: __("Please fill all required fields in <b>Section G &mdash; Consultant Signed Contract</b> before activating the contract:<br><br><ul style='margin-left: 18px;'><li>" + missing_fields.join("</li><li>") + "</li></ul>")
                 });
-                return Promise.reject("MISSING_FINAL_CONTRACT");
+                return Promise.reject("INCOMPLETE_SECTION_G");
             }
-            if (!frm.doc.countersigned_date) {
-                frm.doc.countersigned_date = frappe.datetime.nowdate();
-                frm.refresh_field("countersigned_date");
-            }
+
             return Promise.resolve();
         }
 
@@ -533,6 +603,14 @@ frappe.ui.form.on("Consultant Contract", {
                     ],
                     primary_action_label: __("Confirm Approval"),
                     primary_action: async function(values) {
+                        if (submitted) return;
+                        submitted = true;
+
+                        let $btn = dialog.get_primary_btn();
+                        if ($btn && $btn.length) {
+                            $btn.prop("disabled", true).addClass("disabled");
+                        }
+
                         let final_comment = values.comments ? values.comments.trim() : "";
                         frappe.dom.freeze(__("Recording approval..."));
                         try {
@@ -550,10 +628,13 @@ frappe.ui.form.on("Consultant Contract", {
                             if (remarks_field) {
                                 frm.doc[remarks_field] = final_comment;
                             }
-                            submitted = true;
                             dialog.hide();
                             resolve();
                         } catch (e) {
+                            submitted = false;
+                            if ($btn && $btn.length) {
+                                $btn.prop("disabled", false).removeClass("disabled");
+                            }
                             frappe.dom.unfreeze();
                             frappe.msgprint(__("Error recording approval decision."));
                             reject(e);
@@ -602,10 +683,18 @@ frappe.ui.form.on("Consultant Contract", {
                     ],
                     primary_action_label: __("Confirm Rejection"),
                     primary_action: async function(values) {
+                        if (submitted) return;
                         if (!values.comments || !values.comments.trim()) {
                             frappe.msgprint(__("Rejection comments are mandatory."));
                             return;
                         }
+                        submitted = true;
+
+                        let $btn = dialog.get_primary_btn();
+                        if ($btn && $btn.length) {
+                            $btn.prop("disabled", true).addClass("disabled");
+                        }
+
                         let final_comment = values.comments.trim();
                         frappe.dom.freeze(__("Recording rejection..."));
                         try {
@@ -623,10 +712,13 @@ frappe.ui.form.on("Consultant Contract", {
                             if (remarks_field) {
                                 frm.doc[remarks_field] = final_comment;
                             }
-                            submitted = true;
                             dialog.hide();
                             resolve();
                         } catch (e) {
+                            submitted = false;
+                            if ($btn && $btn.length) {
+                                $btn.prop("disabled", false).removeClass("disabled");
+                            }
                             frappe.dom.unfreeze();
                             frappe.msgprint(__("Error recording rejection."));
                             reject(e);
@@ -675,10 +767,18 @@ frappe.ui.form.on("Consultant Contract", {
                     ],
                     primary_action_label: __("Confirm Return"),
                     primary_action: async function(values) {
+                        if (submitted) return;
                         if (!values.comments || !values.comments.trim()) {
                             frappe.msgprint(__("Revision feedback is mandatory."));
                             return;
                         }
+                        submitted = true;
+
+                        let $btn = dialog.get_primary_btn();
+                        if ($btn && $btn.length) {
+                            $btn.prop("disabled", true).addClass("disabled");
+                        }
+
                         let final_comment = values.comments.trim();
                         frappe.dom.freeze(__("Recording revision request..."));
                         try {
@@ -696,10 +796,13 @@ frappe.ui.form.on("Consultant Contract", {
                             if (remarks_field) {
                                 frm.doc[remarks_field] = final_comment;
                             }
-                            submitted = true;
                             dialog.hide();
                             resolve();
                         } catch (e) {
+                            submitted = false;
+                            if ($btn && $btn.length) {
+                                $btn.prop("disabled", false).removeClass("disabled");
+                            }
                             frappe.dom.unfreeze();
                             frappe.msgprint(__("Error recording revision request."));
                             reject(e);
@@ -762,19 +865,15 @@ frappe.ui.form.on("Consultant Contract", {
     },
 
     proposed_start_date(frm) {
-        calculate_tenure_from_dates(frm);
+        calculate_contract_tenure(frm);
     },
 
     proposed_end_date(frm) {
-        calculate_tenure_from_dates(frm);
+        calculate_contract_tenure(frm);
     },
 
-    initial_tenure_value(frm) {
-        calculate_end_date_from_tenure(frm);
-    },
-
-    tenure_unit(frm) {
-        calculate_end_date_from_tenure(frm);
+    compensation_type(frm) {
+        calculate_total_contract_value(frm);
     },
 
     start_date(frm) {
@@ -881,8 +980,7 @@ function render_contract_progress_tracker(frm) {
             { id: "Pending HR Review", label: "HR Review" },
             { id: "Pending CEO Approval", label: "CEO" },
             { id: "Pending Final HR Review", label: "Final HR" },
-            { id: "Contract Issued", label: "Issued" },
-            { id: "Signed by Consultant", label: "Consultant Signed" },
+            { id: "Signed by Consultant", label: "Signed Contract" },
             { id: "Active", label: "Active" }
         ];
 
@@ -896,6 +994,15 @@ function render_contract_progress_tracker(frm) {
         let revision_stage = get_contract_revision_stage(frm);
         if (revision_stage && !is_rejected) is_revision = true;
 
+        let has_all_section_g = !!(
+            frm.doc.sent_to_consultant_date &&
+            frm.doc.consultant_signed_contract &&
+            frm.doc.consultant_signed_date &&
+            frm.doc.consultant_received_date &&
+            frm.doc.final_executed_contract &&
+            frm.doc.countersigned_date
+        );
+
         let active_index = 0;
         if (current_state === "Active") {
             active_index = steps.length - 1;
@@ -907,10 +1014,8 @@ function render_contract_progress_tracker(frm) {
             if (active_index < 0) active_index = 1;
         } else if (current_state === "CEO Approved" || current_state === "Pending Final HR Review") {
             active_index = 4;
-        } else if (current_state === "Approved for Issuance" || current_state === "Contract Issued") {
+        } else if (current_state === "Signed by Consultant" || current_state === "Approved for Issuance" || current_state === "Contract Issued") {
             active_index = 5;
-        } else if (current_state === "Signed by Consultant") {
-            active_index = 6;
         } else {
             let idx = steps.findIndex(s => s.id === current_state || current_state.includes(s.label));
             active_index = idx >= 0 ? idx : 0;
@@ -926,6 +1031,11 @@ function render_contract_progress_tracker(frm) {
         } else if (is_revision) {
             status_bg = "#d97706";
             bar_color = "#d97706";
+        }
+
+        let display_status = current_state;
+        if (current_state === "Signed by Consultant" || current_state === "Approved for Issuance" || current_state === "Contract Issued") {
+            display_status = has_all_section_g ? "Signed Contract (Ready to Activate)" : "Signed Contract (Pending Uploads)";
         }
 
         let nodes_html = steps.map((s, idx) => {
@@ -967,11 +1077,18 @@ function render_contract_progress_tracker(frm) {
                     circle_bg = "#16a34a";
                     circle_border = "#15803d";
                     circle_color = "#ffffff";
-                    circle_content = idx + 1;
+                    circle_content = (s.id === "Signed by Consultant" && has_all_section_g) ? "&#10003;" : (idx + 1);
                     label_color = "#15803d";
                     label_weight = "700";
                     pulse_style = "box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.25);";
                 }
+            }
+
+            let extra_hint = "";
+            if (s.id === "Signed by Consultant" && is_active) {
+                extra_hint = has_all_section_g ?
+                    `<div style="font-size: 10px; color: #16a34a; font-weight: 600; margin-top: 2px;">(Uploaded)</div>` :
+                    `<div style="font-size: 10px; color: #d97706; font-weight: 600; margin-top: 2px;">(Pending)</div>`;
             }
 
             return `
@@ -981,6 +1098,7 @@ function render_contract_progress_tracker(frm) {
                 </div>
                 <div style="font-size: 11px; font-weight: ${label_weight}; color: ${label_color}; text-align: center; line-height: 1.2;">
                     ${s.label}
+                    ${extra_hint}
                 </div>
             </div>
             `;
@@ -994,7 +1112,7 @@ function render_contract_progress_tracker(frm) {
                 </div>
                 <div>
                     <span class="badge" style="background: ${status_bg}; color: #fff; font-size: 11px; padding: 3px 9px; border-radius: 12px; font-weight: 600;">
-                        ${frappe.utils.escape_html(current_state)} (${percent}%)
+                        ${frappe.utils.escape_html(display_status)} (${percent}%)
                     </span>
                 </div>
             </div>
@@ -1039,7 +1157,33 @@ function render_contract_progress_tracker(frm) {
 // 2. Approver Field Locking & High-Contrast Visual Stamping
 // ==============================================================================
 function apply_contract_approver_field_locking(frm) {
-    if (!frm.doc || frm.is_new()) return;
+    if (!frm || !frm.doc) return;
+
+    if (frm.is_new()) {
+        const review_fields = [
+            { status: "team_lead_decision", review: "team_lead_remarks" },
+            { status: "hr_decision", review: "hr_remarks" },
+            { status: "ceo_decision", review: "ceo_remarks" },
+            { status: "final_hr_decision", review: "final_hr_remarks" }
+        ];
+        review_fields.forEach(item => {
+            let status_field = frm.get_field(item.status);
+            if (status_field && status_field.$wrapper) {
+                status_field.$wrapper.find(".approver-decision-badge").remove();
+                status_field.$wrapper.find(".control-input-wrapper, .control-input, .control-value").show();
+            }
+            let review_field = frm.get_field(item.review);
+            if (review_field && review_field.$wrapper) {
+                review_field.$wrapper.find(".approver-remarks-content").remove();
+                review_field.$wrapper.find(".control-input-wrapper, .control-input, .control-value").show();
+            }
+        });
+        if (frm.wrapper) {
+            $(frm.wrapper).find(".approver-decision-badge, .approver-remarks-content").remove();
+            $(frm.wrapper).find(".control-input-wrapper, .control-input, .control-value").show();
+        }
+        return;
+    }
 
     try {
         let state = frm.doc.workflow_state || "Draft";
@@ -1261,13 +1405,26 @@ function apply_section_visibility(frm) {
     // 3. Legacy RFP fields: NEVER show (redundant legacy fields from previous doctype)
     const LEGACY_RFP_FIELDS = [
         "section_rfp_summary", "organization", "project_name", "grade",
-        "contract_type", "contract_tenure", "start_date", "end_date",
+        "contract_type", "start_date", "end_date",
         "budget_line_item", "proposed_fee", "scope_deliverables_summary",
-        "justification", "amended_from"
+        "justification", "amended_from", "initial_tenure_value", "tenure_unit"
     ];
     LEGACY_RFP_FIELDS.forEach(fn => {
         frm.set_df_property(fn, "hidden", 1);
     });
+
+    // Contract Tenure is visible & read-only; Proposed End Date label is clean
+    frm.set_df_property("contract_tenure", "hidden", 0);
+    frm.set_df_property("contract_tenure", "read_only", 1);
+    frm.set_df_property("proposed_end_date", "label", __("Proposed End Date"));
+
+    // Maintain row alignment in Section C
+    if (frm.fields_dict.tenure_unit && frm.fields_dict.tenure_unit.$wrapper) {
+        frm.fields_dict.tenure_unit.$wrapper.css({
+            "visibility": "hidden",
+            "pointer-events": "none"
+        });
+    }
 
     // 4. Comments and Activity Section: strictly visible ONLY to Admin
     apply_comments_and_activity_visibility(frm);
@@ -1531,18 +1688,19 @@ function enforce_stage_approver_actions(frm) {
         return;
     }
 
-    // 6. Stage: CEO Approved -> Strictly ONLY Contract Manager (CEO and HR must NEVER see action button)
+    // 6. Stage: CEO Approved -> Strictly ONLY Contract Manager (CEO, Lead, and HR must NEVER see action button)
     if (state === "CEO Approved") {
         let is_ceo = (frm.doc.ceo_approver && user === frm.doc.ceo_approver);
+        let is_lead = (frm.doc.team_lead_approver && user === frm.doc.team_lead_approver);
         let is_hr = (frm.doc.hr_approver && user === frm.doc.hr_approver) || (frm.doc.final_hr_approver && user === frm.doc.final_hr_approver);
-        if (is_ceo || is_hr) {
+        if (is_ceo || is_lead || is_hr) {
             hide_actions();
             return;
         }
 
         let is_owner = (user === frm.doc.owner);
         let has_cm_role = frappe.user_roles && frappe.user_roles.includes("Contract Manager");
-        let is_cm_authorized = !is_ceo && !is_hr && (is_owner || has_cm_role || (is_admin && !is_ceo && !is_hr));
+        let is_cm_authorized = !is_ceo && !is_lead && !is_hr && (is_owner || has_cm_role || is_admin);
 
         if (!is_cm_authorized) {
             hide_actions();
@@ -1831,72 +1989,86 @@ function inject_consultant_contract_styles() {
 // ==============================================================================
 // 5. Calculations & Utilities
 // ==============================================================================
-function calculate_tenure_from_dates(frm) {
+function calculate_contract_tenure(frm) {
     if (frm.doc.proposed_start_date && frm.doc.proposed_end_date) {
-        let start = frappe.datetime.str_to_obj(frm.doc.proposed_start_date);
-        let end = frappe.datetime.str_to_obj(frm.doc.proposed_end_date);
-
-        if (end < start) {
-            frappe.msgprint({
-                title: __("Invalid Date Range"),
-                indicator: "red",
-                message: __("Proposed End Date cannot be earlier than Proposed Start Date.")
-            });
-            frm.set_value("proposed_end_date", null);
+        if (frm.doc.proposed_start_date > frm.doc.proposed_end_date) {
+            frappe.msgprint(__('Warning: Proposed End Date cannot be before Proposed Start Date!'));
+            frm.set_value('contract_tenure', '');
+            frm.set_value('total_contract_value', 0);
             return;
         }
 
-        let diff_days = frappe.datetime.get_diff(frm.doc.proposed_end_date, frm.doc.proposed_start_date) + 1;
-        let approx_months = Math.max(1, Math.round(diff_days / 30.4375));
-        let exact_months = (diff_days / 30.4375).toFixed(1);
-        if (exact_months.endsWith(".0")) exact_months = exact_months.slice(0, -2);
+        let start = moment(frm.doc.proposed_start_date);
+        let end = moment(frm.doc.proposed_end_date);
 
-        frm.set_value("initial_tenure_value", approx_months);
-        frm.set_value("tenure_unit", "Months");
-        frm.set_value("contract_tenure", `${approx_months} Months (${diff_days} Days)`);
-        frm.set_value("start_date", frm.doc.proposed_start_date);
-        frm.set_value("end_date", frm.doc.proposed_end_date);
+        // Calculate exact Years, Months, and Days exactly as in Customer Contract
+        let years = end.diff(start, 'years');
+        start.add(years, 'years');
+        
+        let months = end.diff(start, 'months');
+        start.add(months, 'months');
+        
+        let days = end.diff(start, 'days');
 
-        calculate_total_contract_value(frm);
-    }
-}
+        // Build the text cleanly (e.g., hiding "0 Years" if it is only a 6-month contract)
+        let parts = [];
+        if (years > 0) parts.push(years + (years === 1 ? ' Year' : ' Years'));
+        if (months > 0) parts.push(months + (months === 1 ? ' Month' : ' Months'));
+        if (days > 0) parts.push(days + (days === 1 ? ' Day' : ' Days'));
 
-function calculate_end_date_from_tenure(frm) {
-    if (frm.doc.proposed_start_date && frm.doc.initial_tenure_value) {
-        let tenure = cint(frm.doc.initial_tenure_value);
-        let unit = (frm.doc.tenure_unit || "Months").toLowerCase();
-        let s_obj = frappe.datetime.str_to_obj(frm.doc.proposed_start_date);
-        let end_obj = new Date(s_obj.getTime());
+        let final_text = parts.length > 0 ? parts.join(', ') : '0 Days';
 
-        if (unit.includes("month")) {
-            end_obj.setMonth(end_obj.getMonth() + tenure);
-            end_obj.setDate(end_obj.getDate() - 1);
-        } else if (unit.includes("year")) {
-            end_obj.setFullYear(end_obj.getFullYear() + tenure);
-            end_obj.setDate(end_obj.getDate() - 1);
-        } else if (unit.includes("week")) {
-            end_obj.setDate(end_obj.getDate() + (tenure * 7) - 1);
-        } else {
-            end_obj.setDate(end_obj.getDate() + tenure - 1);
+        frm.set_value('contract_tenure', final_text);
+        frm.set_value('start_date', frm.doc.proposed_start_date);
+        frm.set_value('end_date', frm.doc.proposed_end_date);
+
+        // Calculate total tenure in months for Total Contract Value
+        let total_months = (years * 12) + months;
+        if (days >= 28) {
+            total_months += 1;
+        } else if (days > 0) {
+            total_months += (days / 30.0);
         }
+        frm.doc.initial_tenure_value = Math.max(1, Math.round(total_months));
 
-        let end_str = frappe.datetime.obj_to_str(end_obj);
-        frm.set_value("proposed_end_date", end_str);
-        frm.set_value("end_date", end_str);
-        frm.set_value("start_date", frm.doc.proposed_start_date);
-        let diff_days = frappe.datetime.get_diff(end_str, frm.doc.proposed_start_date) + 1;
-        frm.set_value("contract_tenure", `${tenure} ${frm.doc.tenure_unit || 'Months'} (${diff_days} Days)`);
         calculate_total_contract_value(frm);
     }
 }
 
 function calculate_total_contract_value(frm) {
-    let fee = flt(frm.doc.proposed_fee) || flt(frm.doc.compensation_amount) || 0;
-    let tenure = cint(frm.doc.initial_tenure_value) || 1;
-    let comp_type = (frm.doc.compensation_type || "").toLowerCase();
+    let fee = flt(frm.doc.compensation_amount) || flt(frm.doc.proposed_fee) || 0;
+    let comp_type = (frm.doc.compensation_type || "Monthly").toLowerCase();
+
+    if (!frm.doc.proposed_start_date || !frm.doc.proposed_end_date) {
+        let tenure = cint(frm.doc.initial_tenure_value) || 1;
+        if (comp_type.includes("month")) {
+            frm.set_value("total_contract_value", fee * tenure);
+        } else {
+            frm.set_value("total_contract_value", fee);
+        }
+        return;
+    }
+
+    let start = moment(frm.doc.proposed_start_date);
+    let end = moment(frm.doc.proposed_end_date);
+    let years = end.diff(start, 'years');
+    start.add(years, 'years');
+    let months = end.diff(start, 'months');
+    start.add(months, 'months');
+    let days = end.diff(start, 'days');
+
+    let total_months = (years * 12) + months;
+    if (days >= 28) {
+        total_months += 1;
+    } else if (days > 0) {
+        total_months += (days / 30.0);
+    }
 
     if (comp_type.includes("month")) {
-        frm.set_value("total_contract_value", fee * tenure);
+        frm.set_value("total_contract_value", Math.round(fee * total_months));
+    } else if (comp_type.includes("day")) {
+        let total_days = moment(frm.doc.proposed_end_date).diff(moment(frm.doc.proposed_start_date), 'days') + 1;
+        frm.set_value("total_contract_value", fee * total_days);
     } else {
         frm.set_value("total_contract_value", fee);
     }
@@ -2192,26 +2364,55 @@ function validate_pdf_attachment(frm, fieldname) {
     return true;
 }
 
-function setup_print_agreement_button(frm) {
-    if (frm.is_new()) return;
-    let state = frm.doc.workflow_state || frm.doc.status || "Draft";
-    let user = frappe.session.user;
-    let is_ceo = (frm.doc.ceo_approver && user === frm.doc.ceo_approver);
-    let is_hr = (frm.doc.hr_approver && user === frm.doc.hr_approver) || (frm.doc.final_hr_approver && user === frm.doc.final_hr_approver);
-    let is_owner = (user === frm.doc.owner);
-    let has_cm_role = frappe.user_roles && frappe.user_roles.includes("Contract Manager");
-    let is_cm_authorized = !is_ceo && !is_hr && (is_owner || has_cm_role || (user === "Administrator" && !is_ceo && !is_hr));
+function download_contract_preview_pdf(frm) {
+    let template_format = frm.doc.contract_template || "Independent Consultant Agreement";
+    let url = `/api/method/frappe.utils.print_format.download_pdf?doctype=Consultant+Contract&name=${encodeURIComponent(frm.doc.name)}&format=${encodeURIComponent(template_format)}&no_letterhead=0`;
+    
+    frappe.show_alert({
+        message: __(`Downloading Agreement PDF (${frappe.utils.escape_html(template_format)})...`),
+        indicator: "blue"
+    }, 4);
 
-    // Clear previous custom buttons to prevent duplicates
+    // Fetch the binary file and trigger direct browser download
+    fetch(url, {
+        headers: {
+            "X-Frappe-CSRF-Token": frappe.csrf_token || ""
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Server returned status ${response.status}`);
+        }
+        return response.blob();
+    })
+    .then(blob => {
+        let clean_name = (frm.doc.name || "Contract").replace(/[\/\\?%*:|"<>]/g, "_");
+        let filename = `${clean_name}_${template_format}.pdf`;
+        let blobUrl = window.URL.createObjectURL(blob);
+        let link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => window.URL.revokeObjectURL(blobUrl), 2000);
+        frappe.show_alert({
+            message: __(`Downloaded ${filename} successfully.`),
+            indicator: "green"
+        }, 3);
+    })
+    .catch(err => {
+        console.warn("Direct blob download failed, falling back to window.open:", err);
+        window.open(url, "_blank");
+    });
+}
+
+function setup_print_agreement_button(frm) {
+    if (!frm || !frm.page) return;
+    // Clear top toolbar buttons as requested; the action buttons are kept in the banner above Section A
     frm.page.remove_inner_button(__("Download Preview Form (PDF)"));
     frm.page.remove_inner_button(__("Send to HR for Final Review"));
-
-    // If CEO Approved: show primary action button to send directly to HR ONLY for Contract Manager
-    if (state === "CEO Approved" && is_cm_authorized) {
-        frm.add_custom_button(__("Send to HR for Final Review"), function() {
-            trigger_send_to_final_hr(frm);
-        }).addClass("btn-primary").css({"background-color": "#0284c7", "color": "#ffffff", "border-color": "#0284c7"});
-    }
+    frm.page.remove_inner_button(__("Download Agreement (PDF)"));
 }
 
 function trigger_send_to_final_hr(frm) {
@@ -2240,4 +2441,19 @@ function trigger_send_to_final_hr(frm) {
             });
         }
     );
+}
+
+function update_consultant_full_address(frm) {
+    let parts = [];
+    if (frm.doc.address_line_1) parts.push(frm.doc.address_line_1.trim());
+    if (frm.doc.address_line_2) parts.push(frm.doc.address_line_2.trim());
+    if (frm.doc.city) parts.push(frm.doc.city.trim());
+    if (frm.doc.state) parts.push(frm.doc.state.trim());
+    let cp = [];
+    if (frm.doc.country) cp.push(frm.doc.country.trim());
+    if (frm.doc.pin_code) cp.push(frm.doc.pin_code.trim());
+    if (cp.length) parts.push(cp.join(" – "));
+    if (parts.length) {
+        frm.set_value("consultant_address", parts.join(", "));
+    }
 }

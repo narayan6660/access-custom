@@ -1190,4 +1190,27 @@ def custom_apply_workflow(doc, action):
                         frappe.PermissionError
                     )
 
-    return orig_apply_workflow(doc, action)
+    try:
+        return orig_apply_workflow(doc, action)
+    except frappe.model.workflow.WorkflowTransitionError:
+        # Prevent "Not a valid Workflow Action" error pop-up when users click Approve more than once
+        # or when concurrent requests occur for a contract that has already transitioned
+        try:
+            doc_data = frappe.parse_json(doc) if isinstance(doc, str) else doc
+            d_type = doc_data.get("doctype") if isinstance(doc_data, dict) else getattr(doc_data, "doctype", None)
+            d_name = doc_data.get("name") if isinstance(doc_data, dict) else getattr(doc_data, "name", None)
+
+            if d_type and d_name and frappe.db.exists(d_type, d_name):
+                latest_doc = frappe.get_doc(d_type, d_name)
+                workflow = frappe.model.workflow.get_workflow(d_type)
+                if workflow:
+                    current_state = latest_doc.get(workflow.workflow_state_field or "workflow_state")
+                    matching_transitions = [t for t in workflow.transitions if t.action == action]
+                    for t in matching_transitions:
+                        if t.next_state == current_state:
+                            frappe.clear_messages()
+                            return latest_doc
+        except Exception as e:
+            frappe.logger().warning(f"custom_apply_workflow transition check error: {e}")
+
+        raise

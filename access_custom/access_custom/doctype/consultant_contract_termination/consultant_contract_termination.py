@@ -63,6 +63,12 @@ class ConsultantContractTermination(Document):
         if not old_doc:
             return
 
+        old_state = old_doc.workflow_state or old_doc.status or "Draft"
+        if old_state == "Returned for Revision" and state != "Returned for Revision":
+            is_cm = (user == self.owner) or ("Contract Manager" in roles) or is_admin
+            if not is_cm:
+                frappe.throw(frappe._("Only the Contract Manager is authorized to resubmit this document after revision."))
+
         if state == "Pending Team Lead Approval":
             is_lead = (self.team_lead_approver and user == self.team_lead_approver) or ("Team Lead" in roles) or is_admin
             if self.team_lead_remarks != old_doc.team_lead_remarks and not is_lead:

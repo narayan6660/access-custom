@@ -111,15 +111,6 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
-  "modified": "2026-09-28 16:05:07.756007",
-  "name": "Contract Issued",
-  "style": "",
-  "workflow_state_name": "Contract Issued"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
-  "icon": "",
   "modified": "2026-09-28 16:05:07.837384",
   "name": "Signed by Consultant",
   "style": "",
@@ -687,10 +678,10 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
-  "modified": "2026-10-09 11:18:39.075848",
-  "name": "Approved for Issuance",
+  "modified": "2026-09-28 16:05:07.756007",
+  "name": "Contract Issued",
   "style": "",
-  "workflow_state_name": "Approved for Issuance"
+  "workflow_state_name": "Contract Issued"
  },
  {
   "docstatus": 0,
@@ -718,6 +709,15 @@
   "name": "Pending HR Review",
   "style": "Primary",
   "workflow_state_name": "Pending HR Review"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-10-09 11:18:39.075848",
+  "name": "Approved for Issuance",
+  "style": "",
+  "workflow_state_name": "Approved for Issuance"
  },
  {
   "docstatus": 0,

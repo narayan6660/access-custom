@@ -6,12 +6,15 @@
  "engine": "InnoDB",
  "field_order": [
   "company_name",
-  "designation",
-  "salary",
-  "address",
   "contact",
+  "column_break_ozbs",
+  "designation",
   "total_experience",
+  "column_break_kmwm",
+  "salary",
   "relieving_letter_and_experience_letter",
+  "column_break_vsif",
+  "address",
   "previous_ctc_proof_offerincrement_letter"
  ],
  "fields": [
@@ -73,13 +76,25 @@
    "fieldname": "previous_ctc_proof_offerincrement_letter",
    "fieldtype": "Attach",
    "label": "Previous CTC Proof (Offer/Increment Letter)"
+  },
+  {
+   "fieldname": "column_break_ozbs",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_kmwm",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_vsif",
+   "fieldtype": "Column Break"
   }
  ],
  "grid_page_length": 20,
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-06-11 12:26:28.527690",
+ "modified": "2026-10-16 11:51:34.168656",
  "modified_by": "Administrator",
  "module": "Access Custom",
  "name": "Employee External Work History",

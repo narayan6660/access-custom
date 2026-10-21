@@ -87,7 +87,7 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "Draft\nPending Team Lead Approval\nPending HR Review\nPending CEO Approval\nApproved\nRejected",
+   "options": "Draft\nPending Team Lead Approval\nPending HR Review\nPending CEO Approval\nApproved\nRejected\nReturned for Revision",
    "default": "Draft"
   },
   {

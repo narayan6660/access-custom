@@ -1,18 +1,31 @@
 {
  "actions": [],
- "creation": "2013-02-22 01:27:45",
+ "creation": "2026-10-16 11:45:07.659729",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
   "level",
-  "school_univ",
-  "country_of_education",
   "start_year",
+  "column_break_turc",
+  "school_univ",
   "year_of_passing",
-  "mode",
+  "column_break_xkrn",
   "class_per",
-  "certificate"
+  "mode",
+  "column_break_cmao",
+  "country_of_education",
+  "custom_specializations",
+  "custom_certificates_section",
+  "certificate",
+  "column_break_cert2",
+  "certificate_2",
+  "column_break_cert3",
+  "certificate_3",
+  "column_break_jayd",
+  "certificate_4",
+  "column_break_catx",
+  "certificate_5"
  ],
  "fields": [
   {
@@ -20,23 +33,23 @@
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Level",
-   "oldfieldname": "level",
-   "oldfieldtype": "Select",
    "options": "10\n12\nGraduation\nPost Graduation\nPhd.\nDr."
   },
   {
    "fieldname": "school_univ",
    "fieldtype": "Small Text",
    "in_list_view": 1,
-   "label": "School/University",
-   "oldfieldname": "school_univ",
-   "oldfieldtype": "Small Text"
+   "label": "School/University"
   },
   {
    "fieldname": "country_of_education",
    "fieldtype": "Link",
    "label": "Country of Education",
    "options": "Country"
+  },
+  {
+   "fieldname": "column_break_turc",
+   "fieldtype": "Column Break"
   },
   {
    "fieldname": "start_year",
@@ -47,9 +60,7 @@
    "fieldname": "year_of_passing",
    "fieldtype": "Int",
    "in_list_view": 1,
-   "label": "Year of Passing",
-   "oldfieldname": "year_of_passing",
-   "oldfieldtype": "Int"
+   "label": "Year of Passing"
   },
   {
    "fieldname": "mode",
@@ -58,24 +69,81 @@
    "options": "Regular\nOnline\nDistance"
   },
   {
+   "fieldname": "column_break_xkrn",
+   "fieldtype": "Column Break"
+  },
+  {
    "fieldname": "class_per",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Grade / Percentage",
-   "oldfieldname": "class_per",
-   "oldfieldtype": "Data"
+   "label": "Grade / Percentage"
+  },
+  {
+   "fieldname": "custom_specializations",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Specializations"
+  },
+  {
+   "fieldname": "column_break_cmao",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "custom_certificates_section",
+   "fieldtype": "Section Break",
+   "label": "You can upload upto 5 certificate"
   },
   {
    "fieldname": "certificate",
    "fieldtype": "Attach",
-   "label": "Certificate"
+   "label": "Certificate 1 (PDF)"
+  },
+  {
+   "depends_on": "eval:doc.certificate",
+   "fieldname": "certificate_2",
+   "fieldtype": "Attach",
+   "label": "Certificate 2 (PDF)"
+  },
+  {
+   "fieldname": "column_break_cert2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.certificate_2",
+   "fieldname": "certificate_3",
+   "fieldtype": "Attach",
+   "label": "Certificate 3 (PDF)"
+  },
+  {
+   "depends_on": "eval:doc.certificate_3",
+   "fieldname": "certificate_4",
+   "fieldtype": "Attach",
+   "label": "Certificate 4 (PDF)"
+  },
+  {
+   "fieldname": "column_break_cert3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "depends_on": "eval:doc.certificate_4",
+   "fieldname": "certificate_5",
+   "fieldtype": "Attach",
+   "label": "Certificate 5 (PDF)"
+  },
+  {
+   "fieldname": "column_break_jayd",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_catx",
+   "fieldtype": "Column Break"
   }
  ],
  "grid_page_length": 18,
  "idx": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-06-11 12:27:40.894283",
+ "modified": "2026-10-16 11:48:21.053438",
  "modified_by": "Administrator",
  "module": "Access Custom",
  "name": "Employee Education",

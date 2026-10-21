@@ -1,17 +1,24 @@
 {
  "actions": [],
  "allow_rename": 1,
- "creation": "2026-02-26 11:14:14.257988",
+ "creation": "2026-10-15 18:33:26.184275",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
   "entity",
+  "custom_increment_by_amount",
+  "custom_increment_effective_date",
+  "column_break_jjbr",
   "date_of_issue",
-  "current_annual_salary",
   "increment_percentage",
-  "currency",
+  "custom_arrears_period",
+  "column_break_vtyp",
+  "current_annual_salary",
   "revised_annual_salary",
+  "custom_total_arrears_amount",
+  "column_break_bbhl",
+  "currency",
   "increment_letter_document"
  ],
  "fields": [
@@ -59,13 +66,53 @@
    "fieldtype": "Attach",
    "in_list_view": 1,
    "label": "Increment Letter Document"
+  },
+  {
+   "fieldname": "column_break_jjbr",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_vtyp",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_bbhl",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "custom_increment_by_amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Increment by Amount"
+  },
+  {
+   "fieldname": "custom_increment_effective_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Increment Effective Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "custom_arrears_period",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Arrears Period",
+   "read_only": 1
+  },
+  {
+   "fieldname": "custom_total_arrears_amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Total Arrears Amount",
+   "options": "currency",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-09-22 10:44:07.957640",
+ "modified": "2026-10-15 18:39:23.651267",
  "modified_by": "Administrator",
  "module": "Access Custom",
  "name": "Employee Increment Record",

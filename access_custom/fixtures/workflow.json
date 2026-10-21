@@ -2260,7 +2260,7 @@
     "allow_self_approval": 1,
     "allowed": "HR Manager",
     "condition": null,
-    "next_state": "Approved for Issuance",
+    "next_state": "Signed by Consultant",
     "parent": "Consultant Contract Approval Flow",
     "parentfield": "transitions",
     "parenttype": "Workflow",
@@ -2273,7 +2273,7 @@
     "allow_self_approval": 1,
     "allowed": "HR User",
     "condition": null,
-    "next_state": "Approved for Issuance",
+    "next_state": "Signed by Consultant",
     "parent": "Consultant Contract Approval Flow",
     "parentfield": "transitions",
     "parenttype": "Workflow",
@@ -2331,58 +2331,6 @@
     "parenttype": "Workflow",
     "send_email_to_creator": 0,
     "state": "Pending Final HR Review",
-    "workflow_builder_id": null
-   },
-   {
-    "action": "Issue Contract",
-    "allow_self_approval": 1,
-    "allowed": "Contract Manager",
-    "condition": null,
-    "next_state": "Contract Issued",
-    "parent": "Consultant Contract Approval Flow",
-    "parentfield": "transitions",
-    "parenttype": "Workflow",
-    "send_email_to_creator": 0,
-    "state": "Approved for Issuance",
-    "workflow_builder_id": null
-   },
-   {
-    "action": "Issue Contract",
-    "allow_self_approval": 1,
-    "allowed": "System Manager",
-    "condition": null,
-    "next_state": "Contract Issued",
-    "parent": "Consultant Contract Approval Flow",
-    "parentfield": "transitions",
-    "parenttype": "Workflow",
-    "send_email_to_creator": 0,
-    "state": "Approved for Issuance",
-    "workflow_builder_id": null
-   },
-   {
-    "action": "Submit Signed Contract",
-    "allow_self_approval": 1,
-    "allowed": "Employee",
-    "condition": null,
-    "next_state": "Signed by Consultant",
-    "parent": "Consultant Contract Approval Flow",
-    "parentfield": "transitions",
-    "parenttype": "Workflow",
-    "send_email_to_creator": 0,
-    "state": "Contract Issued",
-    "workflow_builder_id": null
-   },
-   {
-    "action": "Submit Signed Contract",
-    "allow_self_approval": 1,
-    "allowed": "Contract Manager",
-    "condition": null,
-    "next_state": "Signed by Consultant",
-    "parent": "Consultant Contract Approval Flow",
-    "parentfield": "transitions",
-    "parenttype": "Workflow",
-    "send_email_to_creator": 0,
-    "state": "Contract Issued",
     "workflow_builder_id": null
    },
    {
@@ -2396,19 +2344,6 @@
     "parenttype": "Workflow",
     "send_email_to_creator": 0,
     "state": "Signed by Consultant",
-    "workflow_builder_id": null
-   },
-   {
-    "action": "Submit Signed Contract",
-    "allow_self_approval": 1,
-    "allowed": "System Manager",
-    "condition": null,
-    "next_state": "Signed by Consultant",
-    "parent": "Consultant Contract Approval Flow",
-    "parentfield": "transitions",
-    "parenttype": "Workflow",
-    "send_email_to_creator": 0,
-    "state": "Contract Issued",
     "workflow_builder_id": null
    },
    {
@@ -4144,7 +4079,7 @@
   "send_email_alert": 0,
   "states": [
    {
-    "allow_edit": "All",
+    "allow_edit": "Contract Manager",
     "avoid_status_override": 0,
     "doc_status": "0",
     "is_optional_state": 0,
@@ -4240,7 +4175,7 @@
     "workflow_builder_id": null
    },
    {
-    "allow_edit": "All",
+    "allow_edit": "Contract Manager",
     "avoid_status_override": 0,
     "doc_status": "0",
     "is_optional_state": 0,
@@ -4260,7 +4195,7 @@
    {
     "action": "Submit for Review",
     "allow_self_approval": 1,
-    "allowed": "All",
+    "allowed": "Contract Manager",
     "condition": null,
     "next_state": "Pending Team Lead Approval",
     "parent": "Consultant Contract Amendment Workflow",
@@ -4269,6 +4204,12 @@
     "send_email_to_creator": 0,
     "state": "Draft",
     "workflow_builder_id": null
+   },
+   {
+    "action": "Submit for Review",
+    "allowed": "System Manager",
+    "next_state": "Pending Team Lead Approval",
+    "state": "Draft"
    },
    {
     "action": "Approve (Team Lead)",
@@ -4390,7 +4331,7 @@
    {
     "action": "Resubmit for Review",
     "allow_self_approval": 1,
-    "allowed": "All",
+    "allowed": "Contract Manager",
     "condition": null,
     "next_state": "Pending Team Lead Approval",
     "parent": "Consultant Contract Amendment Workflow",
@@ -4399,6 +4340,12 @@
     "send_email_to_creator": 0,
     "state": "Returned for Revision",
     "workflow_builder_id": null
+   },
+   {
+    "action": "Resubmit for Review",
+    "allowed": "System Manager",
+    "next_state": "Pending Team Lead Approval",
+    "state": "Returned for Revision"
    }
   ],
   "workflow_data": null,
@@ -4416,7 +4363,7 @@
   "send_email_alert": 0,
   "states": [
    {
-    "allow_edit": "All",
+    "allow_edit": "Contract Manager",
     "avoid_status_override": 0,
     "doc_status": "0",
     "is_optional_state": 0,
@@ -4512,7 +4459,7 @@
     "workflow_builder_id": null
    },
    {
-    "allow_edit": "All",
+    "allow_edit": "Contract Manager",
     "avoid_status_override": 0,
     "doc_status": "0",
     "is_optional_state": 0,
@@ -4532,7 +4479,7 @@
    {
     "action": "Submit for Review",
     "allow_self_approval": 1,
-    "allowed": "All",
+    "allowed": "Contract Manager",
     "condition": null,
     "next_state": "Pending Team Lead Approval",
     "parent": "Consultant Contract Termination Workflow",
@@ -4541,6 +4488,12 @@
     "send_email_to_creator": 0,
     "state": "Draft",
     "workflow_builder_id": null
+   },
+   {
+    "action": "Submit for Review",
+    "allowed": "System Manager",
+    "next_state": "Pending Team Lead Approval",
+    "state": "Draft"
    },
    {
     "action": "Approve (Team Lead)",
@@ -4662,7 +4615,7 @@
    {
     "action": "Resubmit for Review",
     "allow_self_approval": 1,
-    "allowed": "All",
+    "allowed": "Contract Manager",
     "condition": null,
     "next_state": "Pending Team Lead Approval",
     "parent": "Consultant Contract Termination Workflow",
@@ -4671,6 +4624,12 @@
     "send_email_to_creator": 0,
     "state": "Returned for Revision",
     "workflow_builder_id": null
+   },
+   {
+    "action": "Resubmit for Review",
+    "allowed": "System Manager",
+    "next_state": "Pending Team Lead Approval",
+    "state": "Returned for Revision"
    }
   ],
   "workflow_data": null,
@@ -4688,7 +4647,7 @@
   "send_email_alert": 0,
   "states": [
    {
-    "allow_edit": "All",
+    "allow_edit": "Contract Manager",
     "avoid_status_override": 0,
     "doc_status": "0",
     "is_optional_state": 0,
@@ -4784,7 +4743,7 @@
     "workflow_builder_id": null
    },
    {
-    "allow_edit": "All",
+    "allow_edit": "Contract Manager",
     "avoid_status_override": 0,
     "doc_status": "0",
     "is_optional_state": 0,
@@ -4804,7 +4763,7 @@
    {
     "action": "Submit for Review",
     "allow_self_approval": 1,
-    "allowed": "All",
+    "allowed": "Contract Manager",
     "condition": null,
     "next_state": "Pending Team Lead Approval",
     "parent": "Consultant Contract Extension Workflow",
@@ -4813,6 +4772,12 @@
     "send_email_to_creator": 0,
     "state": "Draft",
     "workflow_builder_id": null
+   },
+   {
+    "action": "Submit for Review",
+    "allowed": "System Manager",
+    "next_state": "Pending Team Lead Approval",
+    "state": "Draft"
    },
    {
     "action": "Approve (Team Lead)",
@@ -4934,7 +4899,7 @@
    {
     "action": "Resubmit for Review",
     "allow_self_approval": 1,
-    "allowed": "All",
+    "allowed": "Contract Manager",
     "condition": null,
     "next_state": "Pending Team Lead Approval",
     "parent": "Consultant Contract Extension Workflow",
@@ -4943,6 +4908,12 @@
     "send_email_to_creator": 0,
     "state": "Returned for Revision",
     "workflow_builder_id": null
+   },
+   {
+    "action": "Resubmit for Review",
+    "allowed": "System Manager",
+    "next_state": "Pending Team Lead Approval",
+    "state": "Returned for Revision"
    }
   ],
   "workflow_data": null,

@@ -458,9 +458,19 @@
    "link_type": "DocType",
    "onboard": 0,
    "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Customer Contract",
+   "link_count": 0,
+   "link_to": "Test Customer Contract",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
   }
  ],
- "modified": "2026-09-28 16:25:53.771135",
+ "modified": "2026-10-15 18:17:27.030867",
  "modified_by": "Administrator",
  "module": "Access Custom",
  "name": "Contract Mgmt",

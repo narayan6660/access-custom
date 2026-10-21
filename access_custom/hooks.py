@@ -26,7 +26,7 @@ app_license = "mit"
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/access_custom/css/access_custom.css"
-app_include_js = "/assets/access_custom/js/access_custom.js"
+app_include_js = "/assets/access_custom/js/access_custom.js?v=20261016_1535"
 
 # include js, css files in header of web template
 # web_include_css = "/assets/access_custom/css/access_custom.css"
@@ -149,6 +149,12 @@ override_doctype_class = {
 # Hook on document methods and events
 
 doc_events = {
+    "User": {
+        "validate": "access_custom.overrides.user.validate_system_manager_role_assignment",
+    },
+    "Employee": {
+        "validate": "access_custom.overrides.user.validate_employee_role_assignment",
+    },
     "Test Customer Contract": {
         "validate": "access_custom.contract_lifecycle.validate_stage_approver_authorization",
         "on_update": "access_custom.contract_lifecycle.sync_contract_assignment",
@@ -179,23 +185,11 @@ doc_events = {
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-#   "all": [
-#       "access_custom.tasks.all"
-#   ],
-#   "daily": [
-#       "access_custom.tasks.daily"
-#   ],
-#   "hourly": [
-#       "access_custom.tasks.hourly"
-#   ],
-#   "weekly": [
-#       "access_custom.tasks.weekly"
-#   ],
-#   "monthly": [
-#       "access_custom.tasks.monthly"
-#   ],
-# }
+scheduler_events = {
+    "daily": [
+        "access_custom.access_custom.doctype.consultant_contract.consultant_contract.check_and_mark_expired_contracts"
+    ]
+}
 
 # Testing
 # -------
@@ -336,6 +330,6 @@ fixtures = [
 ]
 
 
-app_include_css = "/assets/access_custom/css/style.css"
+app_include_css = "/assets/access_custom/css/style.css?v=20261016_1535"
 web_include_css = "/assets/access_custom/css/web_style.css"
 app_logo_url = "/assets/access_custom/images/logo.png"

@@ -29,57 +29,6 @@
    "options": "Company"
   },
   {
-   "fieldname": "date_of_issue",
-   "fieldtype": "Date",
-   "in_list_view": 1,
-   "label": "Date of Issue"
-  },
-  {
-   "fieldname": "current_annual_salary",
-   "fieldtype": "Currency",
-   "in_list_view": 1,
-   "label": "Current Annual Salary",
-   "options": "currency"
-  },
-  {
-   "fieldname": "increment_percentage",
-   "fieldtype": "Percent",
-   "in_list_view": 1,
-   "label": "Increment Percentage"
-  },
-  {
-   "fieldname": "currency",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Currency",
-   "options": "Currency"
-  },
-  {
-   "fieldname": "revised_annual_salary",
-   "fieldtype": "Currency",
-   "in_list_view": 1,
-   "label": "Revised Annual Salary",
-   "options": "Currency"
-  },
-  {
-   "fieldname": "increment_letter_document",
-   "fieldtype": "Attach",
-   "in_list_view": 1,
-   "label": "Increment Letter Document"
-  },
-  {
-   "fieldname": "column_break_jjbr",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "column_break_vtyp",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "column_break_bbhl",
-   "fieldtype": "Column Break"
-  },
-  {
    "fieldname": "custom_increment_by_amount",
    "fieldtype": "Currency",
    "in_list_view": 1,
@@ -93,11 +42,45 @@
    "read_only": 1
   },
   {
+   "fieldname": "column_break_jjbr",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "date_of_issue",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Date of Issue"
+  },
+  {
+   "fieldname": "increment_percentage",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "Increment Percentage"
+  },
+  {
    "fieldname": "custom_arrears_period",
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Arrears Period",
    "read_only": 1
+  },
+  {
+   "fieldname": "column_break_vtyp",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "current_annual_salary",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Current Annual Salary",
+   "options": "currency"
+  },
+  {
+   "fieldname": "revised_annual_salary",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Revised Annual Salary",
+   "options": "Currency"
   },
   {
    "fieldname": "custom_total_arrears_amount",
@@ -106,6 +89,23 @@
    "label": "Total Arrears Amount",
    "options": "currency",
    "read_only": 1
+  },
+  {
+   "fieldname": "column_break_bbhl",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Currency",
+   "options": "Currency"
+  },
+  {
+   "fieldname": "increment_letter_document",
+   "fieldtype": "Attach",
+   "in_list_view": 1,
+   "label": "Increment Letter Document"
   }
  ],
  "grid_page_length": 50,

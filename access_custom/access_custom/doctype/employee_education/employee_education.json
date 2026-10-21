@@ -36,37 +36,25 @@
    "options": "10\n12\nGraduation\nPost Graduation\nPhd.\nDr."
   },
   {
-   "fieldname": "school_univ",
-   "fieldtype": "Small Text",
-   "in_list_view": 1,
-   "label": "School/University"
-  },
-  {
-   "fieldname": "country_of_education",
-   "fieldtype": "Link",
-   "label": "Country of Education",
-   "options": "Country"
+   "fieldname": "start_year",
+   "fieldtype": "Int",
+   "label": "Start Year"
   },
   {
    "fieldname": "column_break_turc",
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "start_year",
-   "fieldtype": "Int",
-   "label": "Start Year"
+   "fieldname": "school_univ",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "School/University"
   },
   {
    "fieldname": "year_of_passing",
    "fieldtype": "Int",
    "in_list_view": 1,
    "label": "Year of Passing"
-  },
-  {
-   "fieldname": "mode",
-   "fieldtype": "Select",
-   "label": "Mode",
-   "options": "Regular\nOnline\nDistance"
   },
   {
    "fieldname": "column_break_xkrn",
@@ -79,14 +67,26 @@
    "label": "Grade / Percentage"
   },
   {
-   "fieldname": "custom_specializations",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "Specializations"
+   "fieldname": "mode",
+   "fieldtype": "Select",
+   "label": "Mode",
+   "options": "Regular\nOnline\nDistance"
   },
   {
    "fieldname": "column_break_cmao",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "country_of_education",
+   "fieldtype": "Link",
+   "label": "Country of Education",
+   "options": "Country"
+  },
+  {
+   "fieldname": "custom_specializations",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Specializations"
   },
   {
    "fieldname": "custom_certificates_section",
@@ -99,13 +99,17 @@
    "label": "Certificate 1 (PDF)"
   },
   {
+   "fieldname": "column_break_cert2",
+   "fieldtype": "Column Break"
+  },
+  {
    "depends_on": "eval:doc.certificate",
    "fieldname": "certificate_2",
    "fieldtype": "Attach",
    "label": "Certificate 2 (PDF)"
   },
   {
-   "fieldname": "column_break_cert2",
+   "fieldname": "column_break_cert3",
    "fieldtype": "Column Break"
   },
   {
@@ -115,13 +119,17 @@
    "label": "Certificate 3 (PDF)"
   },
   {
+   "fieldname": "column_break_jayd",
+   "fieldtype": "Column Break"
+  },
+  {
    "depends_on": "eval:doc.certificate_3",
    "fieldname": "certificate_4",
    "fieldtype": "Attach",
    "label": "Certificate 4 (PDF)"
   },
   {
-   "fieldname": "column_break_cert3",
+   "fieldname": "column_break_catx",
    "fieldtype": "Column Break"
   },
   {
@@ -129,14 +137,6 @@
    "fieldname": "certificate_5",
    "fieldtype": "Attach",
    "label": "Certificate 5 (PDF)"
-  },
-  {
-   "fieldname": "column_break_jayd",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "column_break_catx",
-   "fieldtype": "Column Break"
   }
  ],
  "grid_page_length": 18,

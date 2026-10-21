@@ -27,36 +27,23 @@
    "oldfieldtype": "Data"
   },
   {
-   "fieldname": "designation",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "Designation",
-   "oldfieldname": "designation",
-   "oldfieldtype": "Data"
-  },
-  {
-   "fieldname": "salary",
-   "fieldtype": "Currency",
-   "in_list_view": 1,
-   "label": "Salary",
-   "oldfieldname": "salary",
-   "oldfieldtype": "Currency",
-   "options": "Company:company:default_currency"
-  },
-  {
-   "fieldname": "address",
-   "fieldtype": "Small Text",
-   "in_list_view": 1,
-   "label": "Address",
-   "oldfieldname": "address",
-   "oldfieldtype": "Small Text"
-  },
-  {
    "fieldname": "contact",
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Contact",
    "oldfieldname": "contact",
+   "oldfieldtype": "Data"
+  },
+  {
+   "fieldname": "column_break_ozbs",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "designation",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Designation",
+   "oldfieldname": "designation",
    "oldfieldtype": "Data"
   },
   {
@@ -68,26 +55,39 @@
    "oldfieldtype": "Data"
   },
   {
+   "fieldname": "column_break_kmwm",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "salary",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Salary",
+   "oldfieldname": "salary",
+   "oldfieldtype": "Currency",
+   "options": "Company:company:default_currency"
+  },
+  {
    "fieldname": "relieving_letter_and_experience_letter",
    "fieldtype": "Attach",
    "label": "Relieving Letter and Experience Letter"
   },
   {
+   "fieldname": "column_break_vsif",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "address",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Address",
+   "oldfieldname": "address",
+   "oldfieldtype": "Small Text"
+  },
+  {
    "fieldname": "previous_ctc_proof_offerincrement_letter",
    "fieldtype": "Attach",
    "label": "Previous CTC Proof (Offer/Increment Letter)"
-  },
-  {
-   "fieldname": "column_break_ozbs",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "column_break_kmwm",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "column_break_vsif",
-   "fieldtype": "Column Break"
   }
  ],
  "grid_page_length": 20,

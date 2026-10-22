@@ -721,7 +721,7 @@ function inject_amendment_styles() {
         .form-section[data-fieldname="sec_approvals"] .section-body {
             display: grid !important;
             grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.25fr) !important;
-            row-gap: 16px !important;
+            row-gap: 12px !important;
             column-gap: 20px !important;
             align-items: start !important;
         }
@@ -731,6 +731,12 @@ function inject_amendment_styles() {
         }
         .form-section[data-fieldname="sec_approvals"] .frappe-control {
             margin-bottom: 0 !important;
+        }
+        .form-section[data-fieldname="sec_approvals"] .frappe-control .form-group {
+            margin-bottom: 0 !important;
+        }
+        .form-section[data-fieldname="sec_approvals"] .control-label {
+            margin-bottom: 4px !important;
         }
         .form-section[data-fieldname="sec_approvals"] [data-fieldname="team_lead_approver"] {
             grid-row: 1 !important; grid-column: 1 !important;
@@ -1158,7 +1164,7 @@ function apply_amendment_approver_styling(frm) {
                 status_field.$wrapper.find(".control-input").hide();
                 status_field.$wrapper.find(".control-value").hide();
 
-                let $badge = $('<div class="approver-decision-badge" style="margin-top: 4px; display: block !important;"></div>');
+                let $badge = $('<div class="approver-decision-badge" style="margin-top: 0px; display: block !important;"></div>');
                 if (status_val && status_val !== "Pending") {
                     let badge_bg = "#16a34a";
                     let text_color = "#ffffff";
@@ -1171,19 +1177,24 @@ function apply_amendment_approver_styling(frm) {
                         icon = "&#8635;";
                     }
                     $badge.html(`
-                        <div style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: ${badge_bg}; color: ${text_color}; border-radius: 6px; font-weight: 600; font-size: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.08);">
+                        <div style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; background: ${badge_bg}; color: ${text_color}; border-radius: 6px; font-weight: 600; font-size: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.08);">
                             <span>${icon}</span>
                             <span>${frappe.utils.escape_html(status_val)}</span>
                         </div>
                     `);
                 } else {
                     $badge.html(`
-                        <div style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: #f1f5f9; color: #64748b; border: 1px dashed #cbd5e1; border-radius: 6px; font-weight: 500; font-size: 12px;">
+                        <div style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; background: #f1f5f9; color: #64748b; border: 1px dashed #cbd5e1; border-radius: 6px; font-weight: 500; font-size: 12px;">
                             <span>Pending Review</span>
                         </div>
                     `);
                 }
-                status_field.$wrapper.append($badge);
+                let $target = status_field.$wrapper.find(".form-group");
+                if ($target.length) {
+                    $target.append($badge);
+                } else {
+                    status_field.$wrapper.append($badge);
+                }
             }
 
             // Visual box for comment / remarks
@@ -1195,7 +1206,7 @@ function apply_amendment_approver_styling(frm) {
                     review_field.$wrapper.find(".control-input").hide();
                     review_field.$wrapper.find(".control-value").hide();
 
-                    let $rem = $('<div class="approver-remarks-content" style="margin-top: 4px; display: block !important;"></div>');
+                    let $rem = $('<div class="approver-remarks-content" style="margin-top: 0px; display: block !important;"></div>');
                     if (review_val && review_val.trim()) {
                         let border_color = "#cbd5e1";
                         let text_color = "#1e293b";
@@ -1206,18 +1217,23 @@ function apply_amendment_approver_styling(frm) {
                             text_color = "#991b1b";
                         }
                         $rem.html(`
-                            <div style="padding: 10px 14px; background: ${bg_color}; border: 1px solid ${border_color}; border-radius: 6px; font-size: 13px; color: ${text_color}; white-space: pre-wrap; line-height: 1.5; min-height: 42px;">
+                            <div style="padding: 6px 12px; background: ${bg_color}; border: 1px solid ${border_color}; border-radius: 6px; font-size: 13px; color: ${text_color}; white-space: pre-wrap; line-height: 1.45; min-height: 32px;">
                                 ${frappe.utils.escape_html(review_val)}
                             </div>
                         `);
                     } else {
                         $rem.html(`
-                            <div style="padding: 8px 12px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; font-size: 12px; color: #94a3b8; font-style: italic;">
+                            <div style="padding: 6px 12px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; font-size: 12px; color: #94a3b8; font-style: italic; min-height: 32px;">
                                 No comments provided
                             </div>
                         `);
                     }
-                    review_field.$wrapper.append($rem);
+                    let $rem_target = review_field.$wrapper.find(".form-group");
+                    if ($rem_target.length) {
+                        $rem_target.append($rem);
+                    } else {
+                        review_field.$wrapper.append($rem);
+                    }
                 } else {
                     review_field.$wrapper.find(".control-input-wrapper").show();
                     review_field.$wrapper.find(".control-input").show();
@@ -1262,11 +1278,11 @@ function align_approver_rows(frm) {
                 if ($el.length) {
                     $el.css({
                         "min-height": max_h + "px",
-                        "margin-bottom": "18px"
+                        "margin-bottom": "0px"
                     });
                     if (idx > 0) {
                         $el.css({
-                            "padding-top": "14px",
+                            "padding-top": "10px",
                             "border-top": "1px solid #f1f5f9"
                         });
                     }

@@ -3,29 +3,42 @@
 
 frappe.ui.form.on("Consultant Contract Termination", {
     onload(frm) {
+        inject_termination_styles();
         apply_form_lockdown(frm);
+        apply_section_visibility(frm);
         enforce_termination_stage_actions(frm);
         setup_auto_expand_textareas(frm, ["termination_reason", "outstanding_deliverables"]);
         setTimeout(() => {
             render_termination_progress_tracker(frm);
             apply_termination_approver_styling(frm);
             enforce_termination_stage_actions(frm);
+            apply_section_visibility(frm);
+            align_approver_rows(frm);
         }, 120);
         setTimeout(() => {
             enforce_termination_stage_actions(frm);
+            apply_section_visibility(frm);
+            align_approver_rows(frm);
         }, 400);
     },
 
     refresh(frm) {
+        inject_termination_styles();
         apply_status_indicator(frm);
         apply_form_lockdown(frm);
+        apply_section_visibility(frm);
+        setup_auto_expand_textareas(frm, ["termination_reason", "outstanding_deliverables"]);
         setTimeout(() => {
             render_termination_progress_tracker(frm);
             apply_termination_approver_styling(frm);
             enforce_termination_stage_actions(frm);
+            apply_section_visibility(frm);
+            align_approver_rows(frm);
         }, 120);
         setTimeout(() => {
             enforce_termination_stage_actions(frm);
+            apply_section_visibility(frm);
+            align_approver_rows(frm);
         }, 400);
     },
 
@@ -72,7 +85,14 @@ frappe.ui.form.on("Consultant Contract Termination", {
     },
 
     termination_letter(frm) {
-        validate_pdf_attachment(frm, "termination_letter");
+        if (!validate_pdf_attachment(frm, "termination_letter")) {
+            return;
+        }
+        apply_section_visibility(frm);
+        render_termination_progress_tracker(frm);
+        if (frm.doc.termination_letter && frm.doc.docstatus === 1) {
+            frm.save();
+        }
     },
 
     before_workflow_action: async function(frm) {
@@ -413,8 +433,7 @@ function apply_form_lockdown(frm) {
         "final_settlement_amount",
         "outstanding_payment",
         "outstanding_deliverables",
-        "termination_reason",
-        "termination_letter"
+        "termination_reason"
     ];
 
     core_fields.forEach(f => {
@@ -431,6 +450,181 @@ function apply_form_lockdown(frm) {
     frm.set_df_property("ceo_remarks", "read_only", can_edit_ceo_remarks ? 0 : 1);
 }
 
+function apply_section_visibility(frm) {
+    if (!frm.doc) return;
+    let state = frm.doc.workflow_state || frm.doc.status || "Draft";
+    let is_ceo_approved = (state === "Terminated") || (frm.doc.ceo_decision && frm.doc.ceo_decision.includes("Approved"));
+
+    // Documentation section & termination_letter: strictly hidden until CEO approval is completed
+    frm.toggle_display("custom_section_break_krjui", is_ceo_approved);
+    frm.toggle_display("termination_letter", is_ceo_approved);
+    frm.set_df_property("custom_section_break_krjui", "hidden", is_ceo_approved ? 0 : 1);
+    frm.set_df_property("termination_letter", "hidden", is_ceo_approved ? 0 : 1);
+
+    if (is_ceo_approved) {
+        let user = frappe.session.user;
+        let is_admin = (user === "Administrator") || (frappe.user_roles && frappe.user_roles.includes("System Manager"));
+        let is_cm = (user === frm.doc.owner) ||
+            (frappe.user_roles && frappe.user_roles.includes("Contract Manager")) ||
+            is_admin;
+
+        // Render message banner directly BELOW the progressbar at the top
+        render_documentation_top_banner(frm, "termination");
+
+        // Clear any duplicate banner from the bottom section
+        let field_obj = frm.fields_dict["termination_letter"];
+        if (field_obj && field_obj.$wrapper) {
+            field_obj.$wrapper.find(".section-completion-banner").remove();
+        }
+
+        let has_doc = !!frm.doc.termination_letter;
+
+        if (has_doc) {
+            // Once document is uploaded by Contract Manager, show the attached file link and lock actions
+            let fld = frm.get_field("termination_letter");
+            if (fld) {
+                fld.disp_status = "Write";
+                if (typeof fld.set_input === "function") {
+                    fld.set_input(frm.doc.termination_letter);
+                } else if (typeof fld.refresh === "function") {
+                    fld.refresh();
+                }
+                if (fld.$wrapper) {
+                    fld.$wrapper.addClass("locked-attachment");
+                    fld.$wrapper.find(".control-input-wrapper, .control-input, .input-area").show();
+                    fld.$wrapper.find(".attached-file").show().css("display", "flex");
+                    fld.$wrapper.find(".attached-file-link").show();
+                    fld.$wrapper.find(".btn-attach, [data-action='reload_attachment'], [data-action='clear_attachment'], .attached-file > div:last-child").hide();
+                }
+            }
+            frm.read_only = true;
+            if (typeof frm.disable_save === "function") frm.disable_save();
+            if (frm.page) frm.page.clear_primary_action();
+        } else if (is_cm) {
+            frm.read_only = false;
+            frm.set_df_property("termination_letter", "read_only", 0);
+            frm.set_df_property("termination_letter", "allow_on_submit", 1);
+            let fld = frm.get_field("termination_letter");
+            if (fld) {
+                fld.df.read_only = 0;
+                fld.df.allow_on_submit = 1;
+                fld.disp_status = "Write";
+                if (!fld.df.options || typeof fld.df.options !== "object") {
+                    fld.df.options = {};
+                }
+                fld.df.options.restrictions = {
+                    allowed_file_types: [".pdf", "application/pdf"]
+                };
+                if (typeof fld.refresh === "function") {
+                    fld.refresh();
+                }
+                if (fld.$wrapper) {
+                    fld.$wrapper.removeClass("locked-attachment");
+                    fld.$wrapper.find(".control-value").hide();
+                    fld.$wrapper.find(".control-input-wrapper").show();
+                    fld.$wrapper.find(".control-input").show();
+                    fld.$wrapper.find(".input-area").show();
+                    fld.$wrapper.find(".btn-attach").show();
+                }
+            }
+        } else {
+            frm.set_df_property("termination_letter", "read_only", 1);
+            let fld = frm.get_field("termination_letter");
+            if (fld && fld.$wrapper) {
+                fld.$wrapper.find(".btn-attach, .attached-file-link + .btn, .btn-browse, [data-action='reload_attachment']").hide();
+            }
+        }
+    } else {
+        $(frm.wrapper).find(".contract-info-banner").remove();
+    }
+
+    if (frm.wrapper) {
+        let $w = $(frm.wrapper);
+        $w.find('.form-section[data-fieldname="custom_section_break_krjui"]').toggle(is_ceo_approved);
+        $w.find('[data-fieldname="custom_section_break_krjui"]').closest(".form-section").toggle(is_ceo_approved);
+        $w.find('.section-head:contains("Documentation")').closest(".form-section").toggle(is_ceo_approved);
+    }
+}
+
+function render_documentation_top_banner(frm, doctype_type) {
+    if (!frm || !frm.wrapper) return;
+    $(frm.wrapper).find(".contract-info-banner").remove();
+
+    let state = frm.doc.workflow_state || frm.doc.status || "Draft";
+    let is_ceo_approved = (state === "Approved" || state === "Terminated") || 
+        (frm.doc.ceo_decision && frm.doc.ceo_decision.includes("Approved"));
+
+    if (!is_ceo_approved) return;
+
+    let attach_field = (doctype_type === "amendment") ? "signed_amendment_document" :
+                       (doctype_type === "extension") ? "extension_appendix" : "termination_letter";
+    let doc_title = (doctype_type === "amendment") ? "Signed Amendment Document (PDF)" :
+                    (doctype_type === "extension") ? "Extension Agreement / Appendix (PDF)" : "Termination / Release Letter (PDF)";
+    let sec_name = (doctype_type === "amendment") ? "Signed Document" : "Documentation";
+
+    let user = frappe.session.user;
+    let is_admin = (user === "Administrator") || (frappe.user_roles && frappe.user_roles.includes("System Manager"));
+    let is_cm = (user === frm.doc.owner) ||
+        (frappe.user_roles && frappe.user_roles.includes("Contract Manager")) ||
+        is_admin;
+
+    let has_file = !!frm.doc[attach_field];
+
+    let banner_html = has_file ? `
+        <div class="contract-info-banner" style="margin-bottom: 15px; padding: 13px 18px; background: #f0fdf4; border: 1px solid #86efac; border-left: 5px solid #16a34a; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-weight: 700; font-size: 13px; color: #166534; display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 16px;">&#10003;</span>
+                    <span>${sec_name} &mdash; Stage Completed & Finalized</span>
+                </div>
+                <span class="badge" style="background: #16a34a; color: #fff; font-size: 11px; padding: 4px 10px; border-radius: 12px; font-weight: 600;">
+                    Finalized
+                </span>
+            </div>
+            <div style="font-size: 12px; color: #1e293b; margin-top: 5px;">
+                The <b>${doc_title}</b> has been successfully uploaded by the Contract Manager. This document is finalized and locked from any further changes.
+            </div>
+        </div>
+    ` : `
+        <div class="contract-info-banner" style="margin-bottom: 15px; padding: 13px 18px; background: ${is_cm ? '#eff6ff' : '#f8fafc'}; border: 1px solid ${is_cm ? '#bfdbfe' : '#e2e8f0'}; border-left: 5px solid ${is_cm ? '#2563eb' : '#94a3b8'}; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-weight: 700; font-size: 13px; color: ${is_cm ? '#1e40af' : '#475569'}; display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 15px;">&#9203;</span>
+                    <span>Pending Termination Letter Upload</span>
+                </div>
+                <span class="badge" style="background: ${is_cm ? '#2563eb' : '#94a3b8'}; color: #fff; font-size: 11px; padding: 4px 10px; border-radius: 12px; font-weight: 600;">
+                    ${is_cm ? "Action Required" : "Awaiting Contract Manager"}
+                </span>
+            </div>
+            <div style="font-size: 12px; color: #1e293b; margin-top: 5px; line-height: 1.5;">
+                ${is_cm ? `CEO approval completed. <b>Contract Manager:</b> Please upload the signed PDF document below in <b>${sec_name}</b> section to complete this stage.` : `CEO approval completed. Awaiting Contract Manager to upload the termination letter in <b>${sec_name}</b> section.`}
+            </div>
+            ${is_cm ? `
+                <div style="margin-top: 10px;">
+                    <button type="button" class="btn btn-primary btn-xs" onclick="cur_frm.get_field('${attach_field}')?.$input?.click();" style="font-weight: 600; padding: 4px 12px; font-size: 11px; border-radius: 4px;">
+                        &#128206; Attach Document Now
+                    </button>
+                </div>
+            ` : ''}
+        </div>
+    `;
+
+    let $banner = $(banner_html);
+    let $progress = $(frm.wrapper).find(".contract-progress-container");
+    if ($progress.length) {
+        $banner.insertAfter($progress);
+    } else if (frm.dashboard && frm.dashboard.parent && frm.dashboard.parent.length) {
+        $banner.appendTo(frm.dashboard.parent);
+    } else {
+        let $target = $(frm.wrapper).find(".form-layout");
+        if ($target.length) {
+            $banner.insertBefore($target.first());
+        } else {
+            $banner.prependTo($(frm.wrapper).find(".form-page"));
+        }
+    }
+}
+
 function validate_pdf_attachment(frm, fieldname) {
     let file_url = frm.doc[fieldname];
     if (!file_url) return true;
@@ -438,47 +632,206 @@ function validate_pdf_attachment(frm, fieldname) {
     let ext = clean_path.split(".").pop();
     if (ext !== "pdf") {
         let field_label = frm.get_docfield(fieldname)?.label || fieldname;
+
+        // Immediately clear value in doc and control
+        frm.doc[fieldname] = null;
         frm.set_value(fieldname, null);
-        frappe.msgprint({
-            title: __("Invalid Document Format"),
-            indicator: "red",
-            message: __("<b>{0}</b> only accepts PDF (.pdf) files.<br><br>The uploaded file (.<b>{1}</b>) is not permitted and has been removed.", [field_label, ext])
-        });
+        let fld = frm.fields_dict[fieldname];
+        if (fld) {
+            fld.set_input(null);
+            fld.value = null;
+            if (typeof fld.refresh === "function") {
+                fld.refresh();
+            }
+        }
+
+        // Deduplicate: prevent multiple error modals firing within 1.5 seconds
+        let now = Date.now();
+        if (frm._last_pdf_err_time && (now - frm._last_pdf_err_time < 1500) && frm._last_pdf_err_field === fieldname) {
+            return false;
+        }
+        frm._last_pdf_err_time = now;
+        frm._last_pdf_err_field = fieldname;
+
+        if (frm._pdf_err_timer) {
+            clearTimeout(frm._pdf_err_timer);
+        }
+
+        // Delay showing the modal slightly so background upload/save cleanup does not dismiss it.
+        // Using an independent frappe.ui.Dialog ensures frappe.hide_msgprint() cannot wipe it.
+        frm._pdf_err_timer = setTimeout(() => {
+            let d = new frappe.ui.Dialog({
+                title: __("Invalid Document Format"),
+                indicator: "red"
+            });
+            d.$body.html(
+                "<div style='font-size: 14px; line-height: 1.6; padding: 12px 6px; color: #1e293b;'>" +
+                "<p style='margin-bottom: 8px;'><b>" + frappe.utils.escape_html(field_label) + "</b> only accepts <b>PDF (.pdf)</b> files.</p>" +
+                "<p style='color: #dc2626; margin-bottom: 8px;'>The uploaded file (<b>." + frappe.utils.escape_html(ext) + "</b>) is not permitted and has been removed.</p>" +
+                "<p style='color: #64748b; font-size: 13px; margin-bottom: 0;'>Please select and upload a valid PDF document.</p>" +
+                "</div>"
+            );
+            d.set_primary_action(__("Understood"), function() {
+                d.hide();
+            });
+            d.show();
+        }, 350);
+
         return false;
     }
     return true;
 }
 
+function inject_termination_styles() {
+    $("#cct-custom-ui-style").remove();
+    $(`
+    <style id="cct-custom-ui-style">
+        [data-page-route*="consultant-contract-termination"] [data-fieldname="termination_reason"] textarea,
+        [data-page-route*="consultant-contract-termination"] [data-fieldname="outstanding_deliverables"] textarea,
+        [data-page-route*="consultant_contract_termination"] [data-fieldname="termination_reason"] textarea,
+        [data-page-route*="consultant_contract_termination"] [data-fieldname="outstanding_deliverables"] textarea,
+        .form-page[data-page-route*="consultant-contract-termination"] [data-fieldname="termination_reason"] textarea,
+        .form-page[data-page-route*="consultant-contract-termination"] [data-fieldname="outstanding_deliverables"] textarea {
+            height: 52px !important;
+            min-height: 52px !important;
+            line-height: 1.45 !important;
+            font-size: 13px !important;
+            padding: 6px 10px !important;
+            resize: none !important;
+            overflow-y: hidden !important;
+            box-sizing: border-box !important;
+        }
+
+        /* Approver Section Grid Alignment */
+        .form-section[data-fieldname="sec_approvals"] .section-body {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.25fr) !important;
+            row-gap: 16px !important;
+            column-gap: 20px !important;
+            align-items: start !important;
+        }
+        .form-section[data-fieldname="sec_approvals"] .section-body > .form-column,
+        .form-section[data-fieldname="sec_approvals"] .section-body > .form-column > form {
+            display: contents !important;
+        }
+        .form-section[data-fieldname="sec_approvals"] .frappe-control {
+            margin-bottom: 0 !important;
+        }
+        .form-section[data-fieldname="sec_approvals"] [data-fieldname="team_lead_approver"] {
+            grid-row: 1 !important; grid-column: 1 !important;
+        }
+        .form-section[data-fieldname="sec_approvals"] [data-fieldname="team_lead_decision"] {
+            grid-row: 1 !important; grid-column: 2 !important;
+        }
+        .form-section[data-fieldname="sec_approvals"] [data-fieldname="team_lead_remarks"] {
+            grid-row: 1 !important; grid-column: 3 !important;
+        }
+        .form-section[data-fieldname="sec_approvals"] [data-fieldname="hr_approver"] {
+            grid-row: 2 !important; grid-column: 1 !important;
+            padding-top: 14px !important;
+            border-top: 1px solid #f1f5f9 !important;
+        }
+        .form-section[data-fieldname="sec_approvals"] [data-fieldname="hr_decision"] {
+            grid-row: 2 !important; grid-column: 2 !important;
+            padding-top: 14px !important;
+            border-top: 1px solid #f1f5f9 !important;
+        }
+        .form-section[data-fieldname="sec_approvals"] [data-fieldname="hr_remarks"] {
+            grid-row: 2 !important; grid-column: 3 !important;
+            padding-top: 14px !important;
+            border-top: 1px solid #f1f5f9 !important;
+        }
+        .form-section[data-fieldname="sec_approvals"] [data-fieldname="ceo_approver"] {
+            grid-row: 3 !important; grid-column: 1 !important;
+            padding-top: 14px !important;
+            border-top: 1px solid #f1f5f9 !important;
+        }
+        .form-section[data-fieldname="sec_approvals"] [data-fieldname="ceo_decision"] {
+            grid-row: 3 !important; grid-column: 2 !important;
+            padding-top: 14px !important;
+            border-top: 1px solid #f1f5f9 !important;
+        }
+        .form-section[data-fieldname="sec_approvals"] [data-fieldname="ceo_remarks"] {
+            grid-row: 3 !important; grid-column: 3 !important;
+            padding-top: 14px !important;
+            border-top: 1px solid #f1f5f9 !important;
+        }
+        @media (max-width: 767px) {
+            .form-section[data-fieldname="sec_approvals"] .section-body {
+                display: flex !important;
+                flex-direction: column !important;
+            }
+            .form-section[data-fieldname="sec_approvals"] .section-body > .form-column {
+                display: block !important;
+            }
+        }
+
+        /* Permanently lock down uploaded document controls once attached while displaying file link */
+        .locked-attachment .btn-attach,
+        .locked-attachment [data-action="reload_attachment"],
+        .locked-attachment [data-action="clear_attachment"],
+        .locked-attachment .attached-file > div:last-child,
+        .locked-attachment .attached-file-link + .btn,
+        .locked-attachment .clear-button,
+        .locked-attachment .btn-browse,
+        [data-fieldname="termination_letter"].locked-attachment .btn-attach,
+        [data-fieldname="termination_letter"].locked-attachment [data-action="reload_attachment"],
+        [data-fieldname="termination_letter"].locked-attachment [data-action="clear_attachment"],
+        [data-fieldname="termination_letter"].locked-attachment .attached-file > div:last-child,
+        [data-fieldname="termination_letter"].locked-attachment .attached-file-link + .btn,
+        [data-fieldname="termination_letter"].locked-attachment .clear-button {
+            display: none !important;
+        }
+        .locked-attachment .attached-file {
+            display: flex !important;
+            padding: 8px 12px !important;
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 6px !important;
+        }
+        .locked-attachment .attached-file-link {
+            display: inline-block !important;
+            font-weight: 600 !important;
+            color: #2563eb !important;
+        }
+    </style>
+    `).appendTo("head");
+}
+
 function setup_auto_expand_textareas(frm, fieldnames) {
-    fieldnames.forEach(fieldname => {
-        let field = frm.fields_dict[fieldname];
-        if (!field || !field.$wrapper) return;
-        let textarea = field.$wrapper.find("textarea");
-        if (!textarea.length) return;
+    const apply_resize = () => {
+        fieldnames.forEach(fieldname => {
+            let field = frm.fields_dict[fieldname];
+            if (!field || !field.$wrapper) return;
+            let textarea = field.$wrapper.find("textarea");
+            if (!textarea.length) return;
 
-        textarea.css({
-            "min-height": "52px",
-            "height": "52px",
-            "line-height": "1.45",
-            "font-size": "13px",
-            "padding": "6px 10px",
-            "box-sizing": "border-box",
-            "overflow-y": "hidden",
-            "resize": "none"
+            textarea.attr("rows", 2);
+            textarea.each(function() {
+                this.style.setProperty("min-height", "52px", "important");
+                this.style.setProperty("line-height", "1.45", "important");
+                this.style.setProperty("font-size", "13px", "important");
+                this.style.setProperty("padding", "6px 10px", "important");
+                this.style.setProperty("box-sizing", "border-box", "important");
+                this.style.setProperty("overflow-y", "hidden", "important");
+                this.style.setProperty("resize", "none", "important");
+
+                this.style.setProperty("height", "auto", "important");
+                let newHeight = Math.max(52, this.scrollHeight);
+                this.style.setProperty("height", newHeight + "px", "important");
+            });
+
+            textarea.off("input.auto_expand").on("input.auto_expand", function() {
+                this.style.setProperty("height", "auto", "important");
+                let newHeight = Math.max(52, this.scrollHeight);
+                this.style.setProperty("height", newHeight + "px", "important");
+            });
         });
+    };
 
-        const resize = function() {
-            this.style.height = "auto";
-            let newHeight = Math.max(52, this.scrollHeight);
-            this.style.height = newHeight + "px";
-        };
-
-        textarea.off("input.auto_expand").on("input.auto_expand", resize);
-
-        setTimeout(() => {
-            textarea.each(resize);
-        }, 150);
-    });
+    apply_resize();
+    setTimeout(apply_resize, 100);
+    setTimeout(apply_resize, 300);
 }
 
 
@@ -497,12 +850,13 @@ function render_termination_progress_tracker(frm) {
             { id: "Pending Team Lead Approval", label: "Team Lead" },
             { id: "Pending HR Review", label: "HR Review" },
             { id: "Pending CEO Approval", label: "CEO" },
-            { id: "Terminated", label: "Terminated" }
+            { id: "Terminated", label: "Documentation" }
         ];
 
         let current_state = frm.doc.workflow_state || frm.doc.status || "Draft";
         let is_rejected = current_state.includes("Reject") || (frm.doc.status === "Rejected");
         let is_revision = (current_state === "Returned for Revision") || (frm.doc.status === "Returned for Revision");
+        let has_doc_uploaded = !!frm.doc.termination_letter;
 
         let rejected_stage = get_termination_rejection_stage(frm);
         if (rejected_stage) is_rejected = true;
@@ -524,26 +878,38 @@ function render_termination_progress_tracker(frm) {
             active_index = idx >= 0 ? idx : 0;
         }
 
-        let percent = (active_index === steps.length - 1 && current_state === "Terminated") ? 100 : Math.round((active_index / (steps.length - 1)) * 100);
-
-        let status_bg = "#dc2626"; // Termination final color is reddish/dark or green depending on state
-        let bar_color = "#16a34a";
+        let percent = 0;
         if (current_state === "Terminated") {
-            status_bg = "#475569";
-            bar_color = "#475569";
-        } else if (is_rejected) {
+            percent = has_doc_uploaded ? 100 : 85;
+        } else {
+            percent = Math.round((active_index / (steps.length - 1)) * 100);
+        }
+
+        let status_bg = "#16a34a";
+        let bar_color = "#16a34a";
+        let status_label = `${frappe.utils.escape_html(current_state)} (${percent}%)`;
+        if (is_rejected) {
             status_bg = "#dc2626";
             bar_color = "#dc2626";
         } else if (is_revision) {
             status_bg = "#d97706";
             bar_color = "#d97706";
-        } else {
-            status_bg = "#16a34a";
+        } else if (current_state === "Terminated") {
+            if (has_doc_uploaded) {
+                status_bg = "#16a34a";
+                bar_color = "#16a34a";
+                status_label = "Documentation Uploaded &mdash; Completed (100%)";
+            } else {
+                status_bg = "#2563eb";
+                bar_color = "#2563eb";
+                status_label = "CEO Approved &mdash; Awaiting Documentation (85%)";
+            }
         }
 
         let nodes_html = steps.map((s, idx) => {
-            let is_completed = (idx < active_index) || (active_index === steps.length - 1 && current_state === "Terminated");
-            let is_active = (idx === active_index) && !(active_index === steps.length - 1 && current_state === "Terminated");
+            let is_terminated_state = (current_state === "Terminated");
+            let is_completed = (idx < active_index) || (is_terminated_state && idx === active_index && has_doc_uploaded);
+            let is_active = (idx === active_index) && !(is_terminated_state && has_doc_uploaded);
 
             let circle_bg = "#f1f5f9";
             let circle_border = "#cbd5e1";
@@ -552,14 +918,18 @@ function render_termination_progress_tracker(frm) {
             let label_color = "#64748b";
             let label_weight = "500";
             let pulse_style = "";
+            let extra_hint = "";
 
             if (is_completed) {
-                circle_bg = (current_state === "Terminated") ? "#475569" : "#16a34a";
-                circle_border = circle_bg;
+                circle_bg = "#16a34a";
+                circle_border = "#16a34a";
                 circle_color = "#ffffff";
                 circle_content = "&#10003;";
-                label_color = (current_state === "Terminated") ? "#334155" : "#15803d";
+                label_color = "#15803d";
                 label_weight = "600";
+                if (s.id === "Terminated") {
+                    extra_hint = `<div style="font-size: 10px; color: #16a34a; font-weight: 600; margin-top: 2px;">(Completed)</div>`;
+                }
             } else if (is_active) {
                 if (is_rejected) {
                     circle_bg = "#dc2626";
@@ -576,6 +946,15 @@ function render_termination_progress_tracker(frm) {
                     label_color = "#d97706";
                     label_weight = "700";
                     pulse_style = "box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.25);";
+                } else if (is_terminated_state && !has_doc_uploaded) {
+                    circle_bg = "#eff6ff";
+                    circle_border = "#2563eb";
+                    circle_color = "#1d4ed8";
+                    circle_content = idx + 1;
+                    label_color = "#1d4ed8";
+                    label_weight = "700";
+                    pulse_style = "box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.25);";
+                    extra_hint = `<div style="font-size: 10px; color: #2563eb; font-weight: 600; margin-top: 2px;">(Contract Manager)</div>`;
                 } else {
                     circle_bg = "#16a34a";
                     circle_border = "#15803d";
@@ -595,6 +974,7 @@ function render_termination_progress_tracker(frm) {
                 <div style="font-size: 11px; font-weight: ${label_weight}; color: ${label_color}; text-align: center; line-height: 1.2;">
                     ${s.label}
                 </div>
+                ${extra_hint}
             </div>
             `;
         }).join("");
@@ -607,7 +987,7 @@ function render_termination_progress_tracker(frm) {
                 </div>
                 <div>
                     <span class="badge" style="background: ${status_bg}; color: #fff; font-size: 11px; padding: 3px 9px; border-radius: 12px; font-weight: 600;">
-                        ${frappe.utils.escape_html(current_state)} (${percent}%)
+                        ${status_label}
                     </span>
                 </div>
             </div>
@@ -680,8 +1060,23 @@ function apply_termination_approver_styling(frm) {
     if (!frm || !frm.wrapper) return;
 
     if (frm.is_new()) {
-        $(frm.wrapper).find(".approver-decision-badge, .approver-remarks-content").remove();
-        $(frm.wrapper).find(".control-input-wrapper, .control-input, .control-value").show();
+        const stage_mapping = [
+            { status: "team_lead_decision", review: "team_lead_remarks" },
+            { status: "hr_decision", review: "hr_remarks" },
+            { status: "ceo_decision", review: "ceo_remarks" }
+        ];
+        stage_mapping.forEach(item => {
+            let status_field = frm.get_field(item.status);
+            if (status_field && status_field.$wrapper) {
+                status_field.$wrapper.find(".approver-decision-badge").remove();
+                status_field.$wrapper.find(".control-input-wrapper, .control-input, .control-value").show();
+            }
+            let review_field = frm.get_field(item.review);
+            if (review_field && review_field.$wrapper) {
+                review_field.$wrapper.find(".approver-remarks-content").remove();
+                review_field.$wrapper.find(".control-input-wrapper, .control-input, .control-value").show();
+            }
+        });
         return;
     }
 
@@ -814,9 +1209,56 @@ function apply_termination_approver_styling(frm) {
                 }
             }
         });
+        align_approver_rows(frm);
     } catch (e) {
         console.error("Error in apply_termination_approver_styling:", e);
     }
+}
+
+function align_approver_rows(frm) {
+    if (!frm || !frm.wrapper) return;
+    let $w = $(frm.wrapper);
+    let rows = [
+        ["team_lead_approver", "team_lead_decision", "team_lead_remarks"],
+        ["hr_approver", "hr_decision", "hr_remarks"],
+        ["ceo_approver", "ceo_decision", "ceo_remarks"]
+    ];
+
+    // Reset min-heights first to measure natural content height
+    rows.forEach(r => {
+        r.forEach(f => {
+            let $el = $w.find(`[data-fieldname="${f}"]`);
+            $el.css({ "min-height": "", "height": "" });
+        });
+    });
+
+    // Measure and apply matched height for each row
+    rows.forEach((r, idx) => {
+        let max_h = 0;
+        let els = r.map(f => $w.find(`[data-fieldname="${f}"]`));
+        els.forEach($el => {
+            if ($el.length) {
+                let h = $el.outerHeight();
+                if (h > max_h) max_h = h;
+            }
+        });
+        if (max_h > 0) {
+            els.forEach($el => {
+                if ($el.length) {
+                    $el.css({
+                        "min-height": max_h + "px",
+                        "margin-bottom": "18px"
+                    });
+                    if (idx > 0) {
+                        $el.css({
+                            "padding-top": "14px",
+                            "border-top": "1px solid #f1f5f9"
+                        });
+                    }
+                }
+            });
+        }
+    });
 }
 
 

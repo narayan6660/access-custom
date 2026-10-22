@@ -80,6 +80,21 @@ class ConsultantContractExtension(Document):
             if not is_cm:
                 frappe.throw(frappe._("Only the Contract Manager is authorized to resubmit this document after revision."))
 
+        # Restrict upload of extension appendix post-approval strictly to Contract Manager
+        if self.docstatus == 1:
+            if getattr(self, "extension_appendix", None) != getattr(old_doc, "extension_appendix", None):
+                if getattr(old_doc, "extension_appendix", None):
+                    frappe.throw(
+                        frappe._("The Extension Agreement / Appendix has already been uploaded and finalized. It cannot be modified, replaced, or deleted."),
+                        frappe.PermissionError
+                    )
+                is_cm = (user == self.owner) or ("Contract Manager" in roles) or is_admin
+                if not is_cm:
+                    frappe.throw(
+                        frappe._("Only the Contract Manager is authorized to upload the Extension Agreement / Appendix."),
+                        frappe.PermissionError
+                    )
+
         if state == "Pending Team Lead Approval":
             is_lead = (self.team_lead_approver and user == self.team_lead_approver) or ("Team Lead" in roles) or is_admin
             if self.team_lead_remarks != old_doc.team_lead_remarks and not is_lead:

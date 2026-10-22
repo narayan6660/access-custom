@@ -160,7 +160,8 @@
   {
    "fieldname": "termination_letter",
    "fieldtype": "Attach",
-   "label": "Termination / Release Letter (PDF)"
+   "label": "Termination / Release Letter (PDF)",
+   "allow_on_submit": 1
   },
   {
    "fieldname": "amended_from",
@@ -321,6 +322,19 @@
    "role": "Employee",
    "share": 1,
    "submit": 0,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Contract Manager",
+   "share": 1,
+   "submit": 1,
    "write": 1
   }
  ],

@@ -69,6 +69,21 @@ class ConsultantContractTermination(Document):
             if not is_cm:
                 frappe.throw(frappe._("Only the Contract Manager is authorized to resubmit this document after revision."))
 
+        # Restrict upload of termination letter post-approval strictly to Contract Manager
+        if self.docstatus == 1:
+            if getattr(self, "termination_letter", None) != getattr(old_doc, "termination_letter", None):
+                if getattr(old_doc, "termination_letter", None):
+                    frappe.throw(
+                        frappe._("The Termination / Release Letter has already been uploaded and finalized. It cannot be modified, replaced, or deleted."),
+                        frappe.PermissionError
+                    )
+                is_cm = (user == self.owner) or ("Contract Manager" in roles) or is_admin
+                if not is_cm:
+                    frappe.throw(
+                        frappe._("Only the Contract Manager is authorized to upload the Termination / Release Letter."),
+                        frappe.PermissionError
+                    )
+
         if state == "Pending Team Lead Approval":
             is_lead = (self.team_lead_approver and user == self.team_lead_approver) or ("Team Lead" in roles) or is_admin
             if self.team_lead_remarks != old_doc.team_lead_remarks and not is_lead:

@@ -4143,7 +4143,7 @@
     "workflow_builder_id": null
    },
    {
-    "allow_edit": "System Manager",
+    "allow_edit": "Contract Manager",
     "avoid_status_override": 0,
     "doc_status": "1",
     "is_optional_state": 0,
@@ -4427,7 +4427,7 @@
     "workflow_builder_id": null
    },
    {
-    "allow_edit": "System Manager",
+    "allow_edit": "Contract Manager",
     "avoid_status_override": 0,
     "doc_status": "1",
     "is_optional_state": 0,
@@ -4711,7 +4711,7 @@
     "workflow_builder_id": null
    },
    {
-    "allow_edit": "System Manager",
+    "allow_edit": "Contract Manager",
     "avoid_status_override": 0,
     "doc_status": "1",
     "is_optional_state": 0,

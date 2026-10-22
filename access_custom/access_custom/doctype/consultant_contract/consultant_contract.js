@@ -310,6 +310,7 @@ frappe.ui.form.on("Consultant Contract", {
         setTimeout(() => {
             apply_section_visibility(frm);
             render_contract_progress_tracker(frm);
+            align_contract_approver_rows(frm);
             enforce_stage_approver_actions(frm);
         }, 300);
 
@@ -1228,7 +1229,7 @@ function apply_contract_approver_field_locking(frm) {
                 status_field.$wrapper.find(".control-input").hide();
                 status_field.$wrapper.find(".control-value").hide();
 
-                let $badge = $('<div class="approver-decision-badge" style="margin-top: 4px; display: block !important;"></div>');
+                let $badge = $('<div class="approver-decision-badge" style="margin-top: 0px; display: block !important;"></div>');
                 if (status_val && status_val !== "Pending") {
                     let badge_bg = "#16a34a";
                     let text_color = "#ffffff";
@@ -1241,19 +1242,24 @@ function apply_contract_approver_field_locking(frm) {
                         icon = "&#8635;";
                     }
                     $badge.html(`
-                        <div style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: ${badge_bg}; color: ${text_color}; border-radius: 6px; font-weight: 600; font-size: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.08);">
+                        <div style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; background: ${badge_bg}; color: ${text_color}; border-radius: 6px; font-weight: 600; font-size: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.08);">
                             <span>${icon}</span>
                             <span>${frappe.utils.escape_html(status_val)}</span>
                         </div>
                     `);
                 } else {
                     $badge.html(`
-                        <div style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: #f1f5f9; color: #64748b; border: 1px dashed #cbd5e1; border-radius: 6px; font-weight: 500; font-size: 12px;">
+                        <div style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; background: #f1f5f9; color: #64748b; border: 1px dashed #cbd5e1; border-radius: 6px; font-weight: 500; font-size: 12px;">
                             <span>Pending Review</span>
                         </div>
                     `);
                 }
-                status_field.$wrapper.append($badge);
+                let $target = status_field.$wrapper.find(".form-group");
+                if ($target.length) {
+                    $target.append($badge);
+                } else {
+                    status_field.$wrapper.append($badge);
+                }
             }
 
             // Visual box for comment / remarks
@@ -1265,7 +1271,7 @@ function apply_contract_approver_field_locking(frm) {
                     review_field.$wrapper.find(".control-input").hide();
                     review_field.$wrapper.find(".control-value").hide();
 
-                    let $rem = $('<div class="approver-remarks-content" style="margin-top: 4px; display: block !important;"></div>');
+                    let $rem = $('<div class="approver-remarks-content" style="margin-top: 0px; display: block !important;"></div>');
                     if (review_val && review_val.trim()) {
                         let border_color = "#cbd5e1";
                         let text_color = "#1e293b";
@@ -1276,24 +1282,30 @@ function apply_contract_approver_field_locking(frm) {
                             text_color = "#991b1b";
                         }
                         $rem.html(`
-                            <div style="padding: 10px 14px; background: ${bg_color}; border: 1px solid ${border_color}; border-radius: 6px; font-size: 13px; color: ${text_color}; white-space: pre-wrap; line-height: 1.5; min-height: 42px;">
+                            <div style="padding: 6px 12px; background: ${bg_color}; border: 1px solid ${border_color}; border-radius: 6px; font-size: 13px; color: ${text_color}; white-space: pre-wrap; line-height: 1.45; min-height: 32px;">
                                 ${frappe.utils.escape_html(review_val)}
                             </div>
                         `);
                     } else {
                         $rem.html(`
-                            <div style="padding: 8px 12px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; font-size: 12px; color: #94a3b8; font-style: italic;">
+                            <div style="padding: 6px 12px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; font-size: 12px; color: #94a3b8; font-style: italic; min-height: 32px;">
                                 No comments provided
                             </div>
                         `);
                     }
-                    review_field.$wrapper.append($rem);
+                    let $rem_target = review_field.$wrapper.find(".form-group");
+                    if ($rem_target.length) {
+                        $rem_target.append($rem);
+                    } else {
+                        review_field.$wrapper.append($rem);
+                    }
                 } else {
                     review_field.$wrapper.find(".control-input-wrapper").show();
                     review_field.$wrapper.find(".control-input").show();
                 }
             }
         });
+        align_contract_approver_rows(frm);
 
         // General field read-only rules across approval stages
         let is_in_approval = ["Pending Team Lead Approval", "Pending HR Review", "Pending CEO Approval", "Pending Final HR Review"].includes(state);
@@ -1345,6 +1357,47 @@ function apply_contract_approver_field_locking(frm) {
     } catch (e) {
         console.error("Error in apply_contract_approver_field_locking:", e);
     }
+}
+
+function align_contract_approver_rows(frm) {
+    if (!frm || !frm.wrapper) return;
+    let $w = $(frm.wrapper);
+    let rows = [
+        ["team_lead_approver", "team_lead_decision", "team_lead_remarks"],
+        ["hr_approver", "hr_decision", "hr_remarks"],
+        ["ceo_approver", "ceo_decision", "ceo_remarks"],
+        ["final_hr_approver", "final_hr_decision", "final_hr_remarks"]
+    ];
+
+    // Reset min-heights first to measure natural content height
+    rows.forEach(r => {
+        r.forEach(f => {
+            let $el = $w.find(`[data-fieldname="${f}"]`);
+            $el.css({ "min-height": "", "height": "" });
+        });
+    });
+
+    // Measure and apply matched height for each row
+    rows.forEach(r => {
+        let max_h = 0;
+        let els = r.map(f => $w.find(`[data-fieldname="${f}"]`));
+        els.forEach($el => {
+            if ($el.length) {
+                let h = $el.outerHeight();
+                if (h > max_h) max_h = h;
+            }
+        });
+        if (max_h > 0) {
+            els.forEach($el => {
+                if ($el.length) {
+                    $el.css({
+                        "min-height": max_h + "px",
+                        "margin-bottom": "0px"
+                    });
+                }
+            });
+        }
+    });
 }
 
 // ==============================================================================
@@ -1911,6 +1964,49 @@ function inject_consultant_contract_styles() {
             border: none !important;
             background: transparent !important;
             padding: 0 !important;
+        }
+
+        /* Section F - Approver Rows Compact Leveling & Spacing */
+        .form-section[data-fieldname="section_f"],
+        .form-section[data-fieldname="sec_break_f2"],
+        .form-section[data-fieldname="sec_break_f3"],
+        .form-section[data-fieldname="sec_break_f4"] {
+            margin-bottom: 0px !important;
+            padding-top: 8px !important;
+            padding-bottom: 8px !important;
+        }
+
+        .form-section[data-fieldname="sec_break_f2"],
+        .form-section[data-fieldname="sec_break_f3"],
+        .form-section[data-fieldname="sec_break_f4"] {
+            border-top: 1px solid #f1f5f9 !important;
+        }
+
+        .form-section[data-fieldname="sec_break_f2"] .section-head,
+        .form-section[data-fieldname="sec_break_f3"] .section-head,
+        .form-section[data-fieldname="sec_break_f4"] .section-head {
+            display: none !important;
+        }
+
+        .form-section[data-fieldname="section_f"] .frappe-control,
+        .form-section[data-fieldname="sec_break_f2"] .frappe-control,
+        .form-section[data-fieldname="sec_break_f3"] .frappe-control,
+        .form-section[data-fieldname="sec_break_f4"] .frappe-control {
+            margin-bottom: 0 !important;
+        }
+
+        .form-section[data-fieldname="section_f"] .frappe-control .form-group,
+        .form-section[data-fieldname="sec_break_f2"] .frappe-control .form-group,
+        .form-section[data-fieldname="sec_break_f3"] .frappe-control .form-group,
+        .form-section[data-fieldname="sec_break_f4"] .frappe-control .form-group {
+            margin-bottom: 0 !important;
+        }
+
+        .form-section[data-fieldname="section_f"] .control-label,
+        .form-section[data-fieldname="sec_break_f2"] .control-label,
+        .form-section[data-fieldname="sec_break_f3"] .control-label,
+        .form-section[data-fieldname="sec_break_f4"] .control-label {
+            margin-bottom: 4px !important;
         }
 
         /* Hide Comments and Activity / Timeline for Non-Admin users */

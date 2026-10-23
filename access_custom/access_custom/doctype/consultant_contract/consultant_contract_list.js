@@ -209,8 +209,36 @@ function sync_active_consultant_lifecycle_cache(listview) {
             }
         });
 
-        if (updated && listview.$result) {
-            listview.render_results();
+        // Update DOM rows with live accurate pills and routing
+        if (listview.$result) {
+            contract_names.forEach(cname => {
+                let info = listview.lifecycle_cache[cname];
+                if (info) {
+                    let $row = listview.$result.find(`.list-row-container:has([data-name="${frappe.utils.escape_html(cname)}"])`);
+                    if (!$row.length) {
+                        $row = listview.$result.find(`.list-row-container:has(a[href*="${encodeURIComponent(cname)}"])`);
+                    }
+                    if (!$row.length) {
+                        $row = listview.$result.find(`.list-row-container:has(a:contains("${cname}"))`);
+                    }
+                    let $pill = $row.find(".col-status .custom-status-pill");
+                    if ($pill.length) {
+                        $pill.attr("class", `custom-status-pill badge-${info.color}`);
+                        $pill.attr("title", `Click to open: ${info.label}`);
+                        $pill.find("span:last").text(info.label);
+                        $pill.off("click").on("click", function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+                            if (info.docname) {
+                                frappe.set_route("Form", info.doctype, info.docname);
+                            } else {
+                                frappe.set_route("Form", info.doctype, cname);
+                            }
+                        });
+                    }
+                }
+            });
         }
     }).catch(err => {
         console.error("Error in sync_active_consultant_lifecycle_cache:", err);
@@ -454,6 +482,103 @@ const custom_consultant_list_css = `
 }
 `;
 
+function is_consultant_lifecycle_status(val) {
+    if (!val) return false;
+    const lifecycle_statuses = [
+        "Under Extension Process",
+        "Under Amendment Process",
+        "Under Termination Process",
+        "Terminated"
+    ];
+    return lifecycle_statuses.includes(val);
+}
+
+async function get_consultant_contracts_for_lifecycle_status(val) {
+    try {
+        if (val === "Under Extension Process") {
+            let r = await frappe.db.get_list("Consultant Contract Extension", {
+                filters: { docstatus: 0 },
+                fields: ["contract"],
+                limit: 500
+            });
+            return [...new Set((r || []).map(x => x.contract).filter(Boolean))];
+        }
+
+        if (val === "Under Amendment Process") {
+            let r = await frappe.db.get_list("Consultant Contract Amendment", {
+                filters: { docstatus: 0 },
+                fields: ["contract"],
+                limit: 500
+            });
+            return [...new Set((r || []).map(x => x.contract).filter(Boolean))];
+        }
+
+        if (val === "Under Termination Process") {
+            let r = await frappe.db.get_list("Consultant Contract Termination", {
+                filters: { docstatus: 0 },
+                fields: ["contract"],
+                limit: 500
+            });
+            return [...new Set((r || []).map(x => x.contract).filter(Boolean))];
+        }
+
+        if (val === "Terminated") {
+            let [terms, contracts] = await Promise.all([
+                frappe.db.get_list("Consultant Contract Termination", {
+                    filters: { docstatus: 1 },
+                    fields: ["contract"],
+                    limit: 500
+                }),
+                frappe.db.get_list("Consultant Contract", {
+                    filters: { workflow_state: "Terminated" },
+                    fields: ["name"],
+                    limit: 500
+                })
+            ]);
+            let names = (terms || []).map(x => x.contract).concat((contracts || []).map(x => x.name));
+            return [...new Set(names.filter(Boolean))];
+        }
+    } catch (e) {
+        console.error("Error resolving consultant contracts for lifecycle status:", e);
+    }
+    return null;
+}
+
+function setup_consultant_lifecycle_filter_interceptor(listview) {
+    if (!listview || listview._has_lifecycle_interceptor) return;
+    listview._has_lifecycle_interceptor = true;
+
+    const orig_refresh = listview.refresh.bind(listview);
+    const orig_get_filters = listview.get_filters_for_args.bind(listview);
+
+    listview.get_filters_for_args = function() {
+        let filters = orig_get_filters();
+        if (this._lifecycle_filter_names !== null && this._lifecycle_filter_names !== undefined) {
+            filters = filters.filter(f => f[1] !== "status" && f[1] !== "workflow_state");
+            if (this._lifecycle_filter_names.length > 0) {
+                filters.push(["Consultant Contract", "name", "in", this._lifecycle_filter_names]);
+            } else {
+                filters.push(["Consultant Contract", "name", "=", "__NO_MATCHING_CONTRACT__"]);
+            }
+        }
+        return filters;
+    };
+
+    listview.refresh = async function(refresh_header = false) {
+        let filters = this.filter_area ? this.filter_area.get() : [];
+        let status_filter = filters.find(f => (f[1] === "status" || f[1] === "workflow_state") && f[3]);
+
+        if (status_filter && is_consultant_lifecycle_status(status_filter[3])) {
+            this._lifecycle_filter_names = await get_consultant_contracts_for_lifecycle_status(status_filter[3]);
+            this.last_args = null;
+        } else {
+            this._lifecycle_filter_names = null;
+        }
+
+        return orig_refresh(refresh_header);
+    };
+}
+
 frappe.listview_settings["Consultant Contract"] = {
     hide_name_column: true,
     add_fields: [
@@ -477,6 +602,7 @@ frappe.listview_settings["Consultant Contract"] = {
     },
 
     onload(listview) {
+        setup_consultant_lifecycle_filter_interceptor(listview);
         render_consultant_pipeline_cockpit(listview);
         setup_list_actions(listview);
 
@@ -730,6 +856,7 @@ frappe.listview_settings["Consultant Contract"] = {
     },
 
     refresh(listview) {
+        setup_consultant_lifecycle_filter_interceptor(listview);
         frappe.dom.set_style(custom_consultant_list_css);
         if (listview.$page) {
             listview.$page.addClass("consultant-contract-custom-list-view");

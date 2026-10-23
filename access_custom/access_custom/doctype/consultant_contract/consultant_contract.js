@@ -79,6 +79,7 @@ frappe.ui.form.on("Consultant Contract", {
         setup_leadership_queries(frm);
         setup_expenses_allowed_multiselect(frm);
         setup_status_indicator(frm);
+        check_active_consultant_contract_lifecycle(frm);
 
         if (frm.is_new()) {
             // New unsaved contract: hide action buttons, enable save, render progress tracker
@@ -2401,6 +2402,66 @@ function setup_status_indicator(frm) {
     else if (s === "Draft") color = "gray";
 
     frm.page.set_indicator(__(s), color);
+}
+
+function check_active_consultant_contract_lifecycle(frm) {
+    if (!frm.doc || !frm.doc.name || frm.is_new()) return;
+
+    Promise.all([
+        frappe.db.get_list("Consultant Contract Termination", {
+            filters: { contract: frm.doc.name, docstatus: 0 },
+            fields: ["name", "workflow_state", "termination_type"],
+            order_by: "creation desc",
+            limit: 1
+        }),
+        frappe.db.get_list("Consultant Contract Amendment", {
+            filters: { contract: frm.doc.name, docstatus: 0 },
+            fields: ["name", "workflow_state", "amendment_type"],
+            order_by: "creation desc",
+            limit: 1
+        }),
+        frappe.db.get_list("Consultant Contract Extension", {
+            filters: { contract: frm.doc.name, docstatus: 0 },
+            fields: ["name", "workflow_state", "extension_months"],
+            order_by: "creation desc",
+            limit: 1
+        })
+    ]).then(([terms, amends, exts]) => {
+        if (terms && terms.length > 0) {
+            let t = terms[0];
+            frm.page.set_indicator(__("Under Termination Process"), "red");
+            frm.dashboard.clear_headline();
+            frm.dashboard.set_headline(
+                __(`⚠️ Termination Request in progress: <a href="/app/consultant-contract-termination/${encodeURIComponent(t.name)}"><b>${frappe.utils.escape_html(t.name)}</b></a> (${frappe.utils.escape_html(t.termination_type || 'General')}) is currently <b>${frappe.utils.escape_html(t.workflow_state || 'Pending Review')}</b>`),
+                "red"
+            );
+            return;
+        }
+
+        if (amends && amends.length > 0) {
+            let a = amends[0];
+            frm.page.set_indicator(__("Under Amendment Process"), "yellow");
+            frm.dashboard.clear_headline();
+            frm.dashboard.set_headline(
+                __(`ℹ️ Active Amendment in progress: <a href="/app/consultant-contract-amendment/${encodeURIComponent(a.name)}"><b>${frappe.utils.escape_html(a.name)}</b></a> (${frappe.utils.escape_html(a.amendment_type || 'Scope & Fee')}) is currently <b>${frappe.utils.escape_html(a.workflow_state || 'Pending Review')}</b>`),
+                "blue"
+            );
+            return;
+        }
+
+        if (exts && exts.length > 0) {
+            let e = exts[0];
+            frm.page.set_indicator(__("Under Extension Process"), "orange");
+            frm.dashboard.clear_headline();
+            frm.dashboard.set_headline(
+                __(`ℹ️ Active Extension in progress: <a href="/app/consultant-contract-extension/${encodeURIComponent(e.name)}"><b>${frappe.utils.escape_html(e.name)}</b></a> (${frappe.utils.escape_html(e.extension_months ? e.extension_months + ' Months' : 'Extension')}) is currently <b>${frappe.utils.escape_html(e.workflow_state || 'Pending Review')}</b>`),
+                "orange"
+            );
+            return;
+        }
+    }).catch(err => {
+        console.warn("Could not check active consultant contract lifecycle:", err);
+    });
 }
 
 function validate_pdf_attachment(frm, fieldname) {

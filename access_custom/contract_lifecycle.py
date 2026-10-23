@@ -1214,3 +1214,34 @@ def custom_apply_workflow(doc, action):
             frappe.logger().warning(f"custom_apply_workflow transition check error: {e}")
 
         raise
+
+
+def get_employee_dashboard_data(data=None):
+    if not data:
+        data = frappe._dict()
+    if not getattr(data, 'transactions', None):
+        data.transactions = []
+
+    has_contracts_group = False
+    for group in data.transactions:
+        if group.get('label') == 'Contracts':
+            has_contracts_group = True
+            if 'Consultant Contract' not in group.get('items', []):
+                group['items'].append('Consultant Contract')
+            if 'Test Customer Contract' not in group.get('items', []):
+                group['items'].append('Test Customer Contract')
+            break
+
+    if not has_contracts_group:
+        data.transactions.append({
+            'label': 'Contracts',
+            'items': ['Consultant Contract', 'Test Customer Contract']
+        })
+
+    if not getattr(data, 'non_standard_fieldnames', None):
+        data.non_standard_fieldnames = {}
+
+    data.non_standard_fieldnames['Consultant Contract'] = 'consultant_employee'
+    data.non_standard_fieldnames['Test Customer Contract'] = 'contract_owner'
+
+    return data

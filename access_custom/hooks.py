@@ -213,7 +213,11 @@ override_whitelisted_methods = {
 
 # exempt linked doctypes from being automatically cancelled
 #
-# auto_cancel_exempted_doctypes = ["Auto Repeat"]
+override_doctype_dashboards = {
+    "Employee": "access_custom.contract_lifecycle.get_employee_dashboard_data"
+}
+
+auto_cancel_exempted_doctypes = ["Auto Repeat"]
 
 # Ignore links to specified DocTypes when deleting documents
 # -----------------------------------------------------------

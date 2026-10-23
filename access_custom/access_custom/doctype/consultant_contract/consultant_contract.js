@@ -848,6 +848,24 @@ frappe.ui.form.on("Consultant Contract", {
         }
     },
 
+    consultant_employee(frm) {
+        if (frm.doc.consultant_employee) {
+            frappe.db.get_doc("Employee", frm.doc.consultant_employee).then(emp => {
+                if (emp) {
+                    frm.set_value("consultant_name", emp.employee_name || emp.name);
+                    let email = emp.company_email || emp.prefered_email || emp.personal_email || "";
+                    if (email) frm.set_value("email_id", email);
+                    let mobile = emp.cell_number || emp.emergency_phone_number || "";
+                    if (mobile) frm.set_value("contact_number", mobile);
+                    let addr = emp.current_address || emp.permanent_address || "";
+                    if (addr) frm.set_value("consultant_address", addr);
+                    let exp = emp.designation || "";
+                    if (exp) frm.set_value("area_of_expertise", exp);
+                }
+            });
+        }
+    },
+
     consultant_id(frm) {
         if (frm.doc.consultant_id) {
             frappe.db.get_doc("Consultant Master", frm.doc.consultant_id).then(cm => {
@@ -2197,6 +2215,14 @@ function setup_leadership_queries(frm) {
         return {
             query: "access_custom.access_custom.doctype.consultant_contract.consultant_contract.get_leadership_employees",
             filters: { role: "Projects Manager" }
+        };
+    });
+
+    frm.set_query("consultant_employee", function() {
+        return {
+            filters: {
+                "employment_type": ["in", ["Full Time Consultant", "Part Time Consultant", "Short Term Consultant"]]
+            }
         };
     });
 }

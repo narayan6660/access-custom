@@ -848,9 +848,9 @@ frappe.ui.form.on("Consultant Contract", {
         }
     },
 
-    consultant_employee(frm) {
-        if (frm.doc.consultant_employee) {
-            frappe.db.get_doc("Employee", frm.doc.consultant_employee).then(emp => {
+    consultant_id(frm) {
+        if (frm.doc.consultant_id) {
+            frappe.db.get_doc("Employee", frm.doc.consultant_id).then(emp => {
                 if (emp) {
                     frm.set_value("consultant_name", emp.employee_name || emp.name);
                     let email = emp.company_email || emp.prefered_email || emp.personal_email || "";
@@ -861,24 +861,6 @@ frappe.ui.form.on("Consultant Contract", {
                     if (addr) frm.set_value("consultant_address", addr);
                     let exp = emp.designation || "";
                     if (exp) frm.set_value("area_of_expertise", exp);
-                }
-            });
-        }
-    },
-
-    consultant_id(frm) {
-        if (frm.doc.consultant_id) {
-            frappe.db.get_doc("Consultant Master", frm.doc.consultant_id).then(cm => {
-                if (cm) {
-                    frm.set_value("consultant_name", cm.consultant_name);
-                    frm.set_value("email_id", cm.email);
-                    frm.set_value("contact_number", cm.mobile);
-                    frm.set_value("consultant_address", cm.address);
-                    frm.set_value("area_of_expertise", cm.area_of_expertise);
-                    frm.set_value("gstin_number", cm.gstin);
-                    if (cm.cv_attachment && !frm.doc.consultant_cv) {
-                        frm.set_value("consultant_cv", cm.cv_attachment);
-                    }
                 }
             });
         }
@@ -2218,7 +2200,7 @@ function setup_leadership_queries(frm) {
         };
     });
 
-    frm.set_query("consultant_employee", function() {
+    frm.set_query("consultant_id", function() {
         return {
             filters: {
                 "employment_type": ["in", ["Full Time Consultant", "Part Time Consultant", "Short Term Consultant"]]

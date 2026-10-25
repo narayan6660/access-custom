@@ -1241,7 +1241,7 @@ def get_employee_dashboard_data(data=None):
     if not getattr(data, 'non_standard_fieldnames', None):
         data.non_standard_fieldnames = {}
 
-    data.non_standard_fieldnames['Consultant Contract'] = 'consultant_employee'
+    data.non_standard_fieldnames['Consultant Contract'] = 'consultant_id'
     data.non_standard_fieldnames['Test Customer Contract'] = 'contract_owner'
 
     return data

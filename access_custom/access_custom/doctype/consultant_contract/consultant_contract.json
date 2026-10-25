@@ -23,7 +23,6 @@
   "project_contract",
   "section_b",
   "existing_consultant",
-  "consultant_employee",
   "email_id",
   "col_break_b1",
   "consultant_id",
@@ -227,12 +226,6 @@
    "options": "No\nYes"
   },
   {
-   "fieldname": "consultant_employee",
-   "fieldtype": "Link",
-   "label": "Consultant (from Employee Master)",
-   "options": "Employee"
-  },
-  {
    "fieldname": "email_id",
    "fieldtype": "Data",
    "in_list_view": 1,
@@ -248,7 +241,7 @@
    "fieldname": "consultant_id",
    "fieldtype": "Link",
    "label": "Consultant ID",
-   "options": "Consultant Master"
+   "options": "Employee"
   },
   {
    "fieldname": "contact_number",

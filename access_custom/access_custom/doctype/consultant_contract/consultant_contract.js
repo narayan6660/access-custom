@@ -853,14 +853,40 @@ frappe.ui.form.on("Consultant Contract", {
             frappe.db.get_doc("Employee", frm.doc.consultant_id).then(emp => {
                 if (emp) {
                     frm.set_value("consultant_name", emp.employee_name || emp.name);
-                    let email = emp.company_email || emp.prefered_email || emp.personal_email || "";
+
+                    // 1. Email: Check user_id, custom_new_user_email, company_email, personal_email, prefered_email
+                    let email = emp.company_email || emp.personal_email || emp.prefered_email || emp.prefered_contact_email || emp.user_id || emp.custom_new_user_email || "";
                     if (email) frm.set_value("email_id", email);
+
+                    // 2. Mobile:
                     let mobile = emp.cell_number || emp.emergency_phone_number || "";
                     if (mobile) frm.set_value("contact_number", mobile);
-                    let addr = emp.current_address || emp.permanent_address || "";
-                    if (addr) frm.set_value("consultant_address", addr);
-                    let exp = emp.designation || "";
+
+                    // 3. Structured Address fields:
+                    let addr1 = emp.custom_address_line_1 || emp.custom_address_line_ || emp.address_line1 || emp.current_address || "";
+                    let addr2 = emp.custom_address_line_2 || emp.address_line2 || "";
+                    let city = emp.custom_city || emp.custom_city1 || emp.city || "";
+                    let state = emp.custom_state || emp.custom_state1 || emp.state || "";
+                    let pin = emp.custom_pin_code || emp.custom_pin1 || emp.pincode || "";
+
+                    if (addr1) frm.set_value("address_line_1", addr1);
+                    if (addr2) frm.set_value("address_line_2", addr2);
+                    if (city) frm.set_value("city", city);
+                    if (state) frm.set_value("state", state);
+                    if (pin) frm.set_value("pin_code", pin);
+
+                    if (typeof update_consultant_full_address === "function") {
+                        update_consultant_full_address(frm);
+                    }
+
+                    // 4. Area of Expertise / Designation:
+                    let exp = emp.designation || emp.custom_job_title || "";
                     if (exp) frm.set_value("area_of_expertise", exp);
+
+                    // 5. Project Manager:
+                    if (emp.reports_to && !frm.doc.project_manager) {
+                        frm.set_value("project_manager", emp.reports_to);
+                    }
                 }
             });
         }

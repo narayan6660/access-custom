@@ -1000,6 +1000,22 @@ function inject_approver_stage_styles() {
             box-sizing: border-box !important;
         }
 
+        /* 2-line compact auto-expanding textareas for Hold Reason and Scope Impact */
+        [data-fieldname="hold_reason"] textarea,
+        [data-fieldname="scope_impact"] textarea,
+        .frappe-control[data-fieldname="hold_reason"] textarea,
+        .frappe-control[data-fieldname="scope_impact"] textarea {
+            field-sizing: content !important;
+            height: auto !important;
+            min-height: 58px !important;
+            max-height: 350px !important;
+            line-height: 1.45 !important;
+            font-size: 13px !important;
+            padding: 8px 12px !important;
+            resize: vertical !important;
+            box-sizing: border-box !important;
+        }
+
         /* Leveled read-only inputs */
         .form-section[data-fieldname="section_break_approvals"] .control-value.like-disabled-input,
         .form-section[data-fieldname="section_break_app_legal"] .control-value.like-disabled-input,
@@ -1052,13 +1068,19 @@ function inject_approver_stage_styles() {
 
 function setup_auto_expand_textareas(frm) {
     frappe.dom.set_style(`
+        [data-fieldname="hold_reason"] textarea,
+        [data-fieldname="scope_impact"] textarea,
         .frappe-control[data-fieldname="hold_reason"] textarea,
         .frappe-control[data-fieldname="scope_impact"] textarea {
+            field-sizing: content !important;
+            height: auto !important;
             min-height: 58px !important;
+            max-height: 350px !important;
             line-height: 1.45 !important;
+            font-size: 13px !important;
             padding: 8px 12px !important;
+            resize: vertical !important;
             box-sizing: border-box !important;
-            transition: height 0.1s ease;
         }
     `, "contract-on-hold-textarea-autoexpand");
 
@@ -1072,14 +1094,19 @@ function setup_auto_expand_textareas(frm) {
 
         let auto_expand = function() {
             if (!el) return;
-            el.style.height = "58px";
+            if (window.CSS && CSS.supports && CSS.supports("field-sizing", "content")) {
+                el.style.setProperty("height", "auto", "important");
+                return;
+            }
+
+            el.style.setProperty("height", "58px", "important");
             let border_offset = (el.offsetHeight - el.clientHeight) || 2;
             let target_height = Math.max(58, el.scrollHeight + border_offset);
             if (target_height > 350) {
-                el.style.height = "350px";
+                el.style.setProperty("height", "350px", "important");
                 el.style.overflowY = "auto";
             } else {
-                el.style.height = target_height + "px";
+                el.style.setProperty("height", target_height + "px", "important");
                 el.style.overflowY = "hidden";
             }
         };
@@ -1089,5 +1116,6 @@ function setup_auto_expand_textareas(frm) {
         auto_expand();
         setTimeout(auto_expand, 50);
         setTimeout(auto_expand, 200);
+        setTimeout(auto_expand, 500);
     });
 }

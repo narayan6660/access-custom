@@ -4244,7 +4244,7 @@
   "in_list_view": 0,
   "in_preview": 0,
   "in_standard_filter": 0,
-  "insert_after": "naming_series",
+  "insert_after": "custom_active_employee_contract",
   "is_system_generated": 0,
   "is_virtual": 0,
   "label": "",
@@ -15200,7 +15200,7 @@
   "name": "Appraisal-custom_rating_instructions",
   "no_copy": 0,
   "non_negative": 0,
-  "options": "<div style=\"padding: 15px; background-color: #f8f9fa; border-left: 4px solid #1c9b4f; margin-bottom: 20px;\">\n    <h4 style=\"margin-top: 0; color: #333;\">Recommended Performance Rating</h4>\n    <p style=\"font-size: 13px; color: #555;\">Please go through the definitions below for your assessment. Ratings must be assigned as per the defined levels of performance given below.</p>\n    <ul style=\"font-size: 13px; color: #444; padding-left: 20px;\">\n        <li style=\"margin-bottom: 8px;\"><strong>“Consistently Exceeded Expectations”</strong>: Consistently demonstrated role model behaviors, going beyond the scope of defined work. Consistently exceeded Expected Job Results and complied with work rules and performance and regulatory requirements which resulted in an intangible or tangible benefit to the project or the organization.</li>\n        <li style=\"margin-bottom: 8px;\"><strong>\"Exceeded Expectations\"</strong>: Demonstrated role model behaviors from time to time. On several outcomes, exceeded Expected Job Results and complied with work rules and performance and regulatory requirements.</li>\n        <li style=\"margin-bottom: 8px;\"><strong>\"Achieved Expectations\"</strong>: Consistently demonstrated effective behaviors, achieved Expected Job Results and complied with work rules and performance and regulatory requirements.</li>\n        <li style=\"margin-bottom: 8px;\"><strong>\"Below Expectations\"</strong>: Significant improvement needed in one or more areas of Expected Behaviors or Job Results and or did not comply with work rules and performance or regulatory requirements.</li>\n    </ul>\n    <p style=\"font-size: 13px; font-style: italic; color: #333; margin-bottom: 0;\">Having conducted the above review, I have rated the above job holder at the following level of performance: (please select appropriate option)</p>\n</div>",
+  "options": "<div style=\"padding: 15px; background-color: #f8f9fa; border-left: 4px solid #1c9b4f; margin-bottom: 20px;\">\n    <h4 style=\"margin-top: 0; color: #333;\">Recommended Performance Rating</h4>\n    <p style=\"font-size: 13px; color: #555;\">Please go through the definitions below for your assessment. Ratings must be assigned as per the defined levels of performance given below.</p>\n    <ul style=\"font-size: 13px; color: #444; padding-left: 20px;\">\n        <li style=\"margin-bottom: 8px;\"><strong>\u201cConsistently Exceeded Expectations\u201d</strong>: Consistently demonstrated role model behaviors, going beyond the scope of defined work. Consistently exceeded Expected Job Results and complied with work rules and performance and regulatory requirements which resulted in an intangible or tangible benefit to the project or the organization.</li>\n        <li style=\"margin-bottom: 8px;\"><strong>\"Exceeded Expectations\"</strong>: Demonstrated role model behaviors from time to time. On several outcomes, exceeded Expected Job Results and complied with work rules and performance and regulatory requirements.</li>\n        <li style=\"margin-bottom: 8px;\"><strong>\"Achieved Expectations\"</strong>: Consistently demonstrated effective behaviors, achieved Expected Job Results and complied with work rules and performance and regulatory requirements.</li>\n        <li style=\"margin-bottom: 8px;\"><strong>\"Below Expectations\"</strong>: Significant improvement needed in one or more areas of Expected Behaviors or Job Results and or did not comply with work rules and performance or regulatory requirements.</li>\n    </ul>\n    <p style=\"font-size: 13px; font-style: italic; color: #333; margin-bottom: 0;\">Having conducted the above review, I have rated the above job holder at the following level of performance: (please select appropriate option)</p>\n</div>",
   "permlevel": 0,
   "placeholder": null,
   "precision": "",
@@ -28840,5 +28840,60 @@
   "translatable": 1,
   "unique": 0,
   "width": null
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Custom Field",
+  "dt": "Employee",
+  "fieldname": "custom_col_break_contract",
+  "fieldtype": "Column Break",
+  "insert_after": "naming_series",
+  "label": "",
+  "name": "Employee-custom_col_break_contract"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Custom Field",
+  "dt": "Employee",
+  "fieldname": "custom_contract_type",
+  "fieldtype": "Select",
+  "insert_after": "custom_col_break_contract",
+  "label": "Contract Type",
+  "name": "Employee-custom_contract_type",
+  "options": "\nConsultant Contract\nEmployee Contract"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Custom Field",
+  "dt": "Employee",
+  "fieldname": "custom_col_break_contract_select",
+  "fieldtype": "Column Break",
+  "insert_after": "custom_contract_type",
+  "label": "",
+  "name": "Employee-custom_col_break_contract_select"
+ },
+ {
+  "depends_on": "eval:doc.custom_contract_type=='Consultant Contract'",
+  "docstatus": 0,
+  "doctype": "Custom Field",
+  "dt": "Employee",
+  "fieldname": "custom_active_contract",
+  "fieldtype": "Link",
+  "insert_after": "custom_col_break_contract_select",
+  "label": "Select Active Contract",
+  "name": "Employee-custom_active_contract",
+  "options": "Consultant Contract"
+ },
+ {
+  "depends_on": "eval:doc.custom_contract_type=='Employee Contract'",
+  "docstatus": 0,
+  "doctype": "Custom Field",
+  "dt": "Employee",
+  "fieldname": "custom_active_employee_contract",
+  "fieldtype": "Link",
+  "insert_after": "custom_active_contract",
+  "label": "Select Active Contract",
+  "name": "Employee-custom_active_employee_contract",
+  "options": "Contract"
  }
 ]

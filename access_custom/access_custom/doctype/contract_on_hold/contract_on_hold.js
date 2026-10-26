@@ -27,7 +27,20 @@ requested_by: function(frm) {
         }
     },
 
+    onload_post_render: function(frm) {
+        setup_auto_expand_textareas(frm);
+    },
+
+    hold_reason: function(frm) {
+        setup_auto_expand_textareas(frm);
+    },
+
+    scope_impact: function(frm) {
+        setup_auto_expand_textareas(frm);
+    },
+
     refresh: function(frm) {
+        setup_auto_expand_textareas(frm);
         inject_approver_stage_styles();
         enforce_stage_approver_actions(frm);
         format_requested_by_display_contract_on_hold(frm);
@@ -1034,4 +1047,47 @@ function inject_approver_stage_styles() {
         }
     </style>
     `).appendTo("head");
+}
+
+
+function setup_auto_expand_textareas(frm) {
+    frappe.dom.set_style(`
+        .frappe-control[data-fieldname="hold_reason"] textarea,
+        .frappe-control[data-fieldname="scope_impact"] textarea {
+            min-height: 58px !important;
+            line-height: 1.45 !important;
+            padding: 8px 12px !important;
+            box-sizing: border-box !important;
+            transition: height 0.1s ease;
+        }
+    `, "contract-on-hold-textarea-autoexpand");
+
+    ["hold_reason", "scope_impact"].forEach(fieldname => {
+        let field = frm.get_field(fieldname);
+        if (!field || !field.$input) return;
+
+        let $input = field.$input;
+        let el = $input[0];
+        if (!el || el.tagName.toLowerCase() !== "textarea") return;
+
+        let auto_expand = function() {
+            if (!el) return;
+            el.style.height = "58px";
+            let border_offset = (el.offsetHeight - el.clientHeight) || 2;
+            let target_height = Math.max(58, el.scrollHeight + border_offset);
+            if (target_height > 350) {
+                el.style.height = "350px";
+                el.style.overflowY = "auto";
+            } else {
+                el.style.height = target_height + "px";
+                el.style.overflowY = "hidden";
+            }
+        };
+
+        $input.off("input.auto_expand change.auto_expand keyup.auto_expand").on("input.auto_expand change.auto_expand keyup.auto_expand", auto_expand);
+
+        auto_expand();
+        setTimeout(auto_expand, 50);
+        setTimeout(auto_expand, 200);
+    });
 }

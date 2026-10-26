@@ -28842,6 +28842,7 @@
   "width": null
  },
  {
+  "depends_on": "eval:doc.__islocal",
   "docstatus": 0,
   "doctype": "Custom Field",
   "dt": "Employee",
@@ -28852,6 +28853,7 @@
   "name": "Employee-custom_col_break_contract"
  },
  {
+  "depends_on": "eval:doc.__islocal",
   "docstatus": 0,
   "doctype": "Custom Field",
   "dt": "Employee",
@@ -28863,6 +28865,7 @@
   "options": "\nConsultant Contract\nEmployee Contract"
  },
  {
+  "depends_on": "eval:doc.__islocal",
   "docstatus": 0,
   "doctype": "Custom Field",
   "dt": "Employee",
@@ -28873,7 +28876,7 @@
   "name": "Employee-custom_col_break_contract_select"
  },
  {
-  "depends_on": "eval:doc.custom_contract_type=='Consultant Contract'",
+  "depends_on": "eval:doc.__islocal && doc.custom_contract_type=='Consultant Contract'",
   "docstatus": 0,
   "doctype": "Custom Field",
   "dt": "Employee",
@@ -28885,7 +28888,7 @@
   "options": "Consultant Contract"
  },
  {
-  "depends_on": "eval:doc.custom_contract_type=='Employee Contract'",
+  "depends_on": "eval:doc.__islocal && doc.custom_contract_type=='Employee Contract'",
   "docstatus": 0,
   "doctype": "Custom Field",
   "dt": "Employee",

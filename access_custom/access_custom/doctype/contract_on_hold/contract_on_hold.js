@@ -430,14 +430,15 @@ function apply_on_hold_approver_field_locking(frm) {
         let can_edit_comment = is_active_stage && is_auth_approver;
         frm.set_df_property(item.review, "read_only", can_edit_comment ? 0 : 1);
 
-        // Visual badge for status
+        // Visual badge for status (Consultant Contract clean single-box style)
         let status_field = frm.get_field(item.status);
         if (status_field && status_field.$wrapper) {
-            let $disp = status_field.$wrapper.find(".control-value");
-            if (!$disp.length) {
-                let $target = status_field.$wrapper.find(".control-input-wrapper");
-                $disp = $('<div class="control-value like-disabled-input"></div>').appendTo($target.length ? $target : status_field.$wrapper);
-            }
+            status_field.$wrapper.find(".approver-decision-badge").remove();
+            status_field.$wrapper.find(".control-input-wrapper").hide();
+            status_field.$wrapper.find(".control-input").hide();
+            status_field.$wrapper.find(".control-value").hide();
+
+            let $badge = $('<div class="approver-decision-badge" style="margin-top: 0px; display: block !important;"></div>');
             if (status_val) {
                 let badge_bg = "#16a34a";
                 let text_color = "#ffffff";
@@ -448,34 +449,42 @@ function apply_on_hold_approver_field_locking(frm) {
                 } else if (status_val.includes("Returned")) {
                     badge_bg = "#d97706";
                     icon = "&#8635;";
+                } else if (status_val.includes("Not Required")) {
+                    badge_bg = "#64748b";
+                    icon = "&ndash;";
                 }
-                $disp.html(`
-                    <div style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: ${badge_bg}; color: ${text_color}; border-radius: 6px; font-weight: 600; font-size: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.08); margin-top: 2px;">
+                $badge.html(`
+                    <div style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; background: ${badge_bg}; color: ${text_color}; border-radius: 6px; font-weight: 600; font-size: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.08);">
                         <span>${icon}</span>
                         <span>${frappe.utils.escape_html(status_val)}</span>
                     </div>
-                `).css({"border": "none", "background": "transparent", "padding": "0", "color": "inherit"}).show();
-                status_field.$wrapper.find(".control-input").hide();
+                `);
             } else {
-                $disp.html(`
-                    <div style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #f1f5f9; color: #64748b; border: 1px dashed #cbd5e1; border-radius: 6px; font-weight: 500; font-size: 12px; margin-top: 2px;">
+                $badge.html(`
+                    <div style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; background: #f1f5f9; color: #64748b; border: 1px dashed #cbd5e1; border-radius: 6px; font-weight: 500; font-size: 12px;">
                         <span>Pending Review</span>
                     </div>
-                `).css({"border": "none", "background": "transparent", "padding": "0"}).show();
-                status_field.$wrapper.find(".control-input").hide();
+                `);
+            }
+            let $target = status_field.$wrapper.find(".form-group");
+            if ($target.length) {
+                $target.append($badge);
+            } else {
+                status_field.$wrapper.append($badge);
             }
         }
 
-        // Visual box for comment
+        // Visual box for comment / review (Consultant Contract clean single-box style)
         let review_field = frm.get_field(item.review);
         if (review_field && review_field.$wrapper) {
+            review_field.$wrapper.find(".approver-remarks-content").remove();
             if (!can_edit_comment) {
-                let $disp = review_field.$wrapper.find(".control-value");
-                if (!$disp.length) {
-                    let $target = review_field.$wrapper.find(".control-input-wrapper");
-                    $disp = $('<div class="control-value like-disabled-input"></div>').appendTo($target.length ? $target : review_field.$wrapper);
-                }
-                if (review_val) {
+                review_field.$wrapper.find(".control-input-wrapper").hide();
+                review_field.$wrapper.find(".control-input").hide();
+                review_field.$wrapper.find(".control-value").hide();
+
+                let $rem = $('<div class="approver-remarks-content" style="margin-top: 0px; display: block !important;"></div>');
+                if (review_val && review_val.trim()) {
                     let border_color = "#cbd5e1";
                     let text_color = "#1e293b";
                     let bg_color = "#f8fafc";
@@ -483,23 +492,32 @@ function apply_on_hold_approver_field_locking(frm) {
                         border_color = "#fca5a5";
                         bg_color = "#fef2f2";
                         text_color = "#991b1b";
+                    } else if (status_val && status_val.includes("Returned")) {
+                        border_color = "#fcd34d";
+                        bg_color = "#fffbeb";
+                        text_color = "#92400e";
                     }
-                    $disp.html(`
-                        <div style="padding: 10px 14px; background: ${bg_color}; border: 1px solid ${border_color}; border-radius: 6px; font-size: 13px; color: ${text_color}; white-space: pre-wrap; line-height: 1.5; min-height: 42px; margin-top: 2px;">
+                    $rem.html(`
+                        <div style="padding: 6px 12px; background: ${bg_color}; border: 1px solid ${border_color}; border-radius: 6px; font-size: 13px; color: ${text_color}; white-space: pre-wrap; line-height: 1.45; min-height: 32px;">
                             ${frappe.utils.escape_html(review_val)}
                         </div>
-                    `).css({"border": "none", "background": "transparent", "padding": "0"}).show();
-                    review_field.$wrapper.find(".control-input").hide();
+                    `);
                 } else {
-                    $disp.html(`
-                        <div style="padding: 8px 12px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; font-size: 12px; color: #94a3b8; font-style: italic; margin-top: 2px;">
+                    $rem.html(`
+                        <div style="padding: 6px 12px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; font-size: 12px; color: #94a3b8; font-style: italic; min-height: 32px;">
                             No comments provided
                         </div>
-                    `).css({"border": "none", "background": "transparent", "padding": "0"}).show();
-                    review_field.$wrapper.find(".control-input").hide();
+                    `);
+                }
+                let $target = review_field.$wrapper.find(".form-group");
+                if ($target.length) {
+                    $target.append($rem);
+                } else {
+                    review_field.$wrapper.append($rem);
                 }
             } else {
                 review_field.$wrapper.find(".control-value").hide();
+                review_field.$wrapper.find(".control-input-wrapper").show();
                 review_field.$wrapper.find(".control-input").show();
 
                 // Attach input guard on textarea: typing sets form dirty and shows Save button while hiding Actions
@@ -1002,6 +1020,17 @@ function inject_approver_stage_styles() {
         .form-section[data-fieldname="section_break_app_ceo"] .form-control:focus {
             border-color: #2563eb !important;
             box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15) !important;
+        }
+
+        /* Remove outer border/background wrapper on Status and Review to prevent double boxes (Consultant Contract style) */
+        [data-fieldname$="_status"] .control-value,
+        [data-fieldname$="_review"] .control-value,
+        [data-fieldname$="_status"] .control-value.like-disabled-input,
+        [data-fieldname$="_review"] .control-value.like-disabled-input {
+            border: none !important;
+            background: transparent !important;
+            padding: 0 !important;
+            box-shadow: none !important;
         }
     </style>
     `).appendTo("head");

@@ -34,7 +34,20 @@ requested_by: function(frm) {
         }
     },
 
+    onload_post_render: function(frm) {
+        setup_auto_expand_textareas(frm);
+    },
+
+    final_settlement_notes: function(frm) {
+        setup_auto_expand_textareas(frm);
+    },
+
+    remarks: function(frm) {
+        setup_auto_expand_textareas(frm);
+    },
+
     refresh: function(frm) {
+        setup_auto_expand_textareas(frm);
         inject_approver_stage_styles();
         enforce_stage_approver_actions(frm);
         format_requested_by_display_contract_closure(frm);
@@ -904,6 +917,22 @@ function inject_approver_stage_styles() {
             box-sizing: border-box !important;
         }
 
+        /* 2-line compact auto-expanding textareas for Final Settlement Notes and Closure Remarks / Summary */
+        [data-fieldname="final_settlement_notes"] textarea,
+        [data-fieldname="remarks"] textarea,
+        .frappe-control[data-fieldname="final_settlement_notes"] textarea,
+        .frappe-control[data-fieldname="remarks"] textarea {
+            field-sizing: content !important;
+            height: auto !important;
+            min-height: 58px !important;
+            max-height: 350px !important;
+            line-height: 1.45 !important;
+            font-size: 13px !important;
+            padding: 8px 12px !important;
+            resize: vertical !important;
+            box-sizing: border-box !important;
+        }
+
         /* Leveled read-only inputs */
         .form-section[data-fieldname="section_break_approvals"] .control-value.like-disabled-input,
         .form-section[data-fieldname="section_break_app_legal"] .control-value.like-disabled-input,
@@ -951,4 +980,59 @@ function inject_approver_stage_styles() {
         }
     </style>
     `).appendTo("head");
+}
+
+
+function setup_auto_expand_textareas(frm) {
+    frappe.dom.set_style(`
+        [data-fieldname="final_settlement_notes"] textarea,
+        [data-fieldname="remarks"] textarea,
+        .frappe-control[data-fieldname="final_settlement_notes"] textarea,
+        .frappe-control[data-fieldname="remarks"] textarea {
+            field-sizing: content !important;
+            height: auto !important;
+            min-height: 58px !important;
+            max-height: 350px !important;
+            line-height: 1.45 !important;
+            font-size: 13px !important;
+            padding: 8px 12px !important;
+            resize: vertical !important;
+            box-sizing: border-box !important;
+        }
+    `, "contract-closure-textarea-autoexpand");
+
+    ["final_settlement_notes", "remarks"].forEach(fieldname => {
+        let field = frm.get_field(fieldname);
+        if (!field || !field.$input) return;
+
+        let $input = field.$input;
+        let el = $input[0];
+        if (!el || el.tagName.toLowerCase() !== "textarea") return;
+
+        let auto_expand = function() {
+            if (!el) return;
+            if (window.CSS && CSS.supports && CSS.supports("field-sizing", "content")) {
+                el.style.setProperty("height", "auto", "important");
+                return;
+            }
+
+            el.style.setProperty("height", "58px", "important");
+            let border_offset = (el.offsetHeight - el.clientHeight) || 2;
+            let target_height = Math.max(58, el.scrollHeight + border_offset);
+            if (target_height > 350) {
+                el.style.setProperty("height", "350px", "important");
+                el.style.overflowY = "auto";
+            } else {
+                el.style.setProperty("height", target_height + "px", "important");
+                el.style.overflowY = "hidden";
+            }
+        };
+
+        $input.off("input.auto_expand change.auto_expand keyup.auto_expand").on("input.auto_expand change.auto_expand keyup.auto_expand", auto_expand);
+
+        auto_expand();
+        setTimeout(auto_expand, 50);
+        setTimeout(auto_expand, 200);
+        setTimeout(auto_expand, 500);
+    });
 }

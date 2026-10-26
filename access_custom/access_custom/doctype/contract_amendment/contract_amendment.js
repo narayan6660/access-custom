@@ -38,6 +38,7 @@ requested_by: function(frm) {
     },
 
     refresh: function(frm) {
+        inject_approver_stage_styles();
         enforce_stage_approver_actions(frm);
         format_requested_by_display_contract_amendment(frm);
         if (frm.is_new()) {
@@ -1470,4 +1471,117 @@ function enforce_stage_approver_actions(frm) {
             }
         }
     }
+}
+
+
+// ==============================================================================
+// Approver Stage UI Leveling & Spacing (Consultant Contract Style)
+// ==============================================================================
+function inject_approver_stage_styles() {
+    $("#contract-approver-stage-style").remove();
+    $(`
+    <style id="contract-approver-stage-style">
+        /* Scoped strictly to the 5 Approver Sections */
+        .form-section[data-fieldname="section_break_approvals"],
+        .form-section[data-fieldname="section_break_app_legal"],
+        .form-section[data-fieldname="section_break_app_fin"],
+        .form-section[data-fieldname="section_break_app_hr"],
+        .form-section[data-fieldname="section_break_app_ceo"] {
+            margin-bottom: 0px !important;
+            padding-top: 8px !important;
+            padding-bottom: 8px !important;
+        }
+
+        /* Subtle row divider between approvers */
+        .form-section[data-fieldname="section_break_app_legal"],
+        .form-section[data-fieldname="section_break_app_fin"],
+        .form-section[data-fieldname="section_break_app_hr"],
+        .form-section[data-fieldname="section_break_app_ceo"] {
+            border-top: 1px solid #f1f5f9 !important;
+        }
+
+        /* Hide bulky redundant sub-headers */
+        .form-section[data-fieldname="section_break_app_legal"] .section-head,
+        .form-section[data-fieldname="section_break_app_fin"] .section-head,
+        .form-section[data-fieldname="section_break_app_hr"] .section-head,
+        .form-section[data-fieldname="section_break_app_ceo"] .section-head {
+            display: none !important;
+        }
+
+        /* Tighten control and form-group spacing */
+        .form-section[data-fieldname="section_break_approvals"] .frappe-control,
+        .form-section[data-fieldname="section_break_app_legal"] .frappe-control,
+        .form-section[data-fieldname="section_break_app_fin"] .frappe-control,
+        .form-section[data-fieldname="section_break_app_hr"] .frappe-control,
+        .form-section[data-fieldname="section_break_app_ceo"] .frappe-control {
+            margin-bottom: 0 !important;
+        }
+
+        .form-section[data-fieldname="section_break_approvals"] .form-group,
+        .form-section[data-fieldname="section_break_app_legal"] .form-group,
+        .form-section[data-fieldname="section_break_app_fin"] .form-group,
+        .form-section[data-fieldname="section_break_app_hr"] .form-group,
+        .form-section[data-fieldname="section_break_app_ceo"] .form-group {
+            margin-bottom: 0 !important;
+        }
+
+        .form-section[data-fieldname="section_break_approvals"] .control-label,
+        .form-section[data-fieldname="section_break_app_legal"] .control-label,
+        .form-section[data-fieldname="section_break_app_fin"] .control-label,
+        .form-section[data-fieldname="section_break_app_hr"] .control-label,
+        .form-section[data-fieldname="section_break_app_ceo"] .control-label {
+            margin-bottom: 4px !important;
+        }
+
+        /* Level remarks textarea height with adjacent controls (50px compact) */
+        [data-fieldname="lead_approver_review"] textarea,
+        [data-fieldname="legal_approver_review"] textarea,
+        [data-fieldname="finance_approver_review"] textarea,
+        [data-fieldname="hr_approver_review"] textarea,
+        [data-fieldname="ceo_approver_review"] textarea {
+            height: 50px !important;
+            min-height: 50px !important;
+            line-height: 1.45 !important;
+            font-size: 13px !important;
+            padding: 6px 10px !important;
+            resize: vertical !important;
+            box-sizing: border-box !important;
+        }
+
+        /* Leveled read-only inputs */
+        .form-section[data-fieldname="section_break_approvals"] .control-value.like-disabled-input,
+        .form-section[data-fieldname="section_break_app_legal"] .control-value.like-disabled-input,
+        .form-section[data-fieldname="section_break_app_fin"] .control-value.like-disabled-input,
+        .form-section[data-fieldname="section_break_app_hr"] .control-value.like-disabled-input,
+        .form-section[data-fieldname="section_break_app_ceo"] .control-value.like-disabled-input {
+            border: 1px solid #d1d5db !important;
+            background-color: #f8fafc !important;
+            border-radius: 6px !important;
+            padding: 6px 12px !important;
+            min-height: 32px !important;
+            font-size: 13px !important;
+            color: #1e293b !important;
+            box-sizing: border-box !important;
+            width: 100% !important;
+        }
+
+        /* Clean borders on editable form controls in approver section */
+        .form-section[data-fieldname="section_break_approvals"] .form-control,
+        .form-section[data-fieldname="section_break_app_legal"] .form-control,
+        .form-section[data-fieldname="section_break_app_fin"] .form-control,
+        .form-section[data-fieldname="section_break_app_hr"] .form-control,
+        .form-section[data-fieldname="section_break_app_ceo"] .form-control {
+            border: 1px solid #d1d5db !important;
+            border-radius: 6px !important;
+        }
+        .form-section[data-fieldname="section_break_approvals"] .form-control:focus,
+        .form-section[data-fieldname="section_break_app_legal"] .form-control:focus,
+        .form-section[data-fieldname="section_break_app_fin"] .form-control:focus,
+        .form-section[data-fieldname="section_break_app_hr"] .form-control:focus,
+        .form-section[data-fieldname="section_break_app_ceo"] .form-control:focus {
+            border-color: #2563eb !important;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15) !important;
+        }
+    </style>
+    `).appendTo("head");
 }

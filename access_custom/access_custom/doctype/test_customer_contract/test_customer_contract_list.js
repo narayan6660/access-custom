@@ -53,7 +53,11 @@ window.open_contract_status_doc = function(contract_name, raw_status, e, target_
         });
     } else if (raw_status === "Under Amendment Process" || raw_status === "Under Amendment" || (raw_status && raw_status.includes("Amendment"))) {
         frappe.db.get_list("Contract Amendment", {
-            filters: { contract: contract_name },
+            filters: {
+                contract: contract_name,
+                docstatus: 0,
+                workflow_state: ["not in", ["Draft", "Rejected", "Cancelled", "Executed", "Returned for Revision"]]
+            },
             fields: ["name"],
             order_by: "creation desc",
             limit: 1
@@ -144,7 +148,11 @@ function sync_active_lifecycle_cache(listview) {
     Promise.all([
         // 1. In-flight Amendments (docstatus: 0)
         frappe.db.get_list("Contract Amendment", {
-            filters: { contract: ["in", contract_names], docstatus: 0 },
+            filters: {
+                contract: ["in", contract_names],
+                docstatus: 0,
+                workflow_state: ["not in", ["Draft", "Rejected", "Cancelled", "Executed", "Returned for Revision"]]
+            },
             fields: ["name", "contract", "workflow_state", "creation"],
             order_by: "creation desc",
             limit: 100
@@ -609,7 +617,10 @@ async function get_contracts_for_lifecycle_status(val) {
 
         if (val === "Under Amendment Process" || val === "Under Amendment") {
             let r = await frappe.db.get_list("Contract Amendment", {
-                filters: { docstatus: 0 },
+                filters: {
+                    docstatus: 0,
+                    workflow_state: ["not in", ["Draft", "Rejected", "Cancelled", "Executed", "Returned for Revision"]]
+                },
                 fields: ["contract"],
                 limit: 500
             });
@@ -670,7 +681,14 @@ async function get_contracts_for_lifecycle_status(val) {
 
         if (val === "Commenced") {
             let [amends, holds, terms, closures, comm_contracts] = await Promise.all([
-                frappe.db.get_list("Contract Amendment", { filters: { docstatus: 0 }, fields: ["contract"], limit: 500 }),
+                frappe.db.get_list("Contract Amendment", {
+                    filters: {
+                        docstatus: 0,
+                        workflow_state: ["not in", ["Draft", "Rejected", "Cancelled", "Executed", "Returned for Revision"]]
+                    },
+                    fields: ["contract"],
+                    limit: 500
+                }),
                 frappe.db.get_list("Contract On Hold", { filters: { status: ["in", ["Pending Approval", "On Hold"]], docstatus: ["!=", 2] }, fields: ["contract"], limit: 500 }),
                 frappe.db.get_list("Contract Termination", { filters: { docstatus: ["!=", 2] }, fields: ["contract"], limit: 500 }),
                 frappe.db.get_list("Contract Closure", { filters: { docstatus: ["!=", 2] }, fields: ["contract"], limit: 500 }),

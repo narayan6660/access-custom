@@ -12,6 +12,7 @@ requested_by: function(frm) {
         validate_closure_pdf_field(frm, "final_settlement_document", "Final Settlement & Reconciliation (PDF)");
     },
     onload: function(frm) {
+        setup_closure_pdf_restrictions(frm);
         if (frm.is_new()) {
             frm.doc.lead_approver_status = null;
             frm.doc.lead_approver_review = null;
@@ -129,6 +130,29 @@ requested_by: function(frm) {
     },
 
     validate: function(frm) {
+        let pdf_fields = [
+            { fn: "closure_documents", label: "Final Deliverable / Closure Report (PDF)" },
+            { fn: "client_acceptance_document", label: "Client Acceptance Sign-off (PDF)" },
+            { fn: "final_settlement_document", label: "Final Settlement & Reconciliation (PDF)" }
+        ];
+        for (let f of pdf_fields) {
+            let val = frm.doc[f.fn];
+            if (val) {
+                let path = (typeof val === "string") ? val.toLowerCase().trim() : "";
+                let is_pdf = path.endsWith(".pdf") || path.includes(".pdf?") || path.includes(".pdf#");
+                if (!is_pdf) {
+                    frm.set_value(f.fn, "");
+                    frappe.msgprint({
+                        title: __("Invalid File Format"),
+                        indicator: "red",
+                        message: __("Only PDF files (<b>.pdf</b>) are allowed for <b>" + f.label + "</b>.<br><br>Please select and upload a document in <b>.pdf</b> format.")
+                    });
+                    frappe.validated = false;
+                    return false;
+                }
+            }
+        }
+
         if (frm.is_new() || frm.doc.workflow_state === "Closure Initiated" || !frm.doc.workflow_state) return;
 
         let check_auth = function(field, state_name, old_val) {
@@ -755,24 +779,32 @@ function setup_clos_workflow_actions_guard(frm) {
 
 function validate_closure_pdf_field(frm, fieldname, label) {
     let val = frm.doc[fieldname];
-    if (!val) return;
+    if (!val) return true;
     let path = (typeof val === "string") ? val.toLowerCase().trim() : "";
     let is_pdf = path.endsWith(".pdf") || path.includes(".pdf?") || path.includes(".pdf#");
     if (!is_pdf) {
         frm.set_value(fieldname, "");
-        frappe.msgprint({
-            title: __("PDF Document Required"),
-            indicator: "red",
-            message: __("Only PDF files (.pdf) are allowed for <b>{0}</b>. Please upload a valid PDF document.", [label])
-        });
+        setTimeout(function() {
+            frappe.msgprint({
+                title: __("Invalid File Format"),
+                indicator: "red",
+                message: __("Only PDF files (<b>.pdf</b>) are allowed for <b>" + label + "</b>.<br><br>Please select and upload a document in <b>.pdf</b> format.")
+            });
+        }, 350);
+        return false;
     }
+    return true;
 }
 
 function setup_closure_pdf_restrictions(frm) {
     ["closure_documents", "client_acceptance_document", "final_settlement_document"].forEach(fn => {
         let field = frm.get_field(fn);
-        if (field && field.$wrapper) {
-            field.$wrapper.find("input[type=file]").attr("accept", ".pdf,application/pdf");
+        if (field && field.df) {
+            field.df.options = {
+                restrictions: {
+                    allowed_file_types: [".pdf", "application/pdf"]
+                }
+            };
         }
     });
 }

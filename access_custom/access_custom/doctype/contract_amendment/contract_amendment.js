@@ -378,8 +378,19 @@ requested_by: function(frm) {
             }
         }
 
-        // 1. If executing amendment, require signed PDF
+        // 1. If executing amendment, require signed PDF and restrict strictly to Contract Manager
         if (action === "Execute Amendment") {
+            let is_ceo = Boolean(frm.doc.ceo_approver && frappe.session.user === frm.doc.ceo_approver);
+            let is_cm = !is_ceo && ((frappe.session.user === frm.doc.owner) ||
+                (frappe.user_roles && frappe.user_roles.includes("Contract Manager")));
+            if (!is_cm) {
+                frappe.msgprint({
+                    title: __("Not Authorized"),
+                    indicator: "red",
+                    message: __("Only the Contract Manager is authorized to execute this amendment.")
+                });
+                return Promise.reject("NOT_AUTHORIZED");
+            }
             if (!frm.doc.signed_amendment_document) {
                 frappe.msgprint({
                     title: __("Missing Attachment"),
@@ -1289,21 +1300,29 @@ function is_stage_approver(frm, state) {
 function setup_workflow_actions_guard(frm) {
     if (frm.is_new()) return;
     let state = frm.doc.workflow_state || "Draft";
-    let is_contract_manager = (frappe.session.user === frm.doc.owner) ||
-        (frappe.user_roles && frappe.user_roles.includes("Contract Manager"));
+
+    // Strictly check if current user is the CEO approver
+    let is_ceo = Boolean(frm.doc.ceo_approver && frappe.session.user === frm.doc.ceo_approver);
+
+    // Contract Manager: document owner or user with Contract Manager role, strictly excluding the CEO approver
+    let is_contract_manager = !is_ceo && ((frappe.session.user === frm.doc.owner) ||
+        (frappe.user_roles && frappe.user_roles.includes("Contract Manager")));
 
     let is_active_approver = is_stage_approver(frm, state);
     let is_dirty = frm.is_dirty() || (frm.doc && frm.doc.__unsaved);
 
+    // Always remove standalone custom button (Execute Amendment is handled via Actions dropdown)
+    frm.remove_custom_button(__("Execute Amendment"));
+
     if (state === "Pending Client Signature") {
-        if (!is_contract_manager) {
+        if (!is_contract_manager || is_ceo) {
             frm.page.clear_actions_menu();
             if (frm.page.actions && frm.page.actions.parent) {
                 frm.page.actions.parent().addClass("hide");
             }
             frm.disable_save();
         } else {
-            // Contract Manager is authorized to upload signed document and execute
+            // Contract Manager is authorized to upload signed document and execute via the Actions button
             if (is_dirty) {
                 frm.enable_save();
                 frm.page.clear_actions_menu();
@@ -1319,24 +1338,6 @@ function setup_workflow_actions_guard(frm) {
                 if (frm.page.actions && frm.page.actions.parent) {
                     frm.page.actions.parent().removeClass("hide hidden-xl");
                 }
-                // Prominent primary button for executing amendment
-                frm.remove_custom_button(__("Execute Amendment"));
-                frm.add_custom_button(__("Execute Amendment"), function() {
-                    if (!frm.doc.signed_amendment_document) {
-                        frappe.msgprint({
-                            title: __("Missing Attachment"),
-                            indicator: "red",
-                            message: __("Please attach the Counter Signed Amendment Document (PDF) before executing.")
-                        });
-                        return;
-                    }
-                    frappe.xcall("frappe.model.workflow.apply_workflow", {
-                        doc: frm.doc,
-                        action: "Execute Amendment"
-                    }).then(() => {
-                        frm.reload_doc();
-                    });
-                }).addClass("btn-primary");
             }
         }
     } else if (state === "Executed") {

@@ -473,7 +473,7 @@
    {
     "action": "Execute Amendment",
     "allow_self_approval": 1,
-    "allowed": "Employee",
+    "allowed": "Contract Manager",
     "condition": null,
     "next_state": "Executed",
     "parent": "Contract Amendment Workflow",

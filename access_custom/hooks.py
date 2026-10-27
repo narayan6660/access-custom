@@ -153,7 +153,10 @@ doc_events = {
         "validate": "access_custom.overrides.user.validate_system_manager_role_assignment",
     },
     "Employee": {
-        "validate": "access_custom.overrides.user.validate_employee_role_assignment",
+        "validate": [
+            "access_custom.overrides.user.validate_employee_role_assignment",
+            "access_custom.employee_contract_validation.validate_employee_contract_uniqueness",
+        ],
     },
     "Test Customer Contract": {
         "validate": "access_custom.contract_lifecycle.validate_stage_approver_authorization",

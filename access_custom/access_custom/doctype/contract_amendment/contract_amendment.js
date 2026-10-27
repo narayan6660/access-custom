@@ -1,6 +1,17 @@
 // Copyright (c) 2026, Charan and contributors
 // For license information, please see license.txt
 
+function setup_pdf_restrictions(frm) {
+    let field = frm.get_field("signed_amendment_document");
+    if (field && field.df) {
+        field.df.options = {
+            restrictions: {
+                allowed_file_types: [".pdf", "application/pdf"]
+            }
+        };
+    }
+}
+
 frappe.ui.form.on("Contract Amendment", {
 requested_by: function(frm) {
         format_requested_by_display_contract_amendment(frm);
@@ -17,6 +28,7 @@ requested_by: function(frm) {
     },
 
     onload: function(frm) {
+        setup_pdf_restrictions(frm);
         if (frm.is_new()) {
             if (!frm.doc.requested_by && frappe.session.user) {
                 frappe.db.get_value("Employee", { user_id: frappe.session.user }, ["name", "employee_name"], (r) => {
@@ -38,6 +50,7 @@ requested_by: function(frm) {
     },
 
     refresh: function(frm) {
+        setup_pdf_restrictions(frm);
         inject_approver_stage_styles();
         enforce_stage_approver_actions(frm);
         format_requested_by_display_contract_amendment(frm);
@@ -300,12 +313,14 @@ requested_by: function(frm) {
         if (frm.doc.signed_amendment_document) {
             let path = frm.doc.signed_amendment_document.toLowerCase();
             if (!path.endsWith(".pdf")) {
-                frappe.msgprint({
-                    title: __("Invalid File Format"),
-                    indicator: "red",
-                    message: __("Please upload a PDF document for the signed amendment.")
-                });
                 frm.set_value("signed_amendment_document", "");
+                setTimeout(function() {
+                    frappe.msgprint({
+                        title: __("Invalid File Format"),
+                        indicator: "red",
+                        message: __("Only PDF files (<b>.pdf</b>) are allowed for <b>Signed Amendment Document</b>.<br><br>Please select and upload a document in <b>.pdf</b> format.")
+                    });
+                }, 350);
                 return;
             }
             // Automatically save so the uploaded document is persisted to database
@@ -330,6 +345,17 @@ requested_by: function(frm) {
     },
 
     validate: function(frm) {
+        if (frm.doc.signed_amendment_document && !frm.doc.signed_amendment_document.toLowerCase().endsWith(".pdf")) {
+            frm.set_value("signed_amendment_document", "");
+            frappe.msgprint({
+                title: __("Invalid File Format"),
+                indicator: "red",
+                message: __("Only PDF files (<b>.pdf</b>) are allowed for <b>Signed Amendment Document</b>.<br><br>Please select and upload a document in <b>.pdf</b> format.")
+            });
+            frappe.validated = false;
+            return false;
+        }
+
         if (frm.is_new() || frm.doc.workflow_state === "Draft" || !frm.doc.workflow_state) return;
 
         // Enforce strict approver authorization check
@@ -398,6 +424,14 @@ requested_by: function(frm) {
                     message: __("Please attach the Counter Signed Amendment Document (PDF) before executing.")
                 });
                 return Promise.reject("MISSING_SIGNED_DOCUMENT");
+            }
+            if (!frm.doc.signed_amendment_document.toLowerCase().endsWith(".pdf")) {
+                frappe.msgprint({
+                    title: __("Invalid File Format"),
+                    indicator: "red",
+                    message: __("Only PDF files (<b>.pdf</b>) are allowed for <b>Signed Amendment Document</b>.<br><br>Please select and upload a document in <b>.pdf</b> format.")
+                });
+                return Promise.reject("INVALID_FILE_FORMAT");
             }
             return Promise.resolve();
         }

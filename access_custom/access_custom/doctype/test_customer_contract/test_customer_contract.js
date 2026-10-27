@@ -1504,6 +1504,50 @@ function setup_contract_actions_menu(frm) {
 function check_active_contract_lifecycle(frm) {
     if (!frm.doc || !frm.doc.name) return;
 
+    // 1. If contract is Terminated, show Terminated headline
+    if (frm.doc.workflow_state === "Terminated" || frm.doc.contract_status === "Terminated") {
+        frappe.db.get_list("Contract Termination", {
+            filters: { contract: frm.doc.name, docstatus: 1 },
+            fields: ["name", "workflow_state", "termination_type"],
+            order_by: "creation desc",
+            limit: 1
+        }).then(terms => {
+            frm.dashboard.clear_headline();
+            if (terms && terms.length > 0) {
+                frm.dashboard.set_headline(
+                    __("🛑 Contract is <b>Terminated</b> (<a href='/app/contract-termination/{0}'><b>{0}</b></a> - {1})",
+                    [terms[0].name, terms[0].termination_type || "Formal Termination"]),
+                    "red"
+                );
+            } else {
+                frm.dashboard.set_headline(__("🛑 Contract is <b>Terminated</b>"), "red");
+            }
+        });
+        return;
+    }
+
+    // 2. If contract is Closed, show Closed headline
+    if (frm.doc.workflow_state === "Closed" || frm.doc.contract_status === "Closed") {
+        frappe.db.get_list("Contract Closure", {
+            filters: { contract: frm.doc.name, docstatus: 1 },
+            fields: ["name", "workflow_state"],
+            order_by: "creation desc",
+            limit: 1
+        }).then(closes => {
+            frm.dashboard.clear_headline();
+            if (closes && closes.length > 0) {
+                frm.dashboard.set_headline(
+                    __("🔒 Contract is formally <b>Closed</b> (<a href='/app/contract-closure/{0}'><b>{0}</b></a>)",
+                    [closes[0].name]),
+                    "gray"
+                );
+            } else {
+                frm.dashboard.set_headline(__("🔒 Contract is formally <b>Closed</b>"), "gray");
+            }
+        });
+        return;
+    }
+
     // Check Active Amendment (only consider active in-review amendments)
     frappe.db.get_list("Contract Amendment", {
         filters: {
@@ -1573,26 +1617,30 @@ function check_active_contract_lifecycle(frm) {
                         return;
                     }
 
-                    // Check Executed Amendments: show active version and executed amendment
-                    frappe.db.get_list("Contract Amendment", {
-                        filters: { contract: frm.doc.name, docstatus: 1 },
-                        fields: ["name", "workflow_state", "amendment_type", "new_version"],
-                        order_by: "creation desc",
-                        limit: 1
-                    }).then(execs => {
-                        if (execs && execs.length > 0) {
-                            let e = execs[0];
-                            let ver = frm.doc.current_version || e.new_version || "1.1";
-                            frm.dashboard.clear_headline();
-                            frm.dashboard.set_headline(
-                                __("🌿 Active Version: <b>v{0}</b> (Amended via <a href='/app/contract-amendment/{1}'><b>{1}</b></a> - {2})",
-                                [ver, e.name, e.amendment_type]),
-                                "green"
-                            );
-                        } else {
-                            frm.dashboard.clear_headline();
-                        }
-                    });
+                    // Check Executed Amendments: show active version and executed amendment only if still active/commenced
+                    if (frm.doc.workflow_state === "Commenced" || frm.doc.contract_status === "Commenced") {
+                        frappe.db.get_list("Contract Amendment", {
+                            filters: { contract: frm.doc.name, docstatus: 1 },
+                            fields: ["name", "workflow_state", "amendment_type", "new_version"],
+                            order_by: "creation desc",
+                            limit: 1
+                        }).then(execs => {
+                            if (execs && execs.length > 0) {
+                                let e = execs[0];
+                                let ver = frm.doc.current_version || e.new_version || "1.1";
+                                frm.dashboard.clear_headline();
+                                frm.dashboard.set_headline(
+                                    __("🌿 Active Version: <b>v{0}</b> (Amended via <a href='/app/contract-amendment/{1}'><b>{1}</b></a> - {2})",
+                                    [ver, e.name, e.amendment_type]),
+                                    "green"
+                                );
+                            } else {
+                                frm.dashboard.clear_headline();
+                            }
+                        });
+                    } else {
+                        frm.dashboard.clear_headline();
+                    }
                 });
             });
         });

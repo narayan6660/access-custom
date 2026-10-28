@@ -1092,9 +1092,15 @@ def custom_get_transitions(doc, workflow=None, raise_exception=False):
             if not emp_email or user != emp_email:
                 return []
 
-            # In Pending (objective submission stage), ONLY show 'Submit Objectives'
+            # In Pending, show 'Submit Objectives' for Mid-Term, and 'Submit Appraisal' for Annual
             if current_state == "Pending":
-                return [t for t in transitions if t.action == "Submit Objectives"]
+                cycle_name = (doc_obj.get("appraisal_cycle") or "").lower()
+                cycle_type = frappe.db.get_value("Appraisal Cycle", doc_obj.get("appraisal_cycle"), "custom_cycle_type") or ""
+                is_ann = (cycle_type == "Annual") or ("annual" in cycle_name)
+                if is_ann:
+                    return [t for t in transitions if t.action == "Submit Appraisal"]
+                else:
+                    return [t for t in transitions if t.action == "Submit Objectives"]
 
             return transitions
 
@@ -1202,10 +1208,14 @@ def custom_apply_workflow(doc, action):
                     mgr_email = frappe.db.get_value("Employee", reports_to, "user_id")
 
             if current_state == "Pending" and action == "Submit Appraisal":
-                frappe.throw(
-                    frappe._("Cannot submit appraisal while in 'Pending'. Please submit your objectives first for manager review."),
-                    frappe.ValidationError
-                )
+                cycle_name = (doc_obj.get("appraisal_cycle") or "").lower()
+                cycle_type = frappe.db.get_value("Appraisal Cycle", doc_obj.get("appraisal_cycle"), "custom_cycle_type") or ""
+                is_mid = (cycle_type == "Mid-Term") or ("mid" in cycle_name) or ("half" in cycle_name)
+                if is_mid:
+                    frappe.throw(
+                        frappe._("Cannot submit appraisal while in 'Pending'. Please submit your objectives first for manager review."),
+                        frappe.ValidationError
+                    )
 
             if current_state in ["Pending", "Objectives Rejected", "Objectives Approved", "Appraisal Rejected"]:
                 if not emp_email or user != emp_email:

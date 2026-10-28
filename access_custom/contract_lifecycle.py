@@ -1091,6 +1091,11 @@ def custom_get_transitions(doc, workflow=None, raise_exception=False):
         if current_state in ["Pending", "Objectives Rejected", "Objectives Approved"]:
             if not emp_email or user != emp_email:
                 return []
+
+            # In Pending (objective submission stage), ONLY show 'Submit Objectives'
+            if current_state == "Pending":
+                return [t for t in transitions if t.action == "Submit Objectives"]
+
             return transitions
 
         # Manager Review Stages: ONLY the assigned reporting manager can see/execute actions
@@ -1191,6 +1196,12 @@ def custom_apply_workflow(doc, action):
                 reports_to = frappe.db.get_value("Employee", doc_obj.employee, "reports_to")
                 if reports_to:
                     mgr_email = frappe.db.get_value("Employee", reports_to, "user_id")
+
+            if current_state == "Pending" and action == "Submit Appraisal":
+                frappe.throw(
+                    frappe._("Cannot submit appraisal while in 'Pending'. Please submit your objectives first for manager review."),
+                    frappe.ValidationError
+                )
 
             if current_state in ["Pending", "Objectives Rejected", "Objectives Approved"]:
                 if not emp_email or user != emp_email:

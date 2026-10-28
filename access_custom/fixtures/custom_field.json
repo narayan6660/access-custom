@@ -28898,5 +28898,16 @@
   "label": "Select Active Contract",
   "name": "Employee-custom_active_employee_contract",
   "options": "Contract"
+ },
+ {
+  "doctype": "Custom Field",
+  "dt": "Appraisal",
+  "fieldname": "custom_rejection_reason",
+  "fieldtype": "Small Text",
+  "insert_after": "workflow_state",
+  "label": "Rejection Reason",
+  "name": "Appraisal-custom_rejection_reason",
+  "no_copy": 1,
+  "read_only": 1
  }
 ]

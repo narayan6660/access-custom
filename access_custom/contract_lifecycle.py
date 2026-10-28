@@ -1180,6 +1180,10 @@ def custom_apply_workflow(doc, action):
         doc_data = frappe.parse_json(doc) if isinstance(doc, str) else doc
         doc_obj = frappe.get_doc(doc_data)
 
+    captured_rejection_reason = None
+    if hasattr(doc_obj, "get") and doc_obj.get("custom_rejection_reason"):
+        captured_rejection_reason = str(doc_obj.get("custom_rejection_reason")).strip()
+
     doctype = doc_obj.doctype
     if doctype == "Appraisal":
         user = frappe.session.user
@@ -1221,6 +1225,14 @@ def custom_apply_workflow(doc, action):
                             mgr_name
                         ),
                         frappe.PermissionError
+                    )
+
+            if current_state == "Pending Manager Review" and action == "Reject":
+                rejection_reason = captured_rejection_reason
+                if not rejection_reason or not str(rejection_reason).strip():
+                    frappe.throw(
+                        frappe._("Please provide a reason for rejecting the appraisal."),
+                        frappe.ValidationError
                     )
 
     if doctype in STAGE_APPROVER_MAP:
@@ -1276,7 +1288,16 @@ def custom_apply_workflow(doc, action):
                     )
 
     try:
-        return orig_apply_workflow(doc, action)
+        res = orig_apply_workflow(doc, action)
+        if doctype == "Appraisal":
+            if action == "Reject" and captured_rejection_reason:
+                reason_val = captured_rejection_reason
+                frappe.db.set_value("Appraisal", doc_obj.name, "custom_rejection_reason", reason_val)
+                res.custom_rejection_reason = reason_val
+            elif action == "Resubmit Appraisal":
+                frappe.db.set_value("Appraisal", doc_obj.name, "custom_rejection_reason", None)
+                res.custom_rejection_reason = None
+        return res
     except frappe.model.workflow.WorkflowTransitionError:
         # Prevent "Not a valid Workflow Action" error pop-up when users click Approve more than once
         # or when concurrent requests occur for a contract that has already transitioned

@@ -3162,6 +3162,22 @@
     "update_field": null,
     "update_value": null,
     "workflow_builder_id": null
+   },
+   {
+    "allow_edit": "Employee",
+    "avoid_status_override": 0,
+    "doc_status": "0",
+    "is_optional_state": 0,
+    "message": null,
+    "next_action_email_template": null,
+    "parent": "Employee Appraisal Cycle",
+    "parentfield": "states",
+    "parenttype": "Workflow",
+    "send_email": 1,
+    "state": "Appraisal Rejected",
+    "update_field": null,
+    "update_value": null,
+    "workflow_builder_id": null
    }
   ],
   "transitions": [
@@ -3241,6 +3257,32 @@
     "parenttype": "Workflow",
     "send_email_to_creator": 0,
     "state": "Objectives Approved",
+    "workflow_builder_id": null
+   },
+   {
+    "action": "Reject",
+    "allow_self_approval": 1,
+    "allowed": "Reporting Manager",
+    "condition": null,
+    "next_state": "Appraisal Rejected",
+    "parent": "Employee Appraisal Cycle",
+    "parentfield": "transitions",
+    "parenttype": "Workflow",
+    "send_email_to_creator": 0,
+    "state": "Pending Manager Review",
+    "workflow_builder_id": null
+   },
+   {
+    "action": "Resubmit Appraisal",
+    "allow_self_approval": 1,
+    "allowed": "Employee",
+    "condition": "frappe.session.user == doc.custom_employee_email",
+    "next_state": "Pending Manager Review",
+    "parent": "Employee Appraisal Cycle",
+    "parentfield": "transitions",
+    "parenttype": "Workflow",
+    "send_email_to_creator": 0,
+    "state": "Appraisal Rejected",
     "workflow_builder_id": null
    }
   ],

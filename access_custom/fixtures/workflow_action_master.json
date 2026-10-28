@@ -663,5 +663,9 @@
   "modified": "2026-10-12 11:26:44.469378",
   "name": "Resubmit for Review",
   "workflow_action_name": "Resubmit for Review"
+ },
+ {
+  "doctype": "Workflow Action Master",
+  "name": "Resubmit Appraisal"
  }
 ]

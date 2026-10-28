@@ -727,5 +727,9 @@
   "name": "Draft",
   "style": "Primary",
   "workflow_state_name": "Draft"
+ },
+ {
+  "doctype": "Workflow State",
+  "name": "Appraisal Rejected"
  }
 ]

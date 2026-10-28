@@ -1088,7 +1088,7 @@ def custom_get_transitions(doc, workflow=None, raise_exception=False):
                 mgr_email = frappe.db.get_value("Employee", reports_to, "user_id")
 
         # Employee Stages: ONLY the assigned employee can see/execute actions
-        if current_state in ["Pending", "Objectives Rejected", "Objectives Approved"]:
+        if current_state in ["Pending", "Objectives Rejected", "Objectives Approved", "Appraisal Rejected"]:
             if not emp_email or user != emp_email:
                 return []
 
@@ -1203,7 +1203,7 @@ def custom_apply_workflow(doc, action):
                     frappe.ValidationError
                 )
 
-            if current_state in ["Pending", "Objectives Rejected", "Objectives Approved"]:
+            if current_state in ["Pending", "Objectives Rejected", "Objectives Approved", "Appraisal Rejected"]:
                 if not emp_email or user != emp_email:
                     emp_name = doc_obj.get("employee_name") or "the assigned employee"
                     frappe.throw(

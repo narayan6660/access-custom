@@ -28908,6 +28908,7 @@
   "label": "Rejection Reason",
   "name": "Appraisal-custom_rejection_reason",
   "no_copy": 1,
-  "read_only": 1
+  "read_only": 1,
+  "hidden": 1
  }
 ]

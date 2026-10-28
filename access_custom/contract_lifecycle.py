@@ -1066,6 +1066,44 @@ def custom_get_transitions(doc, workflow=None, raise_exception=False):
     transitions = orig_get_transitions(doc_obj, workflow=workflow, raise_exception=raise_exception)
 
     doctype = doc_obj.doctype
+    if doctype == "Appraisal":
+        user = frappe.session.user
+        if user == "Administrator":
+            return transitions
+
+        current_state = doc_obj.get("workflow_state")
+        if not current_state:
+            return transitions
+
+        emp_email = doc_obj.get("custom_employee_email")
+        if not emp_email and doc_obj.get("employee"):
+            emp_email = frappe.db.get_value("Employee", doc_obj.employee, "user_id")
+
+        mgr_email = doc_obj.get("custom_manager_email")
+        if not mgr_email and doc_obj.get("custom_manager"):
+            mgr_email = frappe.db.get_value("Employee", doc_obj.custom_manager, "user_id")
+        if not mgr_email and doc_obj.get("employee"):
+            reports_to = frappe.db.get_value("Employee", doc_obj.employee, "reports_to")
+            if reports_to:
+                mgr_email = frappe.db.get_value("Employee", reports_to, "user_id")
+
+        # Employee Stages: ONLY the assigned employee can see/execute actions
+        if current_state in ["Pending", "Objectives Rejected", "Objectives Approved"]:
+            if not emp_email or user != emp_email:
+                return []
+            return transitions
+
+        # Manager Review Stages: ONLY the assigned reporting manager can see/execute actions
+        if current_state in ["Objective Review Pending", "Pending Manager Review"]:
+            if not mgr_email or user != mgr_email:
+                return []
+            return transitions
+
+        if current_state == "Completed":
+            return []
+
+        return transitions
+
     if doctype not in STAGE_APPROVER_MAP:
         return transitions
 
@@ -1138,6 +1176,42 @@ def custom_apply_workflow(doc, action):
         doc_obj = frappe.get_doc(doc_data)
 
     doctype = doc_obj.doctype
+    if doctype == "Appraisal":
+        user = frappe.session.user
+        if user != "Administrator":
+            current_state = doc_obj.get("workflow_state")
+            emp_email = doc_obj.get("custom_employee_email")
+            if not emp_email and doc_obj.get("employee"):
+                emp_email = frappe.db.get_value("Employee", doc_obj.employee, "user_id")
+
+            mgr_email = doc_obj.get("custom_manager_email")
+            if not mgr_email and doc_obj.get("custom_manager"):
+                mgr_email = frappe.db.get_value("Employee", doc_obj.custom_manager, "user_id")
+            if not mgr_email and doc_obj.get("employee"):
+                reports_to = frappe.db.get_value("Employee", doc_obj.employee, "reports_to")
+                if reports_to:
+                    mgr_email = frappe.db.get_value("Employee", reports_to, "user_id")
+
+            if current_state in ["Pending", "Objectives Rejected", "Objectives Approved"]:
+                if not emp_email or user != emp_email:
+                    emp_name = doc_obj.get("employee_name") or "the assigned employee"
+                    frappe.throw(
+                        frappe._("Access Denied: Only {0} ({1}) is permitted to take action at stage '{2}'.").format(
+                            emp_name, emp_email or "Assigned User", current_state
+                        ),
+                        frappe.PermissionError
+                    )
+
+            if current_state in ["Objective Review Pending", "Pending Manager Review"]:
+                if not mgr_email or user != mgr_email:
+                    mgr_name = frappe.db.get_value("User", mgr_email, "full_name") or mgr_email or "the Reporting Manager"
+                    frappe.throw(
+                        frappe._("Access Denied: Only the designated Reporting Manager ({0}) is permitted to review or approve this appraisal.").format(
+                            mgr_name
+                        ),
+                        frappe.PermissionError
+                    )
+
     if doctype in STAGE_APPROVER_MAP:
         user = frappe.session.user
         if user != "Administrator":

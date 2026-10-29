@@ -1,3 +1,4 @@
+from access_custom.contract_lifecycle import validate_single_active_consultant_contract_action
 # Copyright (c) 2026, Charan and contributors
 # For license information, please see license.txt
 
@@ -39,6 +40,7 @@ class ConsultantContractTermination(Document):
 
         self.validate_pdf_attachments()
         self.validate_approver_permissions()
+        validate_single_active_consultant_contract_action(self)
 
     def validate_pdf_attachments(self):
         val = getattr(self, "termination_letter", None)

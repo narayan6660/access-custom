@@ -585,8 +585,171 @@ LIFECYCLE_STAGES_CONFIG = {
 }
 
 
-@frappe.whitelist()
+CUSTOMER_CONTRACT_LIFECYCLE_DOCTYPES = [
+    "Contract Amendment",
+    "Contract On Hold",
+    "Contract Termination",
+    "Contract Closure"
+]
 
+CUSTOMER_CONTRACT_FINAL_STATES = {
+    "Contract Amendment": ["Executed", "Rejected"],
+    "Contract On Hold": ["Resumed", "Rejected"],
+    "Contract Termination": ["Terminated", "Termination Executed", "Rejected"],
+    "Contract Closure": ["Closed", "Rejected"]
+}
+
+CONSULTANT_CONTRACT_LIFECYCLE_DOCTYPES = [
+    "Consultant Contract Amendment",
+    "Consultant Contract Extension",
+    "Consultant Contract Termination"
+]
+
+CONSULTANT_CONTRACT_FINAL_STATES = {
+    "Consultant Contract Amendment": ["Approved", "Executed", "Rejected"],
+    "Consultant Contract Extension": ["Approved", "Rejected"],
+    "Consultant Contract Termination": ["Terminated", "Rejected"]
+}
+
+
+@frappe.whitelist()
+def check_active_lifecycle_action(contract_id, doctype=None, current_docname=None):
+    """
+    Checks if any active Customer Contract lifecycle action exists for the contract.
+    """
+    if not contract_id:
+        return {"active": False}
+
+    for sibling_dt in CUSTOMER_CONTRACT_LIFECYCLE_DOCTYPES:
+        final_states = CUSTOMER_CONTRACT_FINAL_STATES.get(sibling_dt, ["Rejected"])
+        filters = {
+            "contract": contract_id,
+            "docstatus": ["<", 2],
+            "workflow_state": ["not in", final_states]
+        }
+        if current_docname and sibling_dt == doctype:
+            filters["name"] = ["!=", current_docname]
+
+        active_recs = frappe.get_all(
+            sibling_dt,
+            filters=filters,
+            fields=["name", "workflow_state"],
+            order_by="creation desc",
+            limit=1
+        )
+        if active_recs:
+            rec = active_recs[0]
+            route = frappe.scrub(sibling_dt).replace("_", "-")
+            return {
+                "active": True,
+                "doctype": sibling_dt,
+                "name": rec["name"],
+                "status": rec.get("workflow_state") or "In Progress",
+                "route": route
+            }
+    return {"active": False}
+
+
+@frappe.whitelist()
+def check_active_consultant_lifecycle_action(contract_id, doctype=None, current_docname=None):
+    """
+    Checks if any active Consultant Contract lifecycle action exists for the contract.
+    """
+    if not contract_id:
+        return {"active": False}
+
+    for sibling_dt in CONSULTANT_CONTRACT_LIFECYCLE_DOCTYPES:
+        final_states = CONSULTANT_CONTRACT_FINAL_STATES.get(sibling_dt, ["Rejected"])
+        filters = {
+            "contract": contract_id,
+            "docstatus": ["<", 2]
+        }
+        if current_docname and sibling_dt == doctype:
+            filters["name"] = ["!=", current_docname]
+
+        recs = frappe.get_all(
+            sibling_dt,
+            filters=filters,
+            fields=["name", "workflow_state", "status"],
+            order_by="creation desc"
+        )
+        for rec in recs:
+            st = rec.get("workflow_state") or rec.get("status") or "In Progress"
+            if st not in final_states:
+                route = frappe.scrub(sibling_dt).replace("_", "-")
+                return {
+                    "active": True,
+                    "doctype": sibling_dt,
+                    "name": rec["name"],
+                    "status": st,
+                    "route": route
+                }
+    return {"active": False}
+
+
+def validate_single_active_customer_contract_action(doc):
+    """
+    Server-side validation enforcing that only one Customer Contract lifecycle action
+    (Amendment, On Hold, Termination, Closure) can be active at any time.
+    """
+    if not doc or not doc.get("contract"):
+        return
+    is_new = not getattr(doc, "name", None) or (hasattr(doc, "is_new") and doc.is_new())
+    res = check_active_lifecycle_action(
+        contract_id=doc.contract,
+        doctype=doc.doctype,
+        current_docname=None if is_new else doc.name
+    )
+    if res.get("active"):
+        frappe.throw(
+            frappe._(
+                "<b>Concurrent Action Blocked:</b> Cannot create or submit <b>{0}</b> for Contract <b>{1}</b>. "
+                "An active <b>{2}</b> (<a href='/app/{3}/{4}'><b>{4}</b></a>) is currently in progress (Status: <b>{5}</b>). "
+                "Only one lifecycle action is permitted at a time until completed or rejected."
+            ).format(
+                doc.doctype,
+                doc.contract,
+                res["doctype"],
+                res["route"],
+                res["name"],
+                res["status"]
+            ),
+            title=frappe._("Active Lifecycle Action In Progress")
+        )
+
+
+def validate_single_active_consultant_contract_action(doc):
+    """
+    Server-side validation enforcing that only one Consultant Contract lifecycle action
+    (Amendment, Extension, Termination) can be active at any time.
+    """
+    if not doc or not doc.get("contract"):
+        return
+    is_new = not getattr(doc, "name", None) or (hasattr(doc, "is_new") and doc.is_new())
+    res = check_active_consultant_lifecycle_action(
+        contract_id=doc.contract,
+        doctype=doc.doctype,
+        current_docname=None if is_new else doc.name
+    )
+    if res.get("active"):
+        frappe.throw(
+            frappe._(
+                "<b>Concurrent Action Blocked:</b> Cannot create or submit <b>{0}</b> for Consultant Contract <b>{1}</b>. "
+                "An active <b>{2}</b> (<a href='/app/{3}/{4}'><b>{4}</b></a>) is currently in progress (Status: <b>{5}</b>). "
+                "Only one lifecycle action is permitted at a time until completed or rejected."
+            ).format(
+                doc.doctype,
+                doc.contract,
+                res["doctype"],
+                res["route"],
+                res["name"],
+                res["status"]
+            ),
+            title=frappe._("Active Lifecycle Action In Progress")
+        )
+
+
+@frappe.whitelist()
 def validate_stage_approver_authorization(doc, method=None):
     """
     Strict Stage Approver Authorization Validation:
@@ -595,6 +758,8 @@ def validate_stage_approver_authorization(doc, method=None):
     2. Ensures only the exact assigned approver on this contract (or Administrator) can approve or reject in their state.
     3. Blocks unauthorized transitions and throws a clear PermissionError message.
     """
+    if doc and getattr(doc, "doctype", None) in CUSTOMER_CONTRACT_LIFECYCLE_DOCTYPES:
+        validate_single_active_customer_contract_action(doc)
     if not doc or not getattr(doc, "name", None) or (hasattr(doc, "is_new") and doc.is_new()):
         return
 

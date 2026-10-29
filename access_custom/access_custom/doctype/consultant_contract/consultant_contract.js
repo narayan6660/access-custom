@@ -1666,9 +1666,36 @@ function enforce_stage_approver_actions(frm) {
                 frm.page.actions.parent().removeClass("hide hidden-xl").show();
             }
 
+            function check_and_create_consultant_action(action_label, target_dt, new_doc_args) {
+                frappe.call({
+                    method: "access_custom.contract_lifecycle.check_active_consultant_lifecycle_action",
+                    args: {
+                        contract_id: frm.doc.name,
+                        doctype: target_dt
+                    },
+                    callback: function(r) {
+                        if (r.message && r.message.active) {
+                            frappe.msgprint({
+                                title: __("Active Lifecycle Action In Progress"),
+                                indicator: "orange",
+                                message: __("Cannot initiate <b>{0}</b> for this contract. An active <b>{1}</b> (<a href='/app/{2}/{3}'><b>{3}</b></a>) is currently in progress (Status: <b>{4}</b>). Only one lifecycle action can be active at a time until completed or rejected.", [
+                                    action_label,
+                                    r.message.doctype,
+                                    r.message.route,
+                                    r.message.name,
+                                    r.message.status
+                                ])
+                            });
+                        } else {
+                            frappe.new_doc(target_dt, new_doc_args);
+                        }
+                    }
+                });
+            }
+
             // 1. Contract Extension
             frm.page.add_action_item(__("Contract Extension"), function() {
-                frappe.new_doc("Consultant Contract Extension", {
+                check_and_create_consultant_action(__("Contract Extension"), "Consultant Contract Extension", {
                     contract: frm.doc.name,
                     consultant_name: frm.doc.consultant_name,
                     organization: frm.doc.requesting_organization || frm.doc.organization,
@@ -1680,7 +1707,7 @@ function enforce_stage_approver_actions(frm) {
 
             // 2. Contract Amendment
             frm.page.add_action_item(__("Contract Amendment"), function() {
-                frappe.new_doc("Consultant Contract Amendment", {
+                check_and_create_consultant_action(__("Contract Amendment"), "Consultant Contract Amendment", {
                     contract: frm.doc.name,
                     consultant_name: frm.doc.consultant_name,
                     organization: frm.doc.requesting_organization || frm.doc.organization,
@@ -1690,7 +1717,7 @@ function enforce_stage_approver_actions(frm) {
 
             // 3. Contract Termination
             frm.page.add_action_item(__("Contract Termination"), function() {
-                frappe.new_doc("Consultant Contract Termination", {
+                check_and_create_consultant_action(__("Contract Termination"), "Consultant Contract Termination", {
                     contract: frm.doc.name,
                     consultant_name: frm.doc.consultant_name,
                     organization: frm.doc.requesting_organization || frm.doc.organization

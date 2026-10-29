@@ -1442,7 +1442,30 @@ function setup_contract_actions_menu(frm) {
                 `);
                 $li.find("a").on("click", function(e) {
                     e.preventDefault();
-                    frappe.new_doc(act.dt, { contract: frm.doc.name });
+                    frappe.call({
+                        method: "access_custom.contract_lifecycle.check_active_lifecycle_action",
+                        args: {
+                            contract_id: frm.doc.name,
+                            doctype: act.dt
+                        },
+                        callback: function(r) {
+                            if (r.message && r.message.active) {
+                                frappe.msgprint({
+                                    title: __("Active Lifecycle Action In Progress"),
+                                    indicator: "orange",
+                                    message: __("Cannot initiate <b>{0}</b> for this contract. An active <b>{1}</b> (<a href='/app/{2}/{3}'><b>{3}</b></a>) is currently in progress (Status: <b>{4}</b>). Only one lifecycle action can be active at a time until completed or rejected.", [
+                                        act.label,
+                                        r.message.doctype,
+                                        r.message.route,
+                                        r.message.name,
+                                        r.message.status
+                                    ])
+                                });
+                            } else {
+                                frappe.new_doc(act.dt, { contract: frm.doc.name });
+                            }
+                        }
+                    });
                 });
                 $ul.append($li);
             });

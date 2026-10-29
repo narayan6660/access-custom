@@ -1,3 +1,4 @@
+import re
 import frappe
 from frappe.model.document import Document
 
@@ -32,6 +33,15 @@ class TestCustomerContract(Document):
 			self.current_contract_value = self.project_budget
 		if not getattr(self, "current_end_date", None) and getattr(self, "end_date", None):
 			self.current_end_date = self.end_date
+
+		# Customer POC Email Validation
+		if getattr(self, "customer_poc_email", None) and str(self.customer_poc_email).strip():
+			raw_poc = str(self.customer_poc_email).strip()
+			if ".." in raw_poc or not re.match(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", raw_poc):
+				frappe.throw(
+					frappe._("Please enter a valid <b>Customer POC Email</b> (e.g. name@domain.com). Disallowed characters or consecutive dots are not permitted."),
+					title=frappe._("Invalid Email Address")
+				)
 
 		# Strict File Format Validation
 		file_rules = [

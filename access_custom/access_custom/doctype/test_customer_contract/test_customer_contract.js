@@ -109,6 +109,20 @@ frappe.ui.form.on("Test Customer Contract", {
             frappe.validated = false;
             return false;
         }
+
+        if (frm.doc.customer_poc_email && String(frm.doc.customer_poc_email).trim()) {
+            let raw_email = String(frm.doc.customer_poc_email).trim();
+            let at_count = (raw_email.match(/@/g) || []).length;
+            if (at_count !== 1 || raw_email.indexOf('..') !== -1 || !/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/.test(raw_email)) {
+                frappe.msgprint({
+                    title: __("Invalid Email Address"),
+                    indicator: "red",
+                    message: __("Please enter a valid <b>Customer POC Email</b> (e.g. name@domain.com). Disallowed characters or consecutive dots are not permitted.")
+                });
+                frappe.validated = false;
+                return false;
+            }
+        }
     },
 
     onload: function(frm) {

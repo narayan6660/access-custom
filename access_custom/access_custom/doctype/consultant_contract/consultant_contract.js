@@ -57,6 +57,11 @@ frappe.ui.form.on("Consultant Contract", {
             frappe.validated = false;
             return false;
         }
+
+        if (!validate_consultant_contact_fields(frm)) {
+            frappe.validated = false;
+            return false;
+        }
     },
 
     consultant_cv(frm) {
@@ -2647,4 +2652,123 @@ function update_consultant_full_address(frm) {
     if (parts.length) {
         frm.set_value("consultant_address", parts.join(", "));
     }
+}
+
+function validate_consultant_contact_fields(frm) {
+    // 1. Consultant Name
+    if (frm.doc.consultant_name) {
+        let raw_name = String(frm.doc.consultant_name).trim();
+        if (!/^[a-zA-Z\s.]+$/.test(raw_name)) {
+            frappe.msgprint({
+                title: __("Invalid Name Format"),
+                indicator: "red",
+                message: __("<b>Consultant Name</b> can only contain letters (a–z, A–Z), spaces, and dots ('.'). Numbers or special symbols are not allowed.")
+            });
+            return false;
+        }
+        let letters_only = raw_name.replace(/[^a-zA-Z]/g, '');
+        if (letters_only.length < 2) {
+            frappe.msgprint({
+                title: __("Invalid Name Format"),
+                indicator: "red",
+                message: __("<b>Consultant Name</b> must contain at least 2 letters.")
+            });
+            return false;
+        }
+    }
+
+    // 2. Email ID
+    if (frm.doc.email_id && String(frm.doc.email_id).trim()) {
+        let raw_email = String(frm.doc.email_id).trim();
+        let at_count = (raw_email.match(/@/g) || []).length;
+        if (at_count !== 1 || raw_email.indexOf('..') !== -1 || !/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/.test(raw_email)) {
+            frappe.msgprint({
+                title: __("Invalid Email Address"),
+                indicator: "red",
+                message: __("Please enter a valid <b>Email ID</b> (e.g. name@domain.com). Disallowed characters or consecutive dots are not permitted.")
+            });
+            return false;
+        }
+    }
+
+    // 3. Mobile / Contact Number
+    if (frm.doc.contact_number && String(frm.doc.contact_number).trim()) {
+        let raw_phone = String(frm.doc.contact_number).trim().replace(/[\s\-\(\)]/g, '');
+        for (let d = 0; d < 10; d++) {
+            if (raw_phone.indexOf(String(d).repeat(10)) !== -1) {
+                frappe.msgprint({
+                    title: __("Invalid Mobile Number"),
+                    indicator: "red",
+                    message: __("Please enter a valid <b>Mobile Number</b>, not a dummy or repeated number.")
+                });
+                return false;
+            }
+        }
+        let bad_seqs = ['0123456789', '1234567890', '9876543210', '0987654321'];
+        for (let seq of bad_seqs) {
+            if (raw_phone.indexOf(seq) !== -1) {
+                frappe.msgprint({
+                    title: __("Invalid Mobile Number"),
+                    indicator: "red",
+                    message: __("Please enter a valid <b>Mobile Number</b>, not a sequential test number.")
+                });
+                return false;
+            }
+        }
+
+        let country = (frm.doc.country || 'India').toLowerCase();
+        let is_india = country.includes('india');
+        if (is_india) {
+            let p = raw_phone;
+            if (p.startsWith('+91')) p = p.substring(3);
+            else if (p.startsWith('91') && p.length === 12) p = p.substring(2);
+            else if (p.startsWith('0') && p.length === 11) p = p.substring(1);
+
+            if (p.length !== 10) {
+                frappe.msgprint({
+                    title: __("Invalid Mobile Number"),
+                    indicator: "red",
+                    message: __("Indian <b>Mobile Number</b> must be exactly 10 digits (currently {0} digits).", [p.length])
+                });
+                return false;
+            }
+            if (!['6', '7', '8', '9'].includes(p.charAt(0))) {
+                frappe.msgprint({
+                    title: __("Invalid Mobile Number"),
+                    indicator: "red",
+                    message: __("Indian <b>Mobile Number</b> must start with 6, 7, 8, or 9 (starts with '{0}').", [p.charAt(0)])
+                });
+                return false;
+            }
+        } else {
+            let digits = raw_phone.replace(/\D/g, '');
+            if (digits.length < 7 || digits.length > 15) {
+                frappe.msgprint({
+                    title: __("Invalid Mobile Number"),
+                    indicator: "red",
+                    message: __("International <b>Mobile Number</b> must contain between 7 and 15 digits.")
+                });
+                return false;
+            }
+        }
+    }
+
+    // 4. Pin Code
+    if (frm.doc.pin_code && String(frm.doc.pin_code).trim()) {
+        let raw_pin = String(frm.doc.pin_code).trim();
+        let country = (frm.doc.country || 'India').toLowerCase();
+        let is_india = country.includes('india');
+        if (is_india) {
+            if (!/^[1-9][0-9]{5}$/.test(raw_pin)) {
+                frappe.msgprint({
+                    title: __("Invalid Pin Code"),
+                    indicator: "red",
+                    message: __("Indian <b>Pin Code</b> must be exactly 6 digits and cannot start with 0 (e.g. 500081).")
+                });
+                return false;
+            }
+        }
+    }
+
+    return true;
 }

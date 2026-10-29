@@ -81,15 +81,6 @@
   "name": "Reporting Change"
  },
  {
-  "amendment_type": "Compliance Change",
-  "category": "Other",
-  "description": null,
-  "docstatus": 0,
-  "doctype": "Amendment Type",
-  "modified": "2026-09-21 10:34:12.354655",
-  "name": "Compliance Change"
- },
- {
   "amendment_type": "Other",
   "category": "Other",
   "description": null,
@@ -115,15 +106,6 @@
   "doctype": "Amendment Type",
   "modified": "2026-09-21 11:17:24.583337",
   "name": "Timeline / Milestone Change"
- },
- {
-  "amendment_type": "Resource Change",
-  "category": "Resources",
-  "description": "Key personnel, staffing, or FTE allocation changes",
-  "docstatus": 0,
-  "doctype": "Amendment Type",
-  "modified": "2026-09-21 11:17:24.581682",
-  "name": "Resource Change"
  },
  {
   "amendment_type": "Payment / Commercial Terms Change",
@@ -304,5 +286,23 @@
   "doctype": "Amendment Type",
   "modified": "2026-09-21 10:34:12.340508",
   "name": "Payment Schedule Change"
+ },
+ {
+  "amendment_type": "Compliance Change",
+  "category": "Other",
+  "description": null,
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 10:34:12.354655",
+  "name": "Compliance Change"
+ },
+ {
+  "amendment_type": "Resource Change",
+  "category": "Resources",
+  "description": "Key personnel, staffing, or FTE allocation changes",
+  "docstatus": 0,
+  "doctype": "Amendment Type",
+  "modified": "2026-09-21 11:17:24.581682",
+  "name": "Resource Change"
  }
 ]

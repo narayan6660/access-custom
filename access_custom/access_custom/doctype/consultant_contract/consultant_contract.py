@@ -1,6 +1,7 @@
 # Copyright (c) 2026, Charan and contributors
 # For license information, please see license.txt
 
+import re
 import frappe
 from frappe.model.document import Document
 from frappe.utils import add_days, add_months, add_years, getdate, nowdate
@@ -15,6 +16,7 @@ class ConsultantContract(Document):
         self.sync_workflow_status()
         self.validate_pdf_attachments()
         self.validate_approver_permissions()
+        self.validate_contact_details()
 
     def calculate_tenure_and_end_date(self):
         start = self.proposed_start_date or self.start_date
@@ -499,6 +501,88 @@ class ConsultantContract(Document):
             )
         else:
             self.db_set("consultant_id", existing_master)
+
+    def validate_contact_details(self):
+        # 1. Consultant Name
+        if self.consultant_name:
+            raw_name = str(self.consultant_name).strip()
+            if not re.match(r'^[a-zA-Z\s.]+$', raw_name):
+                frappe.throw(
+                    frappe._("<b>Consultant Name</b> can only contain letters (a–z, A–Z), spaces, and dots ('.'). Numbers or special symbols are not allowed."),
+                    title=frappe._("Invalid Name Format")
+                )
+            if len(re.sub(r'[^a-zA-Z]', '', raw_name)) < 2:
+                frappe.throw(
+                    frappe._("<b>Consultant Name</b> must contain at least 2 letters."),
+                    title=frappe._("Invalid Name Format")
+                )
+
+        # 2. Email ID
+        if getattr(self, 'email_id', None) and str(self.email_id).strip():
+            raw_email = str(self.email_id).strip()
+            if '..' in raw_email or not re.match(r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', raw_email):
+                frappe.throw(
+                    frappe._("Please enter a valid <b>Email ID</b> (e.g. name@domain.com). Disallowed characters or consecutive dots are not permitted."),
+                    title=frappe._("Invalid Email Address")
+                )
+
+        # 3. Mobile / Contact Number
+        if getattr(self, 'contact_number', None) and str(self.contact_number).strip():
+            raw_phone = re.sub(r'[\s\-\(\)]', '', str(self.contact_number).strip())
+            for d in range(10):
+                if str(d) * 10 in raw_phone:
+                    frappe.throw(
+                        frappe._("Please enter a valid <b>Mobile Number</b>, not a dummy or repeated number."),
+                        title=frappe._("Invalid Mobile Number")
+                    )
+            for seq in ['0123456789', '1234567890', '9876543210', '0987654321']:
+                if seq in raw_phone:
+                    frappe.throw(
+                        frappe._("Please enter a valid <b>Mobile Number</b>, not a sequential test number."),
+                        title=frappe._("Invalid Mobile Number")
+                    )
+
+            country = getattr(self, 'country', '') or 'India'
+            is_india = 'india' in country.lower()
+            if is_india:
+                p = raw_phone
+                if p.startswith('+91'):
+                    p = p[3:]
+                elif p.startswith('91') and len(p) == 12:
+                    p = p[2:]
+                elif p.startswith('0') and len(p) == 11:
+                    p = p[1:]
+
+                if len(p) != 10:
+                    frappe.throw(
+                        frappe._("Indian <b>Mobile Number</b> must be exactly 10 digits (currently {0} digits).").format(len(p)),
+                        title=frappe._("Invalid Mobile Number")
+                    )
+                if p[0] not in '6789':
+                    frappe.throw(
+                        frappe._("Indian <b>Mobile Number</b> must start with 6, 7, 8, or 9 (starts with '{0}').").format(p[0]),
+                        title=frappe._("Invalid Mobile Number")
+                    )
+            else:
+                digits = re.sub(r'\D', '', raw_phone)
+                if len(digits) < 7 or len(digits) > 15:
+                    frappe.throw(
+                        frappe._("International <b>Mobile Number</b> must contain between 7 and 15 digits."),
+                        title=frappe._("Invalid Mobile Number")
+                    )
+
+        # 4. Pin Code
+        if getattr(self, 'pin_code', None) and str(self.pin_code).strip():
+            raw_pin = str(self.pin_code).strip()
+            country = getattr(self, 'country', '') or 'India'
+            is_india = 'india' in country.lower()
+            if is_india:
+                if not re.match(r'^[1-9][0-9]{5}$', raw_pin):
+                    frappe.throw(
+                        frappe._("Indian <b>Pin Code</b> must be exactly 6 digits and cannot start with 0 (e.g. 500081)."),
+                        title=frappe._("Invalid Pin Code")
+                    )
+
 
 
 @frappe.whitelist()

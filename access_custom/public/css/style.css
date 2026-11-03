@@ -1728,3 +1728,14 @@ body.modal-open #freeze {
 .grid-readonly-row .grid-footer-toolbar .grid-append-row {
 	display: none !important;
 }
+
+/* Employee Full Name bold styling */
+[data-fieldname="employee_name"] .control-label,
+[data-fieldname="employee_name"] label {
+	font-weight: 700 !important;
+}
+[data-fieldname="employee_name"] input,
+[data-fieldname="employee_name"] .like-disabled-input,
+[data-fieldname="employee_name"] .control-value {
+	font-weight: 700 !important;
+}

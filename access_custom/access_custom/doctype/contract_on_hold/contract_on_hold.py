@@ -5,11 +5,18 @@ from frappe.utils import today, getdate, now_datetime
 
 
 class ContractOnHold(Document):
+    def validate_supporting_document(self):
+        if self.supporting_document:
+            clean_path = str(self.supporting_document).split("?")[0].split("#")[0].lower().strip()
+            if not clean_path.endswith(".pdf"):
+                frappe.throw(_("<b>Supporting Document</b> only accepts <b>PDF (.pdf)</b> files. Uploaded file is not permitted."))
+
     def _validate_links(self):
         self.resolve_requested_by()
+        self.validate_supporting_document()
         state = self.workflow_state or self.status or ""
         # Validate supporting document required before submitting past Draft
-        if state and state not in ["Draft"]:
+        if state and state not in ["Maker", "Draft"]:
             if not getattr(self, "supporting_document", None):
                 frappe.throw(_("Please upload the <b>Supporting Document</b> before submitting this On Hold request for approval."))
 
@@ -29,6 +36,7 @@ class ContractOnHold(Document):
                     self.requested_by = first_emp
 
     def validate(self):
+        self.validate_supporting_document()
         if not self.hold_date:
             self.hold_date = today()
         state = self.workflow_state or self.status or ""
@@ -38,7 +46,7 @@ class ContractOnHold(Document):
             self.resumed_on = now_datetime()
         self.resolve_requested_by()
         # Validate supporting document required before submitting past Draft
-        if state and state not in ["Draft"]:
+        if state and state not in ["Maker", "Draft"]:
             if not getattr(self, "supporting_document", None):
                 frappe.throw(_("Please upload the <b>Supporting Document</b> before submitting this On Hold request for approval."))
 
@@ -134,7 +142,7 @@ class ContractOnHold(Document):
                                 <td style="padding: 8px 4px; font-weight: 700; color: #0f172a;">{contract_ref}</td>
                             </tr>
                             {f'<tr><td style="padding: 8px 4px; font-weight: bold; color: #64748b;">Customer Name:</td><td style="padding: 8px 4px; color: #0f172a;">{cust_name}</td></tr>' if cust_name else ''}
-                            {f'<tr><td style="padding: 8px 4px; font-weight: bold; color: #64748b;">Project Title:</td><td style="padding: 8px 4px; color: #0f172a;">{self.project_title}</td></tr>' if self.project_title else ''}
+                            {f'<tr><td style="padding: 8px 4px; font-weight: bold; color: #64748b;">Customer Title:</td><td style="padding: 8px 4px; color: #0f172a;">{self.project_title}</td></tr>' if self.project_title else ''}
                             <tr>
                                 <td style="padding: 8px 4px; font-weight: bold; color: #64748b;">Hold Record ID:</td>
                                 <td style="padding: 8px 4px; color: #0f172a;">{self.name}</td>
@@ -222,7 +230,7 @@ def send_on_hold_stage_approval_email(doc, state, target_approver):
                             <td style="padding: 8px 4px; font-weight: 700; color: #0f172a;">{contract_ref}</td>
                         </tr>
                         {f'<tr><td style="padding: 8px 4px; font-weight: bold; color: #64748b;">Customer Name:</td><td style="padding: 8px 4px; color: #0f172a;">{cust_name}</td></tr>' if cust_name else ''}
-                        {f'<tr><td style="padding: 8px 4px; font-weight: bold; color: #64748b;">Project Title:</td><td style="padding: 8px 4px; color: #0f172a;">{doc.project_title}</td></tr>' if doc.get("project_title") else ''}
+                        {f'<tr><td style="padding: 8px 4px; font-weight: bold; color: #64748b;">Customer Title:</td><td style="padding: 8px 4px; color: #0f172a;">{doc.project_title}</td></tr>' if doc.get("project_title") else ''}
                         <tr>
                             <td style="padding: 8px 4px; font-weight: bold; color: #64748b;">Hold Date:</td>
                             <td style="padding: 8px 4px; color: #0f172a;">{doc.hold_date or today()}</td>

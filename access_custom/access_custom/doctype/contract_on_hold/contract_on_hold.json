@@ -95,7 +95,7 @@
    "fetch_from": "contract.project_title",
    "fieldname": "project_title",
    "fieldtype": "Data",
-   "label": "Project Title",
+   "label": "Customer Title",
    "read_only": 1
   },
   {
@@ -369,11 +369,11 @@
    "fieldtype": "Column Break"
   },
   {
-   "default": "Draft",
+   "default": "Maker",
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "Draft\nPending Approval\nOn Hold\nResumed\nRejected",
+   "options": "Maker\nPending Approval\nOn Hold\nResumed\nRejected",
    "read_only": 1
   },
   {

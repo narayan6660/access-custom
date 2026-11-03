@@ -100,7 +100,7 @@
    "fetch_from": "contract.project_title",
    "fieldname": "project_title",
    "fieldtype": "Data",
-   "label": "Project Title",
+   "label": "Customer Title",
    "read_only": 1
   },
   {
@@ -405,11 +405,11 @@
    "read_only": 1
   },
   {
-   "default": "Draft",
+   "default": "Maker",
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "Draft\nUnder Review\nClient Communication Required\nTerminated\nCancelled",
+   "options": "Maker\nUnder Review\nClient Communication Required\nTerminated\nCancelled",
    "read_only": 1
   },
   {

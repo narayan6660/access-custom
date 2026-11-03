@@ -61,6 +61,7 @@ requested_by: function(frm) {
 
         if (frm.is_new()) {
             frm.page.clear_actions_menu();
+            render_closure_progress_tracker(frm);
             return;
         }
 
@@ -584,7 +585,7 @@ function render_closure_progress_tracker(frm) {
     frm.dashboard.parent.find(".closure-progress-container").remove();
 
     let steps = [
-        { id: "Closure Initiated", label: "Initiated" },
+        { id: "Closure Initiated", label: "Maker" },
         { id: "Deliverable Closure", label: "Deliverables" },
         { id: "Document Closure", label: "Documents" },
         { id: "Team Lead Closure", label: "Team Lead" },
@@ -697,6 +698,7 @@ function render_closure_progress_tracker(frm) {
     let $container = $(container_html);
     $container.prependTo(frm.dashboard.parent);
     frm.dashboard.show();
+    frm.dashboard.parent.show();
 }
 
 function get_closure_rejection_stage(frm) {

@@ -99,6 +99,7 @@ requested_by: function(frm) {
 
         if (frm.is_new()) {
             frm.page.clear_actions_menu();
+            render_termination_progress_tracker(frm);
             return;
         }
 
@@ -313,7 +314,7 @@ function render_termination_progress_tracker(frm) {
     frm.dashboard.parent.find(".termination-progress-container").remove();
 
     let steps = [
-        { id: "Termination Requested", label: "Requested" },
+        { id: "Termination Requested", label: "Maker" },
         { id: "Termination Under TL Review", label: "Team Lead" },
         { id: "Termination Under Legal Review", label: "Legal" },
         { id: "Termination Under Finance Review", label: "Finance" },
@@ -435,6 +436,7 @@ function render_termination_progress_tracker(frm) {
     let $container = $(container_html);
     $container.prependTo(frm.dashboard.parent);
     frm.dashboard.show();
+    frm.dashboard.parent.show();
 }
 
 function get_termination_rejection_stage(frm) {

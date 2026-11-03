@@ -224,3 +224,117 @@ $(document).on(
 	}
 );
 setInterval(patchGridRowForm, 300);
+
+
+// ============================================================
+// ACCESS CUSTOM: Hide Deprecated Standard ERPNext Contract
+// ============================================================
+(function () {
+	function isStandardContract(item) {
+		if (!item) return false;
+		if (item.match === "Contract") return true;
+		if (item.value === "Contract List" || item.value === "New Contract" || item.value === "Contract") return true;
+		if (item.label === "Contract List" || item.label === "New Contract" || item.label === "Contract") return true;
+		if (Array.isArray(item.route)) {
+			if ((item.route[0] === "List" || item.route[0] === "Form") && item.route[1] === "Contract") {
+				return true;
+			}
+		}
+		if (typeof item.route === "string") {
+			if (item.route === "List/Contract" || item.route === "Form/Contract" || item.route.startsWith("List/Contract/") || item.route.startsWith("Form/Contract/")) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	function purgeStandardContract() {
+		// 1. Purge from bootinfo permissions
+		if (window.frappe && frappe.boot && frappe.boot.user) {
+			["can_read", "can_search", "can_create", "can_write", "can_cancel", "can_delete"].forEach(function (k) {
+				if (Array.isArray(frappe.boot.user[k])) {
+					frappe.boot.user[k] = frappe.boot.user[k].filter(function (dt) {
+						return dt !== "Contract";
+					});
+				}
+			});
+
+			if (frappe.boot.user.all_reports) {
+				Object.keys(frappe.boot.user.all_reports).forEach(function (rep) {
+					if (frappe.boot.user.all_reports[rep] && frappe.boot.user.all_reports[rep].ref_doctype === "Contract") {
+						delete frappe.boot.user.all_reports[rep];
+					}
+				});
+			}
+		}
+
+		// 2. Patch frappe.search.utils
+		if (window.frappe && frappe.search && frappe.search.utils) {
+			if (!frappe.search.utils._std_contract_patched) {
+				frappe.search.utils._std_contract_patched = true;
+
+				var orig_get_doctypes = frappe.search.utils.get_doctypes;
+				frappe.search.utils.get_doctypes = function () {
+					var results = orig_get_doctypes.apply(this, arguments);
+					return results.filter(function (r) {
+						return !isStandardContract(r);
+					});
+				};
+
+				var orig_get_creatables = frappe.search.utils.get_creatables;
+				frappe.search.utils.get_creatables = function () {
+					var results = orig_get_creatables.apply(this, arguments);
+					return results.filter(function (r) {
+						return !isStandardContract(r);
+					});
+				};
+			}
+
+			// Clean recent searches
+			if (Array.isArray(frappe.search.utils.recent)) {
+				frappe.search.utils.recent = frappe.search.utils.recent.filter(function (item) {
+					var r = Array.isArray(item) ? item[0] : item;
+					if (typeof r === "string") {
+						return r !== "List/Contract" && r !== "Form/Contract" && !r.startsWith("List/Contract/") && !r.startsWith("Form/Contract/");
+					}
+					return true;
+				});
+			}
+		}
+
+		// 3. Patch AwesomeBar deduplicate
+		if (window.frappe && frappe.search && frappe.search.AwesomeBar && !frappe.search.AwesomeBar._std_contract_patched) {
+			frappe.search.AwesomeBar._std_contract_patched = true;
+
+			var orig_deduplicate = frappe.search.AwesomeBar.prototype.deduplicate;
+			frappe.search.AwesomeBar.prototype.deduplicate = function (options) {
+				var results = orig_deduplicate.apply(this, arguments);
+				return results.filter(function (item) {
+					return !isStandardContract(item);
+				});
+			};
+		}
+
+		// 4. Intercept direct route /app/contract navigation
+		if (window.frappe && frappe.router && !frappe.router._std_contract_redirect_patched) {
+			frappe.router._std_contract_redirect_patched = true;
+			frappe.router.on("change", function () {
+				var route = frappe.get_route ? frappe.get_route() : [];
+				if (route && (route[0] === "List" || route[0] === "Form") && route[1] === "Contract") {
+					frappe.show_alert({
+						message: __("The default Contract is deprecated. Redirecting to Contract Management..."),
+						indicator: "orange"
+					}, 4);
+					frappe.set_route("Workspaces", "Contract Mgmt");
+				}
+			});
+		}
+	}
+
+	purgeStandardContract();
+	$(document).on("app_ready page-change", purgeStandardContract);
+	setTimeout(purgeStandardContract, 100);
+	setTimeout(purgeStandardContract, 500);
+	setTimeout(purgeStandardContract, 1500);
+	setInterval(purgeStandardContract, 3000);
+})();

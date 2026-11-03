@@ -1,8 +1,38 @@
+function setup_pdf_restrictions(frm) {
+    let field = frm.get_field("supporting_document");
+    if (field && field.df) {
+        field.df.options = {
+            restrictions: {
+                allowed_file_types: [".pdf", "application/pdf"]
+            }
+        };
+    }
+}
+
+function validate_supporting_document_pdf(frm) {
+    if (!frm.doc.supporting_document) return true;
+    let path = String(frm.doc.supporting_document).split("?")[0].split("#")[0].toLowerCase().trim();
+    if (!path.endsWith(".pdf")) {
+        frm.set_value("supporting_document", "");
+        frappe.msgprint({
+            title: __("Invalid Document Format"),
+            indicator: "red",
+            message: __("<b>Supporting Document</b> only accepts <b>PDF (.pdf)</b> files.<br><br>The uploaded file is not permitted and has been removed.")
+        });
+        return false;
+    }
+    return true;
+}
+
 frappe.ui.form.on("Contract On Hold", {
+    supporting_document: function(frm) {
+        validate_supporting_document_pdf(frm);
+    },
 requested_by: function(frm) {
         format_requested_by_display_contract_on_hold(frm);
     },
     onload: function(frm) {
+        setup_pdf_restrictions(frm);
         if (frm.is_new()) {
             frm.doc.lead_approver_status = null;
             frm.doc.lead_approver_review = null;
@@ -40,6 +70,7 @@ requested_by: function(frm) {
     },
 
     refresh: function(frm) {
+        setup_pdf_restrictions(frm);
         setup_auto_expand_textareas(frm);
         inject_approver_stage_styles();
         enforce_stage_approver_actions(frm);
@@ -53,6 +84,7 @@ requested_by: function(frm) {
 
         if (frm.is_new()) {
             frm.page.clear_actions_menu();
+            render_hold_progress_tracker(frm);
             return;
         }
 
@@ -110,52 +142,57 @@ requested_by: function(frm) {
             setup_on_hold_workflow_actions_guard(frm);
         }, 100);
 
-        // Add Resume button if contract is On Hold
+        // Add Request Resume button strictly for Contract Manager only (excluding all approvers)
+        frm.remove_custom_button(__("Request Resume"));
+        frm.remove_custom_button(__("View Resume Request"));
+
         let state = frm.doc.workflow_state || frm.doc.status;
         if (state === "On Hold" || state === "Active Hold") {
-            frm.add_custom_button(__("Resume Contract"), function() {
-                let d = new frappe.ui.Dialog({
-                    title: __("Resume Contract"),
-                    fields: [
-                        {
-                            label: __("Actual Resume Date"),
-                            fieldname: "actual_resume_date",
-                            fieldtype: "Date",
-                            reqd: 1,
-                            default: frappe.datetime.get_today()
-                        },
-                        {
-                            label: __("Resume Remarks / Notes"),
-                            fieldname: "resume_remarks",
-                            fieldtype: "Small Text"
-                        }
-                    ],
-                    primary_action_label: __("Confirm Resume"),
-                    primary_action: function(values) {
-                        d.hide();
-                        frappe.call({
-                            method: "access_custom.access_custom.doctype.contract_on_hold.contract_on_hold.resume_contract",
-                            args: {
-                                hold_name: frm.doc.name,
-                                actual_resume_date: values.actual_resume_date,
-                                resume_remarks: values.resume_remarks
-                            },
-                            freeze: true,
-                            freeze_message: __("Resuming Contract..."),
-                            callback: function(r) {
-                                if (!r.exc) {
-                                    frappe.show_alert({
-                                        message: __("Contract resumed successfully"),
-                                        indicator: "green"
-                                    });
-                                    frm.reload_doc();
-                                }
-                            }
-                        });
+            let approvers = [
+                frm.doc.lead_approver,
+                frm.doc.legal_approver,
+                frm.doc.finance_approver,
+                frm.doc.hr_approver,
+                frm.doc.ceo_approver
+            ].filter(Boolean);
+
+            let is_approver = approvers.includes(frappe.session.user);
+            let is_creator = (frappe.session.user === frm.doc.owner);
+            let has_cm_role = Boolean(frappe.user_roles && frappe.user_roles.includes("Contract Manager"));
+
+            // Strictly: Approvers can only approve or reject; only Contract Manager / Creator can request resume
+            let can_request_resume = !is_approver && (is_creator || has_cm_role || frappe.session.user === "Administrator");
+
+            frappe.db.get_list("Contract Resume", {
+                filters: {
+                    on_hold_record: frm.doc.name,
+                    workflow_state: ["not in", ["Rejected"]]
+                },
+                fields: ["name", "workflow_state", "docstatus"]
+            }).then(records => {
+                let active_resume = (records && records.length > 0) ? records[0] : null;
+                if (active_resume && active_resume.workflow_state !== "Resumed") {
+                    let msg = __("This on-hold contract is currently undergoing Resumption Review: <a href='/app/contract-resume/{0}'><b>{0}</b></a> (Stage: <b>{1}</b>)",
+                        [active_resume.name, active_resume.workflow_state || "In Review"]);
+                    frm.dashboard.clear_headline();
+                    frm.dashboard.set_headline(msg, "blue");
+
+                    if (can_request_resume) {
+                        frm.add_custom_button(__("View Resume Request"), function() {
+                            frappe.set_route("Form", "Contract Resume", active_resume.name);
+                        }).addClass("btn-primary");
                     }
-                });
-                d.show();
-            }).addClass("btn-success");
+                } else if (!active_resume) {
+                    if (can_request_resume) {
+                        frm.add_custom_button(__("Request Resume"), function() {
+                            frappe.new_doc("Contract Resume", {
+                                contract: frm.doc.contract,
+                                on_hold_record: frm.doc.name
+                            });
+                        }).addClass("btn-success");
+                    }
+                }
+            });
         }
     },
 
@@ -171,7 +208,11 @@ requested_by: function(frm) {
     },
 
     validate: function(frm) {
-        if (frm.is_new() || frm.doc.workflow_state === "Draft" || !frm.doc.workflow_state) return;
+        if (!validate_supporting_document_pdf(frm)) {
+            frappe.validated = false;
+            return false;
+        }
+        if (frm.is_new() || frm.doc.workflow_state === "Maker" || frm.doc.workflow_state === "Draft" || !frm.doc.workflow_state) return;
 
         let check_auth = function(field, state_name, old_val) {
             let current_val = frm.doc[field] || "";
@@ -247,7 +288,7 @@ requested_by: function(frm) {
         let now_str = frappe.datetime.str_to_user(frappe.datetime.now_datetime());
 
         if (!action_lower.startsWith("reject")) {
-            if (state === "Draft" || !state) {
+            if ((state === "Maker" || state === "Draft") || !state) {
                 if (!frm.doc.supporting_document) {
                     frappe.msgprint({
                         title: __("Supporting Document Required"),
@@ -413,10 +454,10 @@ function is_stage_approver(frm, state) {
 
 function apply_on_hold_approver_field_locking(frm) {
     if (frm.is_new()) return;
-    let state = frm.doc.workflow_state || "Draft";
+    let state = frm.doc.workflow_state || "Maker";
 
     // Lock contract definition if in review
-    let is_in_review = state !== "Draft";
+    let is_in_review = (state !== "Maker" && state !== "Draft");
     if (is_in_review) {
         ["contract", "hold_reason", "hold_start_date", "expected_resume_date", "requested_by",
          "lead_approver", "legal_approver", "finance_approver", "hr_approver", "ceo_approver"
@@ -658,7 +699,7 @@ function render_hold_progress_tracker(frm) {
     frm.dashboard.parent.find(".hold-progress-container").remove();
 
     let steps = [
-        { id: "Draft", label: "Draft" },
+        { id: "Maker", label: "Maker" },
         { id: "Pending Team Lead Approval", label: "Team Lead" },
         { id: "Pending Legal Approval", label: "Legal" },
         { id: "Pending Finance Approval", label: "Finance" },
@@ -668,7 +709,7 @@ function render_hold_progress_tracker(frm) {
         { id: "Resumed", label: "Resumed" }
     ];
 
-    let current_state = frm.doc.workflow_state || frm.doc.status || "Draft";
+    let current_state = frm.doc.workflow_state || frm.doc.status || "Maker";
     let is_rejected = current_state.includes("Reject");
     
     let active_index = 0;
@@ -677,7 +718,7 @@ function render_hold_progress_tracker(frm) {
     } else if (current_state === "On Hold" || current_state === "Active Hold") {
         active_index = steps.length - 2;
     } else {
-        let idx = steps.findIndex(s => s.id === current_state || current_state.includes(s.label));
+        let idx = steps.findIndex(s => s.id === current_state || (s.id === "Maker" && (current_state === "Maker" || current_state === "Draft")) || current_state.includes(s.label));
         active_index = idx >= 0 ? idx : 0;
     }
 
@@ -780,6 +821,7 @@ function render_hold_progress_tracker(frm) {
     let $container = $(container_html);
     $container.prependTo(frm.dashboard.parent);
     frm.dashboard.show();
+    frm.dashboard.parent.show();
 }
 
 function get_on_hold_rejection_stage(frm) {
@@ -800,14 +842,14 @@ function get_on_hold_rejection_stage(frm) {
 
 function setup_on_hold_workflow_actions_guard(frm) {
     if (frm.is_new()) return;
-    let state = frm.doc.workflow_state || "Draft";
+    let state = frm.doc.workflow_state || "Maker";
     let is_cm = (frappe.session.user === frm.doc.owner) ||
         (frappe.user_roles && frappe.user_roles.includes("Contract Manager"));
 
     let is_active_approver = is_stage_approver(frm, state);
     let is_dirty = frm.is_dirty() || (frm.doc && frm.doc.__unsaved);
 
-    if (state !== "Draft") {
+    if ((state !== "Maker" && state !== "Draft")) {
         if (!is_active_approver) {
             frm.page.clear_actions_menu();
             if (frm.page.actions && frm.page.actions.parent) {

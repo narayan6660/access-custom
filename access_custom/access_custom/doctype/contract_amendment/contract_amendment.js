@@ -100,7 +100,7 @@ requested_by: function(frm) {
                     <div style="margin-top: 4px;"><b>Rejection Reason:</b> <span style="color: #b91c1c; font-weight: 600;">"${frappe.utils.escape_html(rejected_stage.review || 'No specific reason provided')}"</span></div>
                 </div>
                 <div style="font-size: 12px; color: #64748b; border-top: 1px dashed #fca5a5; padding-top: 8px; margin-top: 8px;">
-                    <i>This amendment has been returned to <b>Draft</b>. As Contract Manager, you can review the feedback, update the contract details, and click <b>'Submit to Team Lead'</b> to restart the approval workflow.</i>
+                    <i>This amendment has been returned to <b>Maker</b>. As Contract Manager, you can review the feedback, update the contract details, and click <b>'Submit to Team Lead'</b> to restart the approval workflow.</i>
                 </div>
             </div>`;
             $(banner_html).prependTo(frm.dashboard.parent);
@@ -126,7 +126,7 @@ requested_by: function(frm) {
                     <div style="margin-top: 4px;"><b>Revision Feedback:</b> <span style="color: #92400e; font-weight: 600;">"${frappe.utils.escape_html(returned_stage.review || 'No specific feedback provided')}"</span></div>
                 </div>
                 <div style="font-size: 12px; color: #64748b; border-top: 1px dashed #fde68a; padding-top: 8px; margin-top: 8px;">
-                    <i>This amendment has been returned to <b>Draft</b> for required modifications. Make the necessary updates and click <b>'Submit to Team Lead'</b> to resubmit.</i>
+                    <i>This amendment has been returned to <b>Maker</b> for required modifications. Make the necessary updates and click <b>'Submit to Team Lead'</b> to resubmit.</i>
                 </div>
             </div>`;
             $(banner_html).prependTo(frm.dashboard.parent);
@@ -295,7 +295,7 @@ requested_by: function(frm) {
         }
     },
 
-    impact_scope: function(frm) { update_approver_visibility(frm); render_approval_progress_tracker(frm); },
+    impact_scope: function(frm) { update_approver_visibility(frm); render_approval_progress_tracker(frm); setTimeout(() => setup_auto_expand_textareas(frm), 50); },
     impact_services: function(frm) { update_approver_visibility(frm); render_approval_progress_tracker(frm); },
     impact_deliverables: function(frm) { update_approver_visibility(frm); render_approval_progress_tracker(frm); },
     impact_timeline: function(frm) { update_approver_visibility(frm); render_approval_progress_tracker(frm); },
@@ -356,7 +356,7 @@ requested_by: function(frm) {
             return false;
         }
 
-        if (frm.is_new() || frm.doc.workflow_state === "Draft" || !frm.doc.workflow_state) return;
+        if (frm.is_new() || frm.doc.workflow_state === "Maker" || frm.doc.workflow_state === "Draft" || !frm.doc.workflow_state) return;
 
         // Enforce strict approver authorization check
         let check_auth = function(field, state_name, old_val) {
@@ -922,6 +922,11 @@ function update_approver_visibility(frm) {
             }
         });
     }
+
+    if (frm.layout) {
+        if (typeof frm.layout.refresh_dependency === "function") frm.layout.refresh_dependency();
+        if (typeof frm.layout.refresh_sections === "function") frm.layout.refresh_sections();
+    }
 }
 
 // ==============================================================================
@@ -936,7 +941,7 @@ function render_approval_progress_tracker(frm) {
     let multi_types = (frm.doc.amendment_types || []).map(r => r.amendment_type).filter(Boolean);
 
     let steps = [
-        { id: "Draft", label: "Draft" },
+        { id: "Maker", label: "Maker" },
         { id: "Under Team Lead Review", label: "Team Lead" }
     ];
 
@@ -961,7 +966,7 @@ function render_approval_progress_tracker(frm) {
     steps.push({ id: "Pending Client Signature", label: "Client Signature" });
     steps.push({ id: "Executed", label: "Executed" });
 
-    let current_state = frm.doc.workflow_state || (frm.doc.docstatus === 1 ? "Executed" : "Draft");
+    let current_state = frm.doc.workflow_state || (frm.doc.docstatus === 1 ? "Executed" : "Maker");
     let rejected_stage = get_rejection_stage(frm);
     let returned_stage = get_revision_stage(frm);
 
@@ -993,11 +998,11 @@ function render_approval_progress_tracker(frm) {
         status_bg = "#16a34a";
         bar_color = "#16a34a";
     } else if (rejected_stage) {
-        status_label = `Rejected at ${rejected_stage.role} (Draft)`;
+        status_label = `Rejected at ${rejected_stage.role} (Maker)`;
         status_bg = "#dc2626";
         bar_color = "#dc2626";
     } else if (returned_stage) {
-        status_label = `Returned by ${returned_stage.role} (Draft)`;
+        status_label = `Returned by ${returned_stage.role} (Maker)`;
         status_bg = "#d97706";
         bar_color = "#d97706";
     }
@@ -1089,6 +1094,7 @@ function render_approval_progress_tracker(frm) {
     let $container = $(container_html);
     $container.prependTo(frm.dashboard.parent);
     frm.dashboard.show();
+    frm.dashboard.parent.show();
 }
 
 // ==============================================================================
@@ -1096,14 +1102,14 @@ function render_approval_progress_tracker(frm) {
 // ==============================================================================
 function apply_approver_field_locking(frm) {
     if (frm.is_new()) return;
-    let state = frm.doc.workflow_state || "Draft";
+    let state = frm.doc.workflow_state || "Maker";
 
     // 1. If beyond Draft, lock all master/amendment definition fields
     let is_contract_manager = (frappe.session.user === frm.doc.owner) ||
         frappe.user_roles.includes("Contract Manager") ||
         frappe.user_roles.includes("System Manager");
 
-    let is_in_review = state !== "Draft";
+    let is_in_review = (state !== "Maker" && state !== "Draft");
     let locked_fields = [
         "contract", "amendment_type", "amendment_date", "amendment_effective_date",
         "requested_by", "amendment_reason", "scope_description",
@@ -1116,7 +1122,7 @@ function apply_approver_field_locking(frm) {
             frm.set_df_property(f, "read_only", 1);
         });
     } else {
-        // In Draft:
+        // In Maker:
         // ONLY Contract Manager / document creator can edit the form fields!
         if (is_contract_manager) {
             locked_fields.forEach(f => {
@@ -1333,7 +1339,7 @@ function is_stage_approver(frm, state) {
 // ==============================================================================
 function setup_workflow_actions_guard(frm) {
     if (frm.is_new()) return;
-    let state = frm.doc.workflow_state || "Draft";
+    let state = frm.doc.workflow_state || "Maker";
 
     // Strictly check if current user is the CEO approver
     let is_ceo = Boolean(frm.doc.ceo_approver && frappe.session.user === frm.doc.ceo_approver);
@@ -1380,7 +1386,7 @@ function setup_workflow_actions_guard(frm) {
             frm.page.actions.parent().addClass("hide");
         }
         frm.disable_save();
-    } else if (state !== "Draft") {
+    } else if ((state !== "Maker" && state !== "Draft")) {
         if (!is_active_approver) {
             frm.page.clear_actions_menu();
             if (frm.page.actions && frm.page.actions.parent) {
@@ -1406,7 +1412,7 @@ function setup_workflow_actions_guard(frm) {
             }
         }
     } else {
-        // In Draft:
+        // In Maker:
         if (!is_contract_manager) {
             frm.page.clear_actions_menu();
             if (frm.page.actions && frm.page.actions.parent) {

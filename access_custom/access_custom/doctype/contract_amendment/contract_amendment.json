@@ -142,7 +142,7 @@
    "fetch_from": "contract.project_title",
    "fieldname": "project_title",
    "fieldtype": "Data",
-   "label": "Project Title",
+   "label": "Customer Title",
    "read_only": 1
   },
   {
@@ -326,23 +326,27 @@
   {
    "fieldname": "section_break_scope",
    "fieldtype": "Section Break",
-   "label": "Scope / Service Changes"
+   "label": "Scope / Service Changes",
+   "depends_on": "eval:doc.impact_scope == 1"
   },
   {
    "fieldname": "scope_changes",
    "fieldtype": "Table",
    "label": "Scope / Service Changes",
-   "options": "Amendment Scope Change"
+   "options": "Amendment Scope Change",
+   "depends_on": "eval:doc.impact_scope == 1"
   },
   {
    "fieldname": "scope_description",
-   "fieldtype": "Text",
-   "label": "Detailed Description of Changes"
+   "fieldtype": "Small Text",
+   "label": "Detailed Description of Changes",
+   "depends_on": "eval:doc.impact_scope == 1"
   },
   {
    "fieldname": "section_break_timeline",
    "fieldtype": "Section Break",
-   "label": "Timeline Changes"
+   "label": "Timeline Changes",
+   "depends_on": "eval:doc.impact_timeline == 1"
   },
   {
    "default": "0",
@@ -385,7 +389,8 @@
   {
    "fieldname": "section_break_finance",
    "fieldtype": "Section Break",
-   "label": "Financial Changes"
+   "label": "Financial Changes",
+   "depends_on": "eval:doc.impact_value == 1"
   },
   {
    "default": "0",
@@ -431,24 +436,28 @@
   {
    "fieldname": "section_break_realloc",
    "fieldtype": "Section Break",
-   "label": "Budget Reallocation"
+   "label": "Budget Reallocation",
+   "depends_on": "eval:doc.impact_budget_dist == 1"
   },
   {
    "fieldname": "budget_reallocations",
    "fieldtype": "Table",
    "label": "Budget Reallocations",
-   "options": "Amendment Budget Reallocation"
+   "options": "Amendment Budget Reallocation",
+   "depends_on": "eval:doc.impact_budget_dist == 1"
   },
   {
    "fieldname": "section_break_resources",
    "fieldtype": "Section Break",
-   "label": "Resource Changes"
+   "label": "Resource Changes",
+   "depends_on": "eval:doc.impact_fte == 1"
   },
   {
    "fieldname": "resource_changes",
    "fieldtype": "Table",
    "label": "Resource Changes",
-   "options": "Amendment Resource Change"
+   "options": "Amendment Resource Change",
+   "depends_on": "eval:doc.impact_fte == 1"
   },
   {
    "fieldname": "section_break_approvals",

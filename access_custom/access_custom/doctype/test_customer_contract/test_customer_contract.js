@@ -2,11 +2,28 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on("Test Customer Contract", {
+    party_name: function(frm) {
+        if (frm.doc.party_name && frm.doc.party_type === "Customer") {
+            frappe.db.get_value("Customer", frm.doc.party_name, ["custom_status", "custom_reason_for_inactivation"], (r) => {
+                let data = (r && r.message) ? r.message : r;
+                if (data && data.custom_status === "Inactive") {
+                    let reason = data.custom_reason_for_inactivation ? `<br><br><b>Reason for Inactivation:</b> ${frappe.utils.escape_html(data.custom_reason_for_inactivation)}` : "";
+                    frm.set_value("party_name", "");
+                    frm.set_value("customer_name", "");
+                    frappe.msgprint({
+                        title: __("Inactive Customer Cannot Be Selected"),
+                        indicator: "red",
+                        message: __("Customer <b>{0}</b> is currently <b>Inactive</b> and cannot be selected for contracts until their status is Active.{1}", [frm.doc.party_name || "selected", reason])
+                    });
+                }
+            });
+        }
+    },
     customer_document: function(frm) {
         validate_contract_attachment(frm, "customer_document", ["pdf"], "PDF (.pdf)");
     },
     upload_signed_document: function(frm) {
-        let state = frm.doc.workflow_state || "Draft";
+        let state = frm.doc.workflow_state || "Maker";
         let ceo_status = frm.doc.ceo_approver_status || "";
         let is_ceo_approved = (
             state === "In Progress" ||
@@ -57,7 +74,7 @@ frappe.ui.form.on("Test Customer Contract", {
     },
 
     validate: function(frm) {
-        let state = frm.doc.workflow_state || "Draft";
+        let state = frm.doc.workflow_state || "Maker";
         let ceo_status = frm.doc.ceo_approver_status || "";
         let is_ceo_approved = (
             state === "In Progress" ||
@@ -126,6 +143,16 @@ frappe.ui.form.on("Test Customer Contract", {
     },
 
     onload: function(frm) {
+        frm.set_query("party_name", function() {
+            if (frm.doc.party_type === "Customer") {
+                return {
+                    filters: {
+                        custom_status: "Active",
+                        disabled: 0
+                    }
+                };
+            }
+        });
         if (frm.is_new()) {
             frm.save_disabled = false;
             if (typeof frm.enable_save === "function") frm.enable_save();
@@ -241,7 +268,7 @@ frappe.ui.form.on("Test Customer Contract", {
         enforce_stage_approver_actions(frm);
 
         frm.__orig_upload_signed_document = frm.doc.upload_signed_document;
-        let is_commenced_contract = (frm.doc.workflow_state === "Commenced" || frm.doc.workflow_state === "Active/Amendment Initiated" || frm.doc.contract_status === "Commenced" || frm.doc.docstatus === 1);
+        let is_commenced_contract = (frm.doc.workflow_state === "Commenced" || frm.doc.workflow_state === "Active/Amendment Initiated" || frm.doc.workflow_state === "On Hold" || frm.doc.contract_status === "Commenced" || frm.doc.contract_status === "On Hold" || frm.doc.docstatus === 1);
 
         if (!frm.is_new()) {
             delete frm.doc.__unsaved;
@@ -585,7 +612,7 @@ function render_contract_progress_tracker(frm) {
     frm.dashboard.parent.find(".contract-progress-container").remove();
 
     let steps = [
-        { id: "Draft", label: "Draft" },
+        { id: "Maker", label: "Maker" },
         { id: "Pending Team Lead Approval", label: "Team Lead" },
         { id: "Pending Level 2.1 Legal Approval", label: "Legal" },
         { id: "Pending Level 2.2 Finance Approval", label: "Finance" },
@@ -595,7 +622,7 @@ function render_contract_progress_tracker(frm) {
         { id: "Commenced", label: "Commenced" }
     ];
 
-    let current_state = frm.doc.workflow_state || frm.doc.status || "Draft";
+    let current_state = frm.doc.workflow_state || frm.doc.status || "Maker";
     let is_rejected = current_state.includes("Reject");
     let rejected_stage = get_contract_rejection_stage(frm);
     if (rejected_stage) is_rejected = true;
@@ -607,7 +634,7 @@ function render_contract_progress_tracker(frm) {
         active_index = steps.findIndex(s => s.id === rejected_stage.name);
         if (active_index < 0) active_index = 1;
     } else {
-        let idx = steps.findIndex(s => s.id === current_state || current_state.includes(s.label));
+        let idx = steps.findIndex(s => s.id === current_state || (s.id === "Maker" && (current_state === "Draft" || current_state === "Maker")) || current_state.includes(s.label));
         active_index = idx >= 0 ? idx : 0;
     }
 
@@ -705,7 +732,7 @@ function render_contract_progress_tracker(frm) {
 // ==============================================================================
 function apply_contract_approver_field_locking(frm) {
     if (frm.is_new()) return;
-    let state = frm.doc.workflow_state || "Draft";
+    let state = frm.doc.workflow_state || "Maker";
 
     const review_matrix = [
         { review: "lead_approver_review", status: "lead_approver_status", approver: "lead_approver", state: "Pending Team Lead Approval" },
@@ -850,7 +877,7 @@ function render_contract_timeline_tree(frm) {
         let curr_val = format_currency(frm.doc.current_contract_value || frm.doc.project_budget || 0);
         let curr_end = frm.doc.current_end_date || frm.doc.end_date || "N/A";
         let curr_ver = frm.doc.current_version || "1.0";
-        let status = frm.doc.workflow_state || "Draft";
+        let status = frm.doc.workflow_state || "Maker";
 
         let html = `
         <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin: 10px 0;">
@@ -1213,7 +1240,7 @@ function validate_contract_attachment(frm, fieldname, allowed_extensions, allowe
 function setup_signed_document_access(frm) {
     if (!frm.doc) return;
 
-    let state = frm.doc.workflow_state || "Draft";
+    let state = frm.doc.workflow_state || "Maker";
     let ceo_status = frm.doc.ceo_approver_status || "";
     let is_ceo_approved = (
         state === "In Progress" ||
@@ -1269,7 +1296,7 @@ function setup_contract_attachment_restrictions(frm) {
             }
             f.on_attach_click = function() {
                 if (cfg.field === "upload_signed_document") {
-                    let state = frm.doc.workflow_state || "Draft";
+                    let state = frm.doc.workflow_state || "Maker";
                     let ceo_status = frm.doc.ceo_approver_status || "";
                     let is_ceo_approved = (
                         state === "In Progress" ||
@@ -1316,8 +1343,8 @@ function setup_contract_attachment_restrictions(frm) {
 
 function remove_frappe_default_actions(frm) {
     if (!frm || !frm.doc || frm.is_new()) return;
-    let allowed_states = ["Commenced", "Active/Amendment Initiated"];
-    let is_eligible = allowed_states.includes(frm.doc.workflow_state) || frm.doc.contract_status === "Commenced" || frm.doc.docstatus === 1;
+    let allowed_states = ["Commenced", "Active/Amendment Initiated", "On Hold"];
+    let is_eligible = allowed_states.includes(frm.doc.workflow_state) || frm.doc.contract_status === "Commenced" || frm.doc.contract_status === "On Hold" || frm.doc.docstatus === 1;
     if (!is_eligible) return;
     try {
         if (frm.toolbar) {
@@ -1348,8 +1375,7 @@ function remove_frappe_default_actions(frm) {
             frm.remove_custom_button("Amend");
             frm.remove_custom_button(__("Cancel"));
             frm.remove_custom_button("Cancel");
-            frm.remove_custom_button(__("Actions"));
-            frm.remove_custom_button("Actions");
+            // Retain Actions button
         }
         if (frm.page && frm.page.wrapper) {
             frm.page.wrapper.find('.btn-primary:contains("Amend"), .btn-secondary:contains("Amend"), button[data-label="Amend"]').remove();
@@ -1367,8 +1393,8 @@ function remove_frappe_default_actions(frm) {
 // ==============================================================================
 function setup_contract_actions_menu(frm) {
     if (!frm || !frm.doc || frm.is_new()) return;
-    let allowed_states = ["Commenced", "Active/Amendment Initiated"];
-    let is_eligible = allowed_states.includes(frm.doc.workflow_state) || frm.doc.contract_status === "Commenced" || frm.doc.docstatus === 1;
+    let allowed_states = ["Commenced", "Active/Amendment Initiated", "On Hold"];
+    let is_eligible = allowed_states.includes(frm.doc.workflow_state) || frm.doc.contract_status === "Commenced" || frm.doc.contract_status === "On Hold" || frm.doc.docstatus === 1;
     if (!is_eligible) {
         if (frm.page && frm.page.actions_btn_group) {
             let $btn = frm.page.actions_btn_group.find("button");
@@ -1397,8 +1423,21 @@ function setup_contract_actions_menu(frm) {
 
         remove_frappe_default_actions(frm);
 
-        // 1. Direct DOM population of .actions-btn-group
+        // 1. Direct DOM population of .actions-btn-group (with dynamic creation fallback)
+        let $page_actions = frm.page.page_actions || (frm.page.wrapper && frm.page.wrapper.find(".page-actions"));
         let $actions_grp = frm.page.actions_btn_group || (frm.page.wrapper && frm.page.wrapper.find(".actions-btn-group"));
+
+        if ((!$actions_grp || !$actions_grp.length) && $page_actions && $page_actions.length) {
+            $actions_grp = $(`
+                <div class="actions-btn-group btn-group" style="display: inline-block !important; margin-left: 8px;">
+                    <button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="background-color: #16a34a !important; border-color: #16a34a !important; color: #ffffff !important; font-weight: 600 !important;">
+                        <span class="actions-btn-group-label">Actions</span> <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-right"></ul>
+                </div>
+            `).prependTo($page_actions);
+            frm.page.actions_btn_group = $actions_grp;
+        }
 
         if ($actions_grp && $actions_grp.length) {
             $actions_grp.removeClass("hide hidden-xl hidden-xs").show().css({
@@ -1422,52 +1461,94 @@ function setup_contract_actions_menu(frm) {
                     "opacity": "1"
                 }).show();
 
-            let $ul = $actions_grp.find(".dropdown-menu");
-            $ul.empty();
+            // Dynamically check if this contract is currently on hold to show Resume option strictly for Contract Manager
+            frappe.db.get_list("Contract On Hold", {
+                filters: {
+                    contract: frm.doc.name,
+                    status: "On Hold"
+                },
+                fields: ["name", "status"]
+            }).then(holds => {
+                let active_hold = (holds && holds.length > 0) ? holds[0] : null;
+                let is_on_hold = Boolean(active_hold || frm.doc.contract_status === "On Hold" || frm.doc.workflow_state === "On Hold");
 
-            const lifecycle_actions = [
-                { label: __("Create Amendment"), dt: "Contract Amendment" },
-                { label: __("On Hold"), dt: "Contract On Hold" },
-                { label: __("Termination"), dt: "Contract Termination" },
-                { label: __("Close Contract"), dt: "Contract Closure" }
-            ];
+                let lifecycle_actions = [
+                    { label: __("Create Amendment"), dt: "Contract Amendment" },
+                    { label: __("On Hold"), dt: "Contract On Hold" },
+                    { label: __("Termination"), dt: "Contract Termination" },
+                    { label: __("Close Contract"), dt: "Contract Closure" }
+                ];
 
-            lifecycle_actions.forEach(act => {
-                let $li = $(`
-                    <li>
-                        <a class="grey-link dropdown-item" href="#" onclick="return false;" style="padding: 8px 16px; font-weight: 500; cursor: pointer; color: #1e293b;">
-                            <span class="menu-item-label">${act.label}</span>
-                        </a>
-                    </li>
-                `);
-                $li.find("a").on("click", function(e) {
-                    e.preventDefault();
-                    frappe.call({
-                        method: "access_custom.contract_lifecycle.check_active_lifecycle_action",
-                        args: {
-                            contract_id: frm.doc.name,
-                            doctype: act.dt
-                        },
-                        callback: function(r) {
-                            if (r.message && r.message.active) {
-                                frappe.msgprint({
-                                    title: __("Active Lifecycle Action In Progress"),
-                                    indicator: "orange",
-                                    message: __("Cannot initiate <b>{0}</b> for this contract. An active <b>{1}</b> (<a href='/app/{2}/{3}'><b>{3}</b></a>) is currently in progress (Status: <b>{4}</b>). Only one lifecycle action can be active at a time until completed or rejected.", [
-                                        act.label,
-                                        r.message.doctype,
-                                        r.message.route,
-                                        r.message.name,
-                                        r.message.status
-                                    ])
-                                });
-                            } else {
-                                frappe.new_doc(act.dt, { contract: frm.doc.name });
-                            }
-                        }
+                if (is_on_hold) {
+                    // Only show Resume option if this particular contract is in hold (strictly for Contract Manager)
+                    lifecycle_actions.push({
+                        label: __("Resume"),
+                        dt: "Contract Resume",
+                        is_resume: true,
+                        hold_record: active_hold ? active_hold.name : ""
                     });
+                }
+
+                let $ul = $actions_grp.find(".dropdown-menu");
+                $ul.empty();
+
+                lifecycle_actions.forEach(act => {
+                    let $li = $(`
+                        <li>
+                            <a class="grey-link dropdown-item" href="#" onclick="return false;" style="padding: 8px 16px; font-weight: 500; cursor: pointer; color: #1e293b;">
+                                <span class="menu-item-label">${act.label}</span>
+                            </a>
+                        </li>
+                    `);
+                    $li.find("a").on("click", function(e) {
+                        e.preventDefault();
+                        if (act.is_resume) {
+                            frappe.db.get_list("Contract Resume", {
+                                filters: {
+                                    contract: frm.doc.name,
+                                    workflow_state: ["not in", ["Resumed", "Rejected"]]
+                                },
+                                fields: ["name", "workflow_state"]
+                            }).then(resumes => {
+                                if (resumes && resumes.length > 0) {
+                                    frappe.set_route("Form", "Contract Resume", resumes[0].name);
+                                } else {
+                                    frappe.new_doc("Contract Resume", {
+                                        contract: frm.doc.name,
+                                        on_hold_record: act.hold_record || ""
+                                    });
+                                }
+                            });
+                            return;
+                        }
+
+                        frappe.call({
+                            method: "access_custom.contract_lifecycle.check_active_lifecycle_action",
+                            args: {
+                                contract_id: frm.doc.name,
+                                doctype: act.dt
+                            },
+                            callback: function(r) {
+                                if (r.message && r.message.active) {
+                                    frappe.msgprint({
+                                        title: __("Active Lifecycle Action In Progress"),
+                                        indicator: "orange",
+                                        message: __("Cannot initiate <b>{0}</b> for this contract. An active <b>{1}</b> (<a href='/app/{2}/{3}'><b>{3}</b></a>) is currently in progress (Status: <b>{4}</b>). Only one lifecycle action can be active at a time until completed or rejected.", [
+                                            act.label,
+                                            r.message.doctype,
+                                            r.message.route,
+                                            r.message.name,
+                                            r.message.status
+                                        ])
+                                    });
+                                } else {
+                                    frappe.new_doc(act.dt, { contract: frm.doc.name });
+                                }
+                            }
+                        });
+                    });
+                    $ul.append($li);
                 });
-                $ul.append($li);
             });
         }
 
@@ -1499,7 +1580,7 @@ function setup_contract_actions_menu(frm) {
                 return;
             }
             let state = frm.doc ? frm.doc.workflow_state : "";
-            let is_commenced = (state === "Commenced" || state === "Active/Amendment Initiated" || (frm.doc && frm.doc.docstatus === 1));
+            let is_commenced = (state === "Commenced" || state === "Active/Amendment Initiated" || state === "On Hold" || (frm.doc && (frm.doc.contract_status === "Commenced" || frm.doc.contract_status === "On Hold" || frm.doc.docstatus === 1)));
             if (is_commenced) {
                 frm.toolbar.can_cancel = function() { return false; };
                 frm.toolbar.can_amend = function() { return false; };
@@ -1523,7 +1604,7 @@ function setup_contract_actions_menu(frm) {
                 return;
             }
             let state = frm.doc ? frm.doc.workflow_state : "";
-            if (state === "Commenced" || state === "Active/Amendment Initiated" || (frm.doc && frm.doc.docstatus === 1)) {
+            if (state === "Commenced" || state === "Active/Amendment Initiated" || state === "On Hold" || (frm.doc && (frm.doc.contract_status === "Commenced" || frm.doc.contract_status === "On Hold" || frm.doc.docstatus === 1))) {
                 inject_actions();
                 return;
             }
@@ -1538,10 +1619,64 @@ function setup_contract_actions_menu(frm) {
     setTimeout(inject_actions, 700);
 }
 
+
+function render_lifecycle_sub_progress(frm, title, steps, current_state, docname, doctype) {
+    // Contract page only displays its primary Contract Approval Workflow Route.
+    // Lifecycle sub-actions (Amendment, Hold, Termination, Closure) are displayed via the top headline alert banner,
+    // avoiding duplicate stacked progress bars on the master contract page.
+    if (frm.dashboard && frm.dashboard.parent) {
+        frm.dashboard.parent.find(".lifecycle-sub-progress-container").remove();
+    }
+}
+
+
 function check_active_contract_lifecycle(frm) {
     if (!frm.doc || !frm.doc.name) return;
 
-    // 1. If contract is Terminated, show Terminated headline
+    const termination_steps = [
+        { id: "Termination Requested", label: "Maker" },
+        { id: "Termination Under TL Review", label: "Team Lead" },
+        { id: "Termination Under Legal Review", label: "Legal" },
+        { id: "Termination Under Finance Review", label: "Finance" },
+        { id: "Termination Under HR Review", label: "HR" },
+        { id: "Termination Under CEO Review", label: "CEO" },
+        { id: "Termination Pending Client Comm", label: "Client Comm" },
+        { id: "Termination Executed", label: "Executed" }
+    ];
+
+    const closure_steps = [
+        { id: "Closure Initiated", label: "Maker" },
+        { id: "Deliverable Closure", label: "Deliverable" },
+        { id: "Document Closure", label: "Document" },
+        { id: "Team Lead Closure", label: "Team Lead" },
+        { id: "Legal Closure", label: "Legal" },
+        { id: "Finance Closure", label: "Finance" },
+        { id: "CEO Closure", label: "CEO" },
+        { id: "Closed", label: "Closed" }
+    ];
+
+    const hold_steps = [
+        { id: "Maker", label: "Maker" },
+        { id: "Pending Team Lead Approval", label: "Team Lead" },
+        { id: "Pending Legal Approval", label: "Legal" },
+        { id: "Pending Finance Approval", label: "Finance" },
+        { id: "Pending HR Approval", label: "HR" },
+        { id: "Pending CEO Approval", label: "CEO" },
+        { id: "On Hold", label: "On Hold" }
+    ];
+
+    const amendment_steps = [
+        { id: "Maker", label: "Maker" },
+        { id: "Under Team Lead Review", label: "Team Lead" },
+        { id: "Pending Legal Review", label: "Legal" },
+        { id: "Pending Finance Review", label: "Finance" },
+        { id: "Pending HR Review", label: "HR" },
+        { id: "Pending CEO Review", label: "CEO" },
+        { id: "Pending Client Signature", label: "Counter Sign" },
+        { id: "Executed", label: "Executed" }
+    ];
+
+    // 1. If contract is Terminated, show Terminated headline & progress bar
     if (frm.doc.workflow_state === "Terminated" || frm.doc.contract_status === "Terminated") {
         frappe.db.get_list("Contract Termination", {
             filters: { contract: frm.doc.name, docstatus: 1 },
@@ -1552,18 +1687,20 @@ function check_active_contract_lifecycle(frm) {
             frm.dashboard.clear_headline();
             if (terms && terms.length > 0) {
                 frm.dashboard.set_headline(
-                    __("🛑 Contract is <b>Terminated</b> (<a href='/app/contract-termination/{0}'><b>{0}</b></a> - {1})",
+                    __("This contract is <b>Terminated</b> (<a href='/app/contract-termination/{0}'><b>{0}</b></a> - {1})",
                     [terms[0].name, terms[0].termination_type || "Formal Termination"]),
                     "red"
                 );
+                render_lifecycle_sub_progress(frm, "Contract Termination Route", termination_steps, terms[0].workflow_state || "Termination Executed", terms[0].name, "Contract Termination");
             } else {
-                frm.dashboard.set_headline(__("🛑 Contract is <b>Terminated</b>"), "red");
+                frm.dashboard.set_headline(__("This contract is <b>Terminated</b>"), "red");
+                render_lifecycle_sub_progress(frm, "Contract Termination Route", termination_steps, "Termination Executed", "", "");
             }
         });
         return;
     }
 
-    // 2. If contract is Closed, show Closed headline
+    // 2. If contract is Closed, show Closed headline & progress bar
     if (frm.doc.workflow_state === "Closed" || frm.doc.contract_status === "Closed") {
         frappe.db.get_list("Contract Closure", {
             filters: { contract: frm.doc.name, docstatus: 1 },
@@ -1574,12 +1711,14 @@ function check_active_contract_lifecycle(frm) {
             frm.dashboard.clear_headline();
             if (closes && closes.length > 0) {
                 frm.dashboard.set_headline(
-                    __("🔒 Contract is formally <b>Closed</b> (<a href='/app/contract-closure/{0}'><b>{0}</b></a>)",
+                    __("This contract is formally <b>Closed</b> (<a href='/app/contract-closure/{0}'><b>{0}</b></a>)",
                     [closes[0].name]),
                     "gray"
                 );
+                render_lifecycle_sub_progress(frm, "Contract Closure Route", closure_steps, closes[0].workflow_state || "Closed", closes[0].name, "Contract Closure");
             } else {
-                frm.dashboard.set_headline(__("🔒 Contract is formally <b>Closed</b>"), "gray");
+                frm.dashboard.set_headline(__("This contract is formally <b>Closed</b>"), "gray");
+                render_lifecycle_sub_progress(frm, "Contract Closure Route", closure_steps, "Closed", "", "");
             }
         });
         return;
@@ -1590,7 +1729,7 @@ function check_active_contract_lifecycle(frm) {
         filters: {
             contract: frm.doc.name,
             docstatus: 0,
-            workflow_state: ["not in", ["Draft", "Rejected", "Cancelled", "Executed", "Returned for Revision"]]
+            workflow_state: ["not in", ["Maker", "Draft", "Rejected", "Cancelled", "Executed", "Returned for Revision"]]
         },
         fields: ["name", "workflow_state", "amendment_type"]
     }).then(amends => {
@@ -1598,10 +1737,11 @@ function check_active_contract_lifecycle(frm) {
             let a = amends[0];
             frm.dashboard.clear_headline();
             frm.dashboard.set_headline(
-                __("Active Amendment: <a href='/app/contract-amendment/{0}'><b>{0}</b></a> ({1}) is currently <b>{2}</b>",
+                __("This contract is going under <b>Amendment</b> (<a href='/app/contract-amendment/{0}'><b>{0}</b></a> - {1}) | Stage: <b>{2}</b>",
                 [a.name, a.amendment_type, a.workflow_state]),
                 "blue"
             );
+            render_lifecycle_sub_progress(frm, "Contract Amendment Route", amendment_steps, a.workflow_state, a.name, "Contract Amendment");
             return;
         }
 
@@ -1612,13 +1752,31 @@ function check_active_contract_lifecycle(frm) {
         }).then(holds => {
             if (holds && holds.length > 0) {
                 let h = holds[0];
-                let color = h.status === "On Hold" ? "orange" : "blue";
-                let msg = h.status === "On Hold"
-                    ? __("⚠️ Contract is currently <b>ON HOLD</b> (<a href='/app/contract-on-hold/{0}'><b>{0}</b></a>) | Reason: {1} {2}",
-                        [h.name, h.hold_reason || "", h.expected_resume_date ? `| Expected Resume: ${h.expected_resume_date}` : ""])
-                    : __("Hold Request in review: <a href='/app/contract-on-hold/{0}'><b>{0}</b></a> ({1})", [h.name, h.workflow_state]);
-                frm.dashboard.clear_headline();
-                frm.dashboard.set_headline(msg, color);
+                frappe.db.get_list("Contract Resume", {
+                    filters: { on_hold_record: h.name, workflow_state: ["not in", ["Resumed", "Rejected"]] },
+                    fields: ["name", "workflow_state"]
+                }).then(resumes => {
+                    let r = (resumes && resumes.length > 0) ? resumes[0] : null;
+                    let msg = "";
+                    let color = "orange";
+                    if (r) {
+                        msg = __("This contract is going under <b>Resumption</b> (<a href='/app/contract-resume/{1}'><b>{1}</b></a>) | Current Hold: <a href='/app/contract-on-hold/{0}'><b>{0}</b></a> (Stage: <b>{2}</b>)",
+                            [h.name, r.name, r.workflow_state]);
+                        color = "blue";
+                    } else if (h.status === "On Hold") {
+                        msg = __("This contract is currently <b>On Hold</b> (<a href='/app/contract-on-hold/{0}'><b>{0}</b></a>) | Reason: {1} {2}",
+                            [h.name, h.hold_reason || "", h.expected_resume_date ? `| Expected Resume: ${h.expected_resume_date}` : ""]);
+                        color = "orange";
+                    } else {
+                        msg = __("This contract is going under <b>On Hold</b> (<a href='/app/contract-on-hold/{0}'><b>{0}</b></a>) | Stage: <b>{1}</b>", [h.name, h.workflow_state]);
+                        color = "blue";
+                    }
+                    frm.dashboard.clear_headline();
+                    frm.dashboard.set_headline(msg, color);
+                    if (frm.dashboard && frm.dashboard.parent) {
+                        frm.dashboard.parent.find(".lifecycle-sub-progress-container").remove();
+                    }
+                });
                 return;
             }
 
@@ -1631,10 +1789,11 @@ function check_active_contract_lifecycle(frm) {
                     let t = terms[0];
                     frm.dashboard.clear_headline();
                     frm.dashboard.set_headline(
-                        __("⚠️ Termination Request in progress: <a href='/app/contract-termination/{0}'><b>{0}</b></a> ({1}) is currently <b>{2}</b>",
+                        __("This contract is going under <b>Termination</b> (<a href='/app/contract-termination/{0}'><b>{0}</b></a> - {1}) | Stage: <b>{2}</b>",
                         [t.name, t.termination_type, t.workflow_state]),
                         "red"
                     );
+                    render_lifecycle_sub_progress(frm, "Contract Termination Route", termination_steps, t.workflow_state, t.name, "Contract Termination");
                     return;
                 }
 
@@ -1647,11 +1806,17 @@ function check_active_contract_lifecycle(frm) {
                         let c = closes[0];
                         frm.dashboard.clear_headline();
                         frm.dashboard.set_headline(
-                            __("ℹ️ Contract Closure in progress: <a href='/app/contract-closure/{0}'><b>{0}</b></a> ({1})",
+                            __("This contract is going under <b>Closure</b> (<a href='/app/contract-closure/{0}'><b>{0}</b></a>) | Stage: <b>{1}</b>",
                             [c.name, c.workflow_state]),
                             "blue"
                         );
+                        render_lifecycle_sub_progress(frm, "Contract Closure Route", closure_steps, c.workflow_state, c.name, "Contract Closure");
                         return;
+                    }
+
+                    // No active lifecycle sub-document: remove sub-progress container
+                    if (frm.dashboard && frm.dashboard.parent) {
+                        frm.dashboard.parent.find(".lifecycle-sub-progress-container").remove();
                     }
 
                     // Check Executed Amendments: show active version and executed amendment only if still active/commenced
@@ -1667,7 +1832,7 @@ function check_active_contract_lifecycle(frm) {
                                 let ver = frm.doc.current_version || e.new_version || "1.1";
                                 frm.dashboard.clear_headline();
                                 frm.dashboard.set_headline(
-                                    __("🌿 Active Version: <b>v{0}</b> (Amended via <a href='/app/contract-amendment/{1}'><b>{1}</b></a> - {2})",
+                                    __("Active Version: <b>v{0}</b> (Amended via <a href='/app/contract-amendment/{1}'><b>{1}</b></a> - {2})",
                                     [ver, e.name, e.amendment_type]),
                                     "green"
                                 );
@@ -1684,23 +1849,22 @@ function check_active_contract_lifecycle(frm) {
     });
 }
 
-
 function enforce_stage_approver_actions(frm) {
     if (!frm.doc || !frm.doc.workflow_state || frm.is_new()) return;
 
     const state = frm.doc.workflow_state;
 
     // Commenced / Active lifecycle actions
-    if (state === "Commenced" || state === "Active/Amendment Initiated" || frm.doc.docstatus === 1) {
+    if (state === "Commenced" || state === "Active/Amendment Initiated" || state === "On Hold" || frm.doc.contract_status === "On Hold" || frm.doc.docstatus === 1) {
         setup_contract_actions_menu(frm);
         return;
     }
 
-    // 1. If in Draft state, Returned for Revision, or In Progress (Counter Signing)
-    if (state === "Draft" || state === "Returned for Revision" || state === "In Progress") {
+    // 1. If in Maker/Draft state, Returned for Revision, or In Progress (Counter Signing)
+    if (state === "Draft" || state === "Maker" || state === "Returned for Revision" || state === "In Progress") {
         let is_owner = (frappe.session.user === frm.doc.owner);
         let is_contract_owner = (frm.doc.contract_owner && frappe.session.user === frm.doc.contract_owner);
-        let has_cm_role = frappe.user_roles.includes("Contract Manager") || frappe.user_roles.includes("System Manager");
+        let has_cm_role = (frappe.user_roles && (frappe.user_roles.includes("Contract Manager") || frappe.user_roles.includes("System Manager")));
         let is_admin = (frappe.session.user === "Administrator");
 
         if (!is_owner && !is_contract_owner && !has_cm_role && !is_admin) {

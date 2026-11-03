@@ -736,5 +736,14 @@
   "name": "Appraisal Rejected",
   "style": "",
   "workflow_state_name": "Appraisal Rejected"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-11-02 17:27:08.558076",
+  "name": "Maker",
+  "style": "Primary",
+  "workflow_state_name": "Maker"
  }
 ]

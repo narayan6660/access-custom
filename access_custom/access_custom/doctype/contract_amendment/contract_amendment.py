@@ -408,7 +408,7 @@ class ContractAmendment(Document):
 			return
 
 		state = self.workflow_state or ""
-		if state not in ["Draft", "Executed", "Rejected", "Cancelled"]:
+		if state not in ["Maker", "Draft", "Executed", "Rejected", "Cancelled"]:
 			current_state = frappe.db.get_value("Test Customer Contract", self.contract, "workflow_state")
 			if current_state not in ["Active/Amendment Initiated"]:
 				frappe.db.set_value("Test Customer Contract", self.contract, {
@@ -423,7 +423,7 @@ class ContractAmendment(Document):
 			other_active = frappe.db.exists("Contract Amendment", {
 				"contract": self.contract,
 				"name": ["!=", self.name],
-				"workflow_state": ["not in", ["Draft", "Executed", "Rejected", "Cancelled"]],
+				"workflow_state": ["not in", ["Maker", "Draft", "Executed", "Rejected", "Cancelled"]],
 				"docstatus": 0
 			})
 			if not other_active:

@@ -2,7 +2,7 @@
  "actions": [],
  "allow_import": 1,
  "allow_rename": 1,
- "autoname": "TEST-.YYYY.-.#####",
+ "autoname": "autoname",
  "creation": "2026-09-24 16:26:02.039176",
  "doctype": "DocType",
  "editable_grid": 1,
@@ -186,7 +186,7 @@
    "fieldname": "project_title",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Project Title",
+   "label": "Customer Title",
    "reqd": 1
   },
   {
@@ -218,13 +218,13 @@
    "in_standard_filter": 1,
    "label": "Status",
    "no_copy": 1,
-   "options": "\nDraft\nPending Team Lead Approval\nPending Level 2.1 Legal Approval\nPending Level 2.2 Finance Approval\nPending Level 2.3 HR Approval\nPending CEO Approval\nIn Progress\nCommenced\nUnder Amendment Process\nUnder On Hold Process\nOn Hold\nUnder Termination Process\nTerminated\nUnder Closure Process\nClosed"
+   "options": "\nMaker\nPending Team Lead Approval\nPending Level 2.1 Legal Approval\nPending Level 2.2 Finance Approval\nPending Level 2.3 HR Approval\nPending CEO Approval\nIn Progress\nCommenced\nUnder Amendment Process\nUnder On Hold Process\nOn Hold\nUnder Termination Process\nTerminated\nUnder Closure Process\nClosed"
   },
   {
    "fieldname": "project_currency",
    "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Project Currency",
+   "label": "Customer Currency",
    "options": "Currency",
    "reqd": 1
   },
@@ -248,7 +248,7 @@
   {
    "fieldname": "country",
    "fieldtype": "Table MultiSelect",
-   "label": "Project Geography",
+   "label": "Customer Geography",
    "options": "Contract Country Selection"
   },
   {
@@ -269,7 +269,7 @@
   {
    "fieldname": "project_cost",
    "fieldtype": "Currency",
-   "label": "Project Cost"
+   "label": "Contract Cost"
   },
   {
    "fieldname": "section_break_rcux",
@@ -665,7 +665,7 @@
    "fieldname": "contract_status",
    "fieldtype": "Select",
    "label": "Contract Status",
-   "options": "Draft\nUnder Review\nPending Approval\nPending Signature\nActive\nOn Hold\nSuspended\nExpired\nRenewal in Progress\nRenewed\nTerminated\nCancelled\nClosed\nIn Progress\nCommenced\nCompleted"
+   "options": "Maker\nUnder Review\nPending Approval\nPending Signature\nActive\nOn Hold\nSuspended\nExpired\nRenewal in Progress\nRenewed\nTerminated\nCancelled\nClosed\nIn Progress\nCommenced\nCompleted"
   },
   {
    "fieldname": "column_break_0pyk",

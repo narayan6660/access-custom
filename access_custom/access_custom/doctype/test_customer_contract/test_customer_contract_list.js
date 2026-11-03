@@ -51,12 +51,29 @@ window.open_contract_status_doc = function(contract_name, raw_status, e, target_
                 frappe.set_route("Form", "Test Customer Contract", contract_name);
             }
         });
+    } else if (raw_status === "Under Resumption Process" || (raw_status && raw_status.includes("Resumption"))) {
+        frappe.db.get_list("Contract Resume", {
+            filters: {
+                contract: contract_name,
+                docstatus: 0,
+                workflow_state: ["not in", ["Resumed", "Rejected"]]
+            },
+            fields: ["name"],
+            order_by: "creation desc",
+            limit: 1
+        }).then(r => {
+            if (r && r.length) {
+                frappe.set_route("Form", "Contract Resume", r[0].name);
+            } else {
+                frappe.set_route("Form", "Test Customer Contract", contract_name);
+            }
+        });
     } else if (raw_status === "Under Amendment Process" || raw_status === "Under Amendment" || (raw_status && raw_status.includes("Amendment"))) {
         frappe.db.get_list("Contract Amendment", {
             filters: {
                 contract: contract_name,
                 docstatus: 0,
-                workflow_state: ["not in", ["Draft", "Rejected", "Cancelled", "Executed", "Returned for Revision"]]
+                workflow_state: ["not in", ["Maker", "Draft", "Rejected", "Cancelled", "Executed", "Returned for Revision"]]
             },
             fields: ["name"],
             order_by: "creation desc",
@@ -89,7 +106,7 @@ window.open_contract_status_doc = function(contract_name, raw_status, e, target_
 
 // Lifecycle Status Resolution Helper
 function resolve_contract_display_status(doc, listview) {
-    if (!doc) return { label: "Draft", color: "blue", doctype: "Test Customer Contract", docname: "", raw: "Draft" };
+    if (!doc) return { label: "Maker", color: "blue", doctype: "Test Customer Contract", docname: "", raw: "Maker" };
 
     // 1. Cached in-flight / lifecycle status from parallel queries
     if (listview && listview.lifecycle_cache && listview.lifecycle_cache[doc.name]) {
@@ -107,6 +124,9 @@ function resolve_contract_display_status(doc, listview) {
     if (wf === "Closed" || cs === "Closed" || st === "Closed") {
         return { label: "Closed", color: "gray", doctype: "Contract Closure", docname: "", raw: "Closed" };
     }
+    if (wf === "Under Resumption Process" || st === "Under Resumption Process") {
+        return { label: "Under Resumption Process", color: "blue", doctype: "Contract Resume", docname: "", raw: "Under Resumption Process" };
+    }
     if (cs === "On Hold" || wf === "On Hold" || st === "On Hold") {
         return { label: "On Hold", color: "orange", doctype: "Contract On Hold", docname: "", raw: "On Hold" };
     }
@@ -115,8 +135,8 @@ function resolve_contract_display_status(doc, listview) {
     }
 
     // 3. Pre-commencement stages
-    if (wf === "Draft" || (!wf && (cs === "Draft" || st === "Draft"))) {
-        return { label: "Draft", color: "blue", doctype: "Test Customer Contract", docname: "", raw: "Draft" };
+    if (wf === "Maker" || wf === "Draft" || (!wf && (cs === "Maker" || cs === "Draft" || st === "Maker" || st === "Draft"))) {
+        return { label: "Maker", color: "blue", doctype: "Test Customer Contract", docname: "", raw: "Maker" };
     }
     if (wf.startsWith("Pending") || st.startsWith("Pending") || cs === "Pending Approval") {
         let label = wf || st || cs;
@@ -131,7 +151,7 @@ function resolve_contract_display_status(doc, listview) {
         return { label: "Commenced", color: "green", doctype: "Test Customer Contract", docname: "", raw: "Commenced" };
     }
 
-    return { label: wf || st || cs || "Draft", color: "blue", doctype: "Test Customer Contract", docname: "", raw: "Draft" };
+    return { label: wf || st || cs || "Maker", color: "blue", doctype: "Test Customer Contract", docname: "", raw: "Maker" };
 }
 
 // Background Batch Fetcher for in-flight lifecycle sub-documents
@@ -151,7 +171,7 @@ function sync_active_lifecycle_cache(listview) {
             filters: {
                 contract: ["in", contract_names],
                 docstatus: 0,
-                workflow_state: ["not in", ["Draft", "Rejected", "Cancelled", "Executed", "Returned for Revision"]]
+                workflow_state: ["not in", ["Maker", "Draft", "Rejected", "Cancelled", "Executed", "Returned for Revision"]]
             },
             fields: ["name", "contract", "workflow_state", "creation"],
             order_by: "creation desc",
@@ -177,8 +197,19 @@ function sync_active_lifecycle_cache(listview) {
             fields: ["name", "contract", "workflow_state", "docstatus", "creation"],
             order_by: "creation desc",
             limit: 100
+        }),
+        // 5. In-flight Resumptions (docstatus: 0)
+        frappe.db.get_list("Contract Resume", {
+            filters: {
+                contract: ["in", contract_names],
+                docstatus: 0,
+                workflow_state: ["not in", ["Resumed", "Rejected"]]
+            },
+            fields: ["name", "contract", "workflow_state", "creation"],
+            order_by: "creation desc",
+            limit: 100
         })
-    ]).then(([amends, holds, terms, closures]) => {
+    ]).then(([amends, holds, terms, closures, resumes]) => {
         // A. Process Closures (Highest precedence)
         (closures || []).forEach(cl => {
             if (cl.contract && !listview.lifecycle_cache[cl.contract]) {
@@ -203,6 +234,19 @@ function sync_active_lifecycle_cache(listview) {
                     doctype: "Contract Termination",
                     docname: t.name,
                     raw: is_term ? "Terminated" : "Under Termination Process"
+                };
+            }
+        });
+
+        // C1. Process In-flight Resumptions (Takes precedence over On Hold)
+        (resumes || []).forEach(res => {
+            if (res.contract && !listview.lifecycle_cache[res.contract]) {
+                listview.lifecycle_cache[res.contract] = {
+                    label: "Under Resumption Process",
+                    color: "blue",
+                    doctype: "Contract Resume",
+                    docname: res.name,
+                    raw: "Under Resumption Process"
                 };
             }
         });
@@ -315,40 +359,45 @@ const custom_list_css = `
     display: none !important;
 }
 
-/* 1. Contract ID (160px) */
+/* 1. Contract ID (145px) */
 .col-contract-id,
 .list-row-col.col-contract-id,
 .list-subject.col-contract-id {
-    flex: 0 0 160px !important;
-    width: 160px !important;
-    min-width: 160px !important;
-    max-width: 160px !important;
+    flex: 0 0 145px !important;
+    width: 145px !important;
+    min-width: 145px !important;
+    max-width: 145px !important;
     flex-shrink: 0 !important;
     flex-grow: 0 !important;
     padding-right: 8px !important;
+    margin-right: 12px !important;
 }
 
-/* 2. Customer Id (120px) */
+/* 2. Customer Id (95px + 16px 4-space gap) */
 .col-party-name,
 .list-row-col.col-party-name {
-    flex: 0 0 120px !important;
-    width: 120px !important;
-    min-width: 120px !important;
-    max-width: 120px !important;
+    flex: 0 0 95px !important;
+    width: 95px !important;
+    min-width: 95px !important;
+    max-width: 95px !important;
     flex-shrink: 0 !important;
     flex-grow: 0 !important;
-    padding-right: 8px !important;
+    padding-right: 0px !important;
+    margin-right: 16px !important;
 }
 
-/* 3. Project Title (Expands to all middle space) */
+/* 3. Customer Title (200px, left-aligned, brings Currency to the left) */
 .col-project-title,
 .list-row-col.col-project-title {
-    flex: 1 1 auto !important;
-    flex-grow: 1 !important;
-    min-width: 180px !important;
-    width: auto !important;
-    max-width: none !important;
-    padding-right: 15px !important;
+    flex: 0 0 200px !important;
+    width: 200px !important;
+    min-width: 200px !important;
+    max-width: 200px !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    text-align: left !important;
+    padding-right: 0px !important;
+    margin-right: 16px !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
     white-space: nowrap !important;
@@ -373,43 +422,49 @@ const custom_list_css = `
     white-space: nowrap !important;
 }
 
-/* 4. Currency (55px) */
+/* 4. Currency (50px, shifted left next to Customer Title) */
 .col-currency,
 .list-row-col.col-currency {
-    flex: 0 0 55px !important;
-    width: 55px !important;
-    min-width: 55px !important;
-    max-width: 55px !important;
+    flex: 0 0 50px !important;
+    width: 50px !important;
+    min-width: 50px !important;
+    max-width: 50px !important;
     flex-shrink: 0 !important;
     flex-grow: 0 !important;
     text-align: center !important;
-    padding: 0 4px !important;
+    padding: 0 !important;
+    margin-right: 16px !important;
 }
 
-/* 5. Budget (135px) */
+/* 5. Budget (160px - prevents any large number collision) */
 .col-budget,
 .list-row-col.col-budget {
-    flex: 0 0 135px !important;
-    width: 135px !important;
-    min-width: 135px !important;
-    max-width: 135px !important;
+    flex: 0 0 160px !important;
+    width: 160px !important;
+    min-width: 160px !important;
+    max-width: 160px !important;
     flex-shrink: 0 !important;
     flex-grow: 0 !important;
     text-align: right !important;
-    padding-right: 12px !important;
+    padding-right: 0px !important;
+    margin-right: 16px !important;
     white-space: nowrap !important;
 }
 
-/* 6. Status (150px) */
+/* 6. Status (Left-aligned, starts 4 spaces after Budget) */
 .col-status,
 .list-row-col.col-status {
-    flex: 0 0 150px !important;
-    width: 150px !important;
-    min-width: 150px !important;
-    max-width: 150px !important;
+    flex: 0 0 175px !important;
+    width: 175px !important;
+    min-width: 175px !important;
     flex-shrink: 0 !important;
     flex-grow: 0 !important;
-    text-align: center !important;
+    text-align: left !important;
+    padding-left: 0px !important;
+    margin-right: 16px !important;
+    display: flex !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
     overflow: visible !important;
     text-overflow: clip !important;
 }
@@ -507,7 +562,7 @@ const custom_list_css = `
 
 const clean_status_options = [
     "",
-    "Draft",
+    "Maker",
     "Pending Team Lead Approval",
     "Pending Level 2.1 Legal Approval",
     "Pending Level 2.2 Finance Approval",
@@ -518,6 +573,7 @@ const clean_status_options = [
     "Under Amendment Process",
     "Under On Hold Process",
     "On Hold",
+    "Under Resumption Process",
     "Under Termination Process",
     "Terminated",
     "Under Closure Process",
@@ -540,7 +596,8 @@ function sanitize_status_filter(listview) {
 
     // Direct DOM sanitization to strip legacy options immediately
     const apply_dom_filter_cleanup = () => {
-        let $selects = $('select[data-fieldname="status"], .standard-filter-section select');
+        if (!listview || !listview.$page) return;
+        let $selects = listview.$page.find('select[data-fieldname="status"], .standard-filter-section select');
         $selects.each(function() {
             let $sel = $(this);
             let cur_val = $sel.val();
@@ -578,6 +635,7 @@ function is_custom_lifecycle_status(val) {
         "Under Amendment",
         "Under On Hold Process",
         "On Hold",
+        "Under Resumption Process",
         "Under Termination Process",
         "Terminated",
         "Under Closure Process",
@@ -592,6 +650,15 @@ async function get_contracts_for_lifecycle_status(val) {
         if (val === "Under On Hold Process") {
             let r = await frappe.db.get_list("Contract On Hold", {
                 filters: { status: "Pending Approval", docstatus: ["!=", 2] },
+                fields: ["contract"],
+                limit: 500
+            });
+            return [...new Set((r || []).map(x => x.contract).filter(Boolean))];
+        }
+
+        if (val === "Under Resumption Process") {
+            let r = await frappe.db.get_list("Contract Resume", {
+                filters: { docstatus: 0, workflow_state: ["not in", ["Resumed", "Rejected"]] },
                 fields: ["contract"],
                 limit: 500
             });
@@ -619,7 +686,7 @@ async function get_contracts_for_lifecycle_status(val) {
             let r = await frappe.db.get_list("Contract Amendment", {
                 filters: {
                     docstatus: 0,
-                    workflow_state: ["not in", ["Draft", "Rejected", "Cancelled", "Executed", "Returned for Revision"]]
+                    workflow_state: ["not in", ["Maker", "Draft", "Rejected", "Cancelled", "Executed", "Returned for Revision"]]
                 },
                 fields: ["contract"],
                 limit: 500
@@ -684,7 +751,7 @@ async function get_contracts_for_lifecycle_status(val) {
                 frappe.db.get_list("Contract Amendment", {
                     filters: {
                         docstatus: 0,
-                        workflow_state: ["not in", ["Draft", "Rejected", "Cancelled", "Executed", "Returned for Revision"]]
+                        workflow_state: ["not in", ["Maker", "Draft", "Rejected", "Cancelled", "Executed", "Returned for Revision"]]
                     },
                     fields: ["contract"],
                     limit: 500
@@ -794,12 +861,12 @@ frappe.listview_settings['Test Customer Contract'] = {
                 }
             });
 
-            // 3. Project Title
+            // 3. Customer Title
             this.columns.push({
                 type: "Field",
                 custom_class: "col-project-title",
                 df: {
-                    label: __("Project Title"),
+                    label: __("Customer Title"),
                     fieldname: "project_title",
                     fieldtype: "Data"
                 }
@@ -839,38 +906,38 @@ frappe.listview_settings['Test Customer Contract'] = {
                 <header class="level list-row-head text-muted">
                     <div class="level-left list-header-subject" style="display: flex !important; flex: 1 1 auto !important; align-items: center !important; width: calc(100% - 90px) !important; max-width: calc(100% - 90px) !important; min-width: 0 !important; margin-right: 10px !important; overflow: hidden !important;">
                         <!-- 1. Contract ID -->
-                        <div class="list-row-col list-subject level col-contract-id" style="flex: 0 0 160px !important; width: 160px !important; min-width: 160px !important; max-width: 160px !important; padding-right: 8px !important; display: flex !important; align-items: center !important;">
+                        <div class="list-row-col list-subject level col-contract-id" style="flex: 0 0 145px !important; width: 145px !important; min-width: 145px !important; max-width: 145px !important; padding-right: 8px !important; margin-right: 12px !important; display: flex !important; align-items: center !important;">
                             <input class="level-item list-check-all" type="checkbox" title="${__("Select All")}" style="margin-right: 8px !important;">
                             <span class="level-item" data-sort-by="name" title="${__("Click to sort by Contract ID")}" style="font-weight: 600; cursor: pointer;">
                                 ${__("Contract ID")}
                             </span>
                         </div>
                         <!-- 2. Customer Id -->
-                        <div class="list-row-col hidden-xs col-party-name" style="flex: 0 0 120px !important; width: 120px !important; min-width: 120px !important; max-width: 120px !important; padding-right: 8px !important;">
+                        <div class="list-row-col hidden-xs col-party-name" style="flex: 0 0 95px !important; width: 95px !important; min-width: 95px !important; max-width: 95px !important; padding-right: 0px !important; margin-right: 16px !important;">
                             <span data-sort-by="party_name" title="${__("Click to sort by Customer Id")}" style="font-weight: 600; cursor: pointer;">
                                 ${__("Customer Id")}
                             </span>
                         </div>
-                        <!-- 3. Project Title -->
-                        <div class="list-row-col hidden-xs col-project-title" style="flex: 1 1 auto !important; flex-grow: 1 !important; min-width: 180px !important; width: auto !important; max-width: none !important; padding-right: 15px !important;">
-                            <span data-sort-by="project_title" title="${__("Click to sort by Project Title")}" style="font-weight: 600; cursor: pointer;">
-                                ${__("Project Title")}
+                        <!-- 3. Customer Title (Brings Currency left) -->
+                        <div class="list-row-col hidden-xs col-project-title" style="flex: 0 0 200px !important; width: 200px !important; min-width: 200px !important; max-width: 200px !important; text-align: left !important; padding-right: 0px !important; margin-right: 16px !important;">
+                            <span data-sort-by="project_title" title="${__("Click to sort by Customer Title")}" style="font-weight: 600; cursor: pointer;">
+                                ${__("Customer Title")}
                             </span>
                         </div>
                         <!-- 4. Currency -->
-                        <div class="list-row-col hidden-xs col-currency text-center" style="flex: 0 0 55px !important; width: 55px !important; min-width: 55px !important; max-width: 55px !important; text-align: center !important; padding: 0 4px !important;">
+                        <div class="list-row-col hidden-xs col-currency text-center" style="flex: 0 0 50px !important; width: 50px !important; min-width: 50px !important; max-width: 50px !important; text-align: center !important; padding: 0 !important; margin-right: 16px !important;">
                             <span data-sort-by="project_currency" title="${__("Click to sort by Currency")}" style="font-weight: 600; cursor: pointer;">
                                 ${__("Currency")}
                             </span>
                         </div>
-                        <!-- 5. Budget -->
-                        <div class="list-row-col hidden-xs col-budget text-right" style="flex: 0 0 135px !important; width: 135px !important; min-width: 135px !important; max-width: 135px !important; text-align: right !important; padding-right: 12px !important;">
+                        <!-- 5. Budget (160px to prevent overflow) -->
+                        <div class="list-row-col hidden-xs col-budget text-right" style="flex: 0 0 160px !important; width: 160px !important; min-width: 160px !important; max-width: 160px !important; text-align: right !important; padding-right: 0px !important; margin-right: 16px !important;">
                             <span data-sort-by="project_budget" title="${__("Click to sort by Budget")}" style="font-weight: 600; cursor: pointer;">
                                 ${__("Budget")}
                             </span>
                         </div>
                         <!-- 6. Status -->
-                        <div class="list-row-col hidden-xs col-status text-center" style="flex: 0 0 150px !important; width: 150px !important; min-width: 150px !important; max-width: 150px !important; text-align: center !important;">
+                        <div class="list-row-col hidden-xs col-status text-left" style="flex: 0 0 175px !important; width: 175px !important; min-width: 175px !important; text-align: left !important; padding-left: 0px !important; margin-right: 16px !important;">
                             <span style="font-weight: 600;">
                                 ${__("Status")}
                             </span>
@@ -912,7 +979,7 @@ frappe.listview_settings['Test Customer Contract'] = {
                 let target_dn = info.docname || "";
 
                 return `
-                    <div class="list-row-col hidden-xs col-status text-center" style="flex: 0 0 150px !important; width: 150px !important; min-width: 150px !important; max-width: 150px !important; text-align: center !important;">
+                    <div class="list-row-col hidden-xs col-status text-left" style="flex: 0 0 175px !important; width: 175px !important; min-width: 175px !important; text-align: left !important; padding-left: 0px !important; margin-right: 16px !important; display: flex !important; justify-content: flex-start !important; align-items: center !important;">
                         <span class="custom-status-pill badge-${info.color}" 
                               onclick="window.open_contract_status_doc('${doc.name}', '${info.raw}', event, '${target_dt}', '${target_dn}');"
                               title="${__('Click to open: ' + info.label)}">
@@ -935,10 +1002,10 @@ frappe.listview_settings['Test Customer Contract'] = {
                 `;
             }
 
-            // 1. Contract ID (Subject Column with Checkbox)
+            // 1. Contract ID (145px)
             if (col.type === "Subject" || col.custom_class === "col-contract-id") {
                 return `
-                    <div class="list-row-col list-subject level col-contract-id" style="flex: 0 0 160px !important; width: 160px !important; min-width: 160px !important; max-width: 160px !important; padding-right: 8px !important; display: flex !important; align-items: center !important;">
+                    <div class="list-row-col list-subject level col-contract-id" style="flex: 0 0 145px !important; width: 145px !important; min-width: 145px !important; max-width: 145px !important; padding-right: 8px !important; margin-right: 12px !important; display: flex !important; align-items: center !important;">
                         <input class="level-item list-row-checkbox" type="checkbox" data-name="${frappe.utils.escape_html(doc.name)}" onclick="event.stopPropagation();" style="margin-right: 8px !important; flex-shrink: 0 !important;">
                         <span class="level-item ellipsis" style="font-weight: 600; min-width: 0 !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important;" title="${frappe.utils.escape_html(doc.name)}">
                             <a class="grey font-weight-bold" href="/app/test-customer-contract/${encodeURIComponent(doc.name)}" title="${frappe.utils.escape_html(doc.name)}">
@@ -953,10 +1020,10 @@ frappe.listview_settings['Test Customer Contract'] = {
             const fieldname = df.fieldname;
             const value = doc[fieldname] || "";
 
-            // 2. Customer Id
+            // 2. Customer Id (95px + 16px gap)
             if (fieldname === "party_name" || col.custom_class === "col-party-name") {
                 return `
-                    <div class="list-row-col hidden-xs col-party-name" style="flex: 0 0 120px !important; width: 120px !important; min-width: 120px !important; max-width: 120px !important; padding-right: 8px !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important;">
+                    <div class="list-row-col hidden-xs col-party-name" style="flex: 0 0 95px !important; width: 95px !important; min-width: 95px !important; max-width: 95px !important; padding-right: 0px !important; margin-right: 16px !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important;">
                         <a class="grey" href="/app/test-customer-contract/${encodeURIComponent(doc.name)}" title="${frappe.utils.escape_html(value)}">
                             ${frappe.utils.escape_html(value)}
                         </a>
@@ -964,29 +1031,29 @@ frappe.listview_settings['Test Customer Contract'] = {
                 `;
             }
 
-            // 3. Project Title
+            // 3. Customer Title (200px - brings Currency to left)
             if (fieldname === "project_title" || col.custom_class === "col-project-title") {
                 return `
-                    <div class="list-row-col hidden-xs col-project-title" style="flex: 1 1 auto !important; flex-grow: 1 !important; min-width: 180px !important; width: auto !important; max-width: none !important; padding-right: 15px !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important;">
+                    <div class="list-row-col hidden-xs col-project-title" style="flex: 0 0 200px !important; width: 200px !important; min-width: 200px !important; max-width: 200px !important; text-align: left !important; padding-right: 0px !important; margin-right: 16px !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important;">
                         <span title="${frappe.utils.escape_html(value)}">${frappe.utils.escape_html(value)}</span>
                     </div>
                 `;
             }
 
-            // 4. Currency
+            // 4. Currency (50px)
             if (fieldname === "project_currency" || col.custom_class === "col-currency") {
                 return `
-                    <div class="list-row-col hidden-xs col-currency text-center" style="flex: 0 0 55px !important; width: 55px !important; min-width: 55px !important; max-width: 55px !important; text-align: center !important; padding: 0 4px !important; white-space: nowrap !important;">
+                    <div class="list-row-col hidden-xs col-currency text-center" style="flex: 0 0 50px !important; width: 50px !important; min-width: 50px !important; max-width: 50px !important; text-align: center !important; padding: 0 !important; margin-right: 16px !important; white-space: nowrap !important;">
                         <span>${frappe.utils.escape_html(value || "INR")}</span>
                     </div>
                 `;
             }
 
-            // 5. Budget
+            // 5. Budget (160px - prevents overflow)
             if (df.fieldtype === "Currency" || fieldname === "project_budget" || col.custom_class === "col-budget") {
                 let formatted_budget = format_currency(value, doc.project_currency || "INR");
                 return `
-                    <div class="list-row-col hidden-xs text-right col-budget" style="flex: 0 0 135px !important; width: 135px !important; min-width: 135px !important; max-width: 135px !important; text-align: right !important; padding-right: 12px !important; white-space: nowrap !important;">
+                    <div class="list-row-col hidden-xs text-right col-budget" style="flex: 0 0 160px !important; width: 160px !important; min-width: 160px !important; max-width: 160px !important; text-align: right !important; padding-right: 0px !important; margin-right: 16px !important; white-space: nowrap !important;">
                         <span>${formatted_budget}</span>
                     </div>
                 `;

@@ -26,7 +26,7 @@ app_license = "mit"
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/access_custom/css/access_custom.css"
-app_include_js = "/assets/access_custom/js/access_custom.js?v=20261016_1535"
+app_include_js = "/assets/access_custom/js/access_custom.js?v=20261030_1615"
 
 # include js, css files in header of web template
 # web_include_css = "/assets/access_custom/css/access_custom.css"
@@ -123,6 +123,7 @@ permission_query_conditions = {
     "Contract On Hold": "access_custom.contract_lifecycle.get_contract_permission_query_conditions",
     "Contract Termination": "access_custom.contract_lifecycle.get_contract_permission_query_conditions",
     "Contract Closure": "access_custom.contract_lifecycle.get_contract_permission_query_conditions",
+    "Contract Resume": "access_custom.contract_lifecycle.get_contract_permission_query_conditions",
 }
 
 has_permission = {
@@ -131,6 +132,7 @@ has_permission = {
     "Contract On Hold": "access_custom.contract_lifecycle.has_contract_permission",
     "Contract Termination": "access_custom.contract_lifecycle.has_contract_permission",
     "Contract Closure": "access_custom.contract_lifecycle.has_contract_permission",
+    "Contract Resume": "access_custom.contract_lifecycle.has_contract_permission",
 }
 
 # DocType Class
@@ -149,6 +151,9 @@ override_doctype_class = {
 # Hook on document methods and events
 
 doc_events = {
+    "Customer": {
+        "validate": "access_custom.contract_lifecycle.validate_customer_status_and_inactivation",
+    },
     "User": {
         "validate": "access_custom.overrides.user.validate_system_manager_role_assignment",
     },
@@ -179,6 +184,11 @@ doc_events = {
         "on_trash": "access_custom.contract_lifecycle.on_contract_trash",
     },
     "Contract Closure": {
+        "validate": "access_custom.contract_lifecycle.validate_stage_approver_authorization",
+        "on_update": "access_custom.contract_lifecycle.sync_contract_assignment",
+        "on_trash": "access_custom.contract_lifecycle.on_contract_trash",
+    },
+    "Contract Resume": {
         "validate": "access_custom.contract_lifecycle.validate_stage_approver_authorization",
         "on_update": "access_custom.contract_lifecycle.sync_contract_assignment",
         "on_trash": "access_custom.contract_lifecycle.on_contract_trash",
@@ -337,6 +347,8 @@ fixtures = [
 ]
 
 
-app_include_css = "/assets/access_custom/css/style.css?v=20261016_1535"
+app_include_css = "/assets/access_custom/css/style.css?v=20261030_1615"
 web_include_css = "/assets/access_custom/css/web_style.css"
 app_logo_url = "/assets/access_custom/images/logo.png"
+
+extend_bootinfo = ["access_custom.overrides.boot.extend_bootinfo"]

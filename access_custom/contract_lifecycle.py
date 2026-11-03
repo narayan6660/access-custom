@@ -48,6 +48,13 @@ STAGE_APPROVER_MAP = {
         "Finance Closure": "finance_approver",
         "CEO Closure": "ceo_approver",
     },
+    "Contract Resume": {
+        "Pending Team Lead Approval": "lead_approver",
+        "Pending Legal Approval": "legal_approver",
+        "Pending Finance Approval": "finance_approver",
+        "Pending HR Approval": "hr_approver",
+        "Pending CEO Approval": "ceo_approver",
+    },
 }
 
 FINAL_STATES = {
@@ -56,9 +63,10 @@ FINAL_STATES = {
     "Contract On Hold": ["On Hold", "Resumed", "Rejected"],
     "Contract Termination": ["Terminated", "Termination Executed", "Rejected"],
     "Contract Closure": ["Closed", "Rejected"],
+    "Contract Resume": ["Resumed", "Rejected"],
 }
 
-RESET_STATES = ["Draft", "Returned for Revision", "Termination Requested", "Closure Initiated"]
+RESET_STATES = ["Maker", "Draft", "Returned for Revision", "Termination Requested", "Closure Initiated"]
 
 
 def create_silent_todo(doctype, name, allocated_to, description, priority="High"):
@@ -170,7 +178,7 @@ def get_contract_permission_query_conditions(user=None, doctype=None, **kwargs):
 
     # If this is parent Test Customer Contract, also allow if user is approver on any child lifecycle docs
     if dt == "Test Customer Contract":
-        for child_dt in ["Contract Amendment", "Contract On Hold", "Contract Termination", "Contract Closure"]:
+        for child_dt in ["Contract Amendment", "Contract On Hold", "Contract Termination", "Contract Closure", "Contract Resume"]:
             conds.append(f"""`tab{dt}`.`name` IN (
                 SELECT `contract` FROM `tab{child_dt}`
                 WHERE `owner` = {escaped_user}
@@ -252,7 +260,7 @@ def has_contract_permission(doc, ptype="read", user=None, **kwargs):
 
     # If parent doc, check if user is approver on any active child lifecycle docs
     if doc.doctype == "Test Customer Contract":
-        for child_dt in ["Contract Amendment", "Contract On Hold", "Contract Termination", "Contract Closure"]:
+        for child_dt in ["Contract Amendment", "Contract On Hold", "Contract Termination", "Contract Closure", "Contract Resume"]:
             has_child = frappe.db.sql(f"""
                 SELECT 1 FROM `tab{child_dt}`
                 WHERE `contract` = %s AND (
@@ -449,6 +457,13 @@ def sync_contract_assignment(doc, method=None):
                     except Exception as e:
                         frappe.log_error(f"Error sending On Hold approval assignment email: {str(e)}")
 
+                if doc.doctype == "Contract Resume":
+                    try:
+                        from access_custom.access_custom.doctype.contract_resume.contract_resume import send_resume_stage_approval_email
+                        send_resume_stage_approval_email(doc, state, target_approver)
+                    except Exception as e:
+                        frappe.log_error(f"Error sending Resume approval assignment email: {str(e)}")
+
     finally:
         frappe.flags.in_sync_contract_assignment = False
 
@@ -478,7 +493,7 @@ def ensure_approval_status_stamped(doc):
     Safeguard: If a lifecycle document advanced beyond an approval stage,
     ensure the completed stage's approver status field is stamped.
     """
-    if doc.doctype not in ["Contract Amendment", "Contract On Hold", "Contract Termination", "Contract Closure"]:
+    if doc.doctype not in ["Contract Amendment", "Contract On Hold", "Contract Termination", "Contract Closure", "Contract Resume"]:
         return
 
     meta = frappe.get_meta(doc.doctype)
@@ -521,6 +536,15 @@ def ensure_approval_status_stamped(doc):
             ("Finance Closure", "finance_approver_status"),
             ("CEO Closure", "ceo_approver_status"),
             ("Closed", None)
+        ]
+    elif doc.doctype == "Contract Resume":
+        stages_order = [
+            ("Pending Team Lead Approval", "lead_approver_status"),
+            ("Pending Legal Approval", "legal_approver_status"),
+            ("Pending Finance Approval", "finance_approver_status"),
+            ("Pending HR Approval", "hr_approver_status"),
+            ("Pending CEO Approval", "ceo_approver_status"),
+            ("Resumed", None)
         ]
 
     curr_state = doc.get("workflow_state")
@@ -581,6 +605,13 @@ LIFECYCLE_STAGES_CONFIG = {
         {"state": "Legal Closure", "field": "legal_approver", "status": "legal_approver_status", "review": "legal_approver_review", "role": "Legal Closure"},
         {"state": "Finance Closure", "field": "finance_approver", "status": "finance_approver_status", "review": "finance_approver_review", "role": "Finance Closure"},
         {"state": "CEO Closure", "field": "ceo_approver", "status": "ceo_approver_status", "review": "ceo_approver_review", "role": "CEO Closure"},
+    ],
+    "Contract Resume": [
+        {"state": "Pending Team Lead Approval", "field": "lead_approver", "status": "lead_approver_status", "review": "lead_approver_review", "role": "Team Lead Approval"},
+        {"state": "Pending Legal Approval", "field": "legal_approver", "status": "legal_approver_status", "review": "legal_approver_review", "role": "Legal Approval"},
+        {"state": "Pending Finance Approval", "field": "finance_approver", "status": "finance_approver_status", "review": "finance_approver_review", "role": "Finance Approval"},
+        {"state": "Pending HR Approval", "field": "hr_approver", "status": "hr_approver_status", "review": "hr_approver_review", "role": "HR Approval"},
+        {"state": "Pending CEO Approval", "field": "ceo_approver", "status": "ceo_approver_status", "review": "ceo_approver_review", "role": "CEO Approval"},
     ]
 }
 
@@ -589,14 +620,16 @@ CUSTOMER_CONTRACT_LIFECYCLE_DOCTYPES = [
     "Contract Amendment",
     "Contract On Hold",
     "Contract Termination",
-    "Contract Closure"
+    "Contract Closure",
+    "Contract Resume"
 ]
 
 CUSTOMER_CONTRACT_FINAL_STATES = {
     "Contract Amendment": ["Executed", "Rejected"],
     "Contract On Hold": ["Resumed", "Rejected"],
     "Contract Termination": ["Terminated", "Termination Executed", "Rejected"],
-    "Contract Closure": ["Closed", "Rejected"]
+    "Contract Closure": ["Closed", "Rejected"],
+    "Contract Resume": ["Resumed", "Rejected"]
 }
 
 CONSULTANT_CONTRACT_LIFECYCLE_DOCTYPES = [
@@ -621,6 +654,8 @@ def check_active_lifecycle_action(contract_id, doctype=None, current_docname=Non
         return {"active": False}
 
     for sibling_dt in CUSTOMER_CONTRACT_LIFECYCLE_DOCTYPES:
+        if doctype == "Contract Resume" and sibling_dt == "Contract On Hold":
+            continue
         final_states = CUSTOMER_CONTRACT_FINAL_STATES.get(sibling_dt, ["Rejected"])
         filters = {
             "contract": contract_id,
@@ -882,11 +917,11 @@ def handle_workflow_transition_events(doc):
         "Termination Under TL Review",
         "Team Lead Closure"
     ]
-    if old_state in ["Draft", "Returned for Revision", "Rejected"] and new_state in first_stages:
+    if old_state in ["Maker", "Draft", "Returned for Revision", "Rejected"] and new_state in first_stages:
         reset_approver_statuses_on_resubmit(doc)
 
     # Case 2: Rejection or Return for Revision
-    if new_state in ["Draft", "Returned for Revision", "Rejected"]:
+    if new_state in ["Maker", "Draft", "Returned for Revision", "Rejected"]:
         send_rejection_or_revision_broadcast(doc, old_state, new_state)
 
 
@@ -996,7 +1031,7 @@ def send_rejection_or_revision_broadcast(doc, old_state, new_state):
     if is_rejected:
         status_desc = "This amendment proposal has been rejected and transitioned to the <strong>Rejected</strong> state."
     else:
-        status_desc = "The document has been returned directly to <strong>Draft</strong> stage. Only the Contract Manager is authorized to modify the details and resubmit to Team Lead for approvals from the beginning."
+        status_desc = "The document has been returned directly to <strong>Maker</strong> stage. Only the Contract Manager is authorized to modify the details and resubmit to Team Lead for approvals from the beginning."
 
     html_message = f"""<!-- Hidden Preheader -->
 <div style="display: none; max-height: 0px; overflow: hidden; font-size: 0px; line-height: 0px; mso-hide: all; color: #fff;">
@@ -1294,7 +1329,7 @@ def custom_get_transitions(doc, workflow=None, raise_exception=False):
         # Case A: In Draft or Returned for Revision (After Rejection)
     # ONLY Contract Manager or Creator/Owner is permitted to see/action the document.
     # Approvers assigned to this contract MUST NOT see any actions in Draft!
-    if current_state in ["Draft", "Returned for Revision", "Termination Requested", "Closure Initiated", "In Progress"]:
+    if current_state in ["Maker", "Draft", "Returned for Revision", "Termination Requested", "Closure Initiated", "In Progress"]:
         approvers = [
             doc_obj.get("lead_approver"),
             doc_obj.get("legal_approver"),
@@ -1415,7 +1450,7 @@ def custom_apply_workflow(doc, action):
         if user != "Administrator":
             current_state = doc_obj.get("workflow_state")
 
-            if current_state in ["Draft", "Returned for Revision", "Termination Requested", "Closure Initiated", "In Progress"]:
+            if current_state in ["Maker", "Draft", "Returned for Revision", "Termination Requested", "Closure Initiated", "In Progress"]:
                 is_creator = (user == doc_obj.owner)
                 if doc_obj.get("contract_owner"):
                     emp_user = frappe.db.get_value("Employee", doc_obj.contract_owner, "user_id")
@@ -1526,3 +1561,21 @@ def get_employee_dashboard_data(data=None):
     data.non_standard_fieldnames['Test Customer Contract'] = 'contract_owner'
 
     return data
+
+def validate_customer_status_and_inactivation(doc, method=None):
+    """
+    Validates Customer status:
+    1. If status is Inactive, a non-empty Reason for Inactivation is mandatory.
+    2. Syncs disabled = 1 when Inactive, disabled = 0 when Active.
+    """
+    if getattr(doc, "custom_status", None) == "Inactive":
+        reason = (doc.get("custom_reason_for_inactivation") or "").strip()
+        if not reason:
+            frappe.throw(
+                frappe._("<b>Reason for Inactivation</b> is mandatory before marking this Customer as <b>Inactive</b>."),
+                title=frappe._("Inactivation Reason Required")
+            )
+        doc.disabled = 1
+    elif getattr(doc, "custom_status", None) == "Active":
+        doc.disabled = 0
+

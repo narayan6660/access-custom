@@ -3,7 +3,30 @@ import frappe
 from frappe.model.document import Document
 
 class TestCustomerContract(Document):
+	def autoname(self):
+		company = self.access_entity
+		if not company:
+			frappe.throw(frappe._("Please select Access Entity (Company) before saving the contract."))
+		self.name = generate_customer_contract_number(company, getattr(self, "creation", None))
+
 	def validate(self):
+		# Inactive Customer Validation (New contracts or changed customer only - existing contracts unaffected)
+		if getattr(self, "party_type", None) == "Customer" and getattr(self, "party_name", None):
+			is_new_contract = not getattr(self, "name", None) or not frappe.db.exists(self.doctype, self.name)
+			db_party = frappe.db.get_value(self.doctype, self.name, "party_name") if not is_new_contract else None
+			party_changed = is_new_contract or (db_party and db_party != self.party_name)
+
+			if party_changed:
+				cust = frappe.db.get_value("Customer", self.party_name, ["custom_status", "custom_reason_for_inactivation"], as_dict=True)
+				if cust and cust.custom_status == "Inactive":
+					reason = f"<br><b>Reason for Inactivation:</b> {cust.custom_reason_for_inactivation}" if cust.custom_reason_for_inactivation else ""
+					frappe.throw(
+						frappe._("Customer <b>{0}</b> is currently <b>Inactive</b> and cannot be selected for new contracts until their status is set to Active.{1}").format(
+							self.party_name, reason
+						),
+						title=frappe._("Inactive Customer Blocked")
+					)
+
 		wf_state = getattr(self, 'workflow_state', None)
 		if wf_state:
 			self.status = wf_state
@@ -18,8 +41,8 @@ class TestCustomerContract(Document):
 					self.commenced_on = frappe.utils.now_datetime()
 			elif wf_state == "In Progress":
 				self.contract_status = "In Progress"
-			elif wf_state == "Draft":
-				self.contract_status = "Draft"
+			elif wf_state in ["Maker", "Draft"]:
+				self.contract_status = "Maker"
 			elif "Pending" in wf_state:
 				self.contract_status = "Pending Approval"
 			elif wf_state in ["On Hold", "Terminated", "Closed"]:
@@ -154,3 +177,40 @@ def get_contract_version_tree(contract_name):
 		"master": master,
 		"amendments": amendments
 	}
+
+
+def generate_customer_contract_number(company, creation_date=None, current_docname=None):
+	if not company:
+		return ""
+
+	abbr = frappe.db.get_value("Company", company, "abbr")
+	if not abbr:
+		abbr = company[:4].upper()
+
+	clean_abbr = abbr.replace("-IND", "").strip()
+
+	if not creation_date:
+		creation_date = frappe.utils.nowdate()
+
+	date_obj = frappe.utils.getdate(creation_date)
+	yymmdd = date_obj.strftime("%y%m%d")
+
+	prefix = f"{clean_abbr}/"
+	existing = frappe.db.sql("""
+		SELECT name FROM `tabTest Customer Contract`
+		WHERE name LIKE %s
+	""", (f"{prefix}%",), as_dict=True)
+
+	max_serial = 0
+	for r in existing:
+		doc_name = (r.get("name") or "").strip()
+		if current_docname and doc_name == current_docname:
+			continue
+		parts = doc_name.split("/")
+		if len(parts) >= 3 and parts[-1].isdigit():
+			val = int(parts[-1])
+			if val > max_serial:
+				max_serial = val
+
+	next_serial = max_serial + 1
+	return f"{clean_abbr}/{yymmdd}/{next_serial}"

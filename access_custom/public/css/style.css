@@ -1733,9 +1733,14 @@ body.modal-open #freeze {
 [data-fieldname="employee_name"] .control-label,
 [data-fieldname="employee_name"] label {
 	font-weight: 700 !important;
+	color: #000000 !important;
 }
 [data-fieldname="employee_name"] input,
 [data-fieldname="employee_name"] .like-disabled-input,
-[data-fieldname="employee_name"] .control-value {
+[data-fieldname="employee_name"] .control-value,
+[data-fieldname="employee_name"] .form-control {
 	font-weight: 700 !important;
+	color: #000000 !important;
+	-webkit-text-fill-color: #000000 !important;
+	opacity: 1 !important;
 }

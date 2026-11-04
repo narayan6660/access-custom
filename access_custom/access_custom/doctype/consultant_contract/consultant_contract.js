@@ -2257,7 +2257,7 @@ function setup_leadership_queries(frm) {
         if (comp) {
             return {
                 filters: {
-                    company: ["in", [comp, ""]]
+                    company: comp
                 }
             };
         }

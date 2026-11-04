@@ -76,7 +76,7 @@
    "fieldname": "custom_increment_by_amount",
    "fieldtype": "Currency",
    "in_list_view": 1,
-   "label": "Increment by Amount"
+   "label": "Increment Amount"
   },
   {
    "columns": 1,

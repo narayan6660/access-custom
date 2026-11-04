@@ -113,9 +113,11 @@
   {
    "fieldname": "custom_total_arrears_amount",
    "fieldtype": "Currency",
-   "label": "Total Arrears Amount",
+   "label": "Arrears Amount",
    "options": "currency",
-   "read_only": 1
+   "read_only": 1,
+   "in_list_view": 1,
+   "columns": 1
   },
   {
    "fieldname": "column_break_bbhl",

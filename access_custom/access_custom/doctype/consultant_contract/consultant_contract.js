@@ -25,6 +25,14 @@ frappe.ui.form.on("Consultant Contract", {
         if (frm.doc.requesting_organization) {
             frm.set_value("organization", frm.doc.requesting_organization);
         }
+        if (frm.doc.contract_template) {
+            let current_comp = frm.doc.requesting_organization || frm.doc.organization;
+            frappe.db.get_value("Contract Template", frm.doc.contract_template, "company", (r) => {
+                if (r && r.company && r.company !== current_comp) {
+                    frm.set_value("contract_template", "");
+                }
+            });
+        }
     },
 
     address_line_1(frm) { update_consultant_full_address(frm); },
@@ -2244,6 +2252,18 @@ function calculate_total_allocation(frm) {
 }
 
 function setup_leadership_queries(frm) {
+    frm.set_query("contract_template", function() {
+        let comp = frm.doc.requesting_organization || frm.doc.organization;
+        if (comp) {
+            return {
+                filters: {
+                    company: ["in", [comp, ""]]
+                }
+            };
+        }
+        return {};
+    });
+
     frm.set_query("team_lead", function() {
         return {
             query: "access_custom.access_custom.doctype.consultant_contract.consultant_contract.get_leadership_employees",

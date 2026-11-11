@@ -130,3 +130,32 @@ def get_available_employee_contracts(doctype, txt, searchfield, start, page_leng
         order_by="modified desc",
         as_list=True
     )
+import frappe
+from frappe import _
+
+@frappe.whitelist()
+def get_user_roles_and_modules(user_id):
+    """
+    Fetch roles and blocked modules for an employee's linked User,
+    bypassing child-table Has Role restriction for authorized HR users.
+    """
+    if not user_id:
+        return {}
+
+    # Security check: User must be System Manager, Administrator, HR Manager, or HR User
+    current_roles = frappe.get_roles()
+    if not any(r in ["System Manager", "Administrator", "HR Manager", "HR User"] for r in current_roles):
+        frappe.throw(_("Not permitted to view user roles."), frappe.PermissionError)
+
+    if not frappe.db.exists("User", user_id):
+        return {}
+
+    user = frappe.get_doc("User", user_id)
+    roles = [r.role for r in user.roles]
+    blocked = [m.module for m in user.block_modules]
+    return {
+        "roles": roles,
+        "role_profile_name": user.role_profile_name,
+        "module_profile": user.module_profile,
+        "blocked_modules": blocked
+    }

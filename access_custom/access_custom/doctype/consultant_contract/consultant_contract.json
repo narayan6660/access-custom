@@ -164,6 +164,7 @@
   {
    "fieldname": "requesting_organization",
    "fieldtype": "Link",
+   "in_standard_filter": 1,
    "label": "Requesting Organization",
    "options": "Company"
   },
@@ -347,8 +348,9 @@
   },
   {
    "fieldname": "work_location",
-   "fieldtype": "Data",
-   "label": "Work Location"
+   "fieldtype": "Link",
+   "label": "Work Location",
+   "options": "Branch"
   },
   {
    "default": "6",
@@ -476,6 +478,13 @@
    "fieldtype": "Link",
    "label": "Designation",
    "options": "Designation"
+  },
+  {
+   "fieldname": "grade",
+   "fieldtype": "Link",
+   "label": "Grade / Level",
+   "options": "Employee Grade",
+   "reqd": 0
   },
   {
    "fieldname": "sec_break_e2",
@@ -718,12 +727,6 @@
    "in_list_view": 1,
    "label": "Project Name",
    "options": "Project",
-   "hidden": 1
-  },
-  {
-   "fieldname": "grade",
-   "fieldtype": "Data",
-   "label": "Grade",
    "hidden": 1
   },
   {

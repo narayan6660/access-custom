@@ -3,6 +3,24 @@
 
 frappe.ui.form.on("Consultant Contract Amendment", {
     onload(frm) {
+        frm.set_query("team_lead_approver", function() {
+            return {
+                query: "access_custom.access_custom.doctype.consultant_contract.consultant_contract.get_approver_users",
+                filters: { role: "Team Lead" }
+            };
+        });
+        frm.set_query("hr_approver", function() {
+            return {
+                query: "access_custom.access_custom.doctype.consultant_contract.consultant_contract.get_approver_users",
+                filters: { role: ["HR Manager", "HR User"] }
+            };
+        });
+        frm.set_query("ceo_approver", function() {
+            return {
+                query: "access_custom.access_custom.doctype.consultant_contract.consultant_contract.get_approver_users",
+                filters: { role: "CEO Approver" }
+            };
+        });
         inject_amendment_styles();
         setup_value_calculation(frm);
         apply_form_lockdown(frm);

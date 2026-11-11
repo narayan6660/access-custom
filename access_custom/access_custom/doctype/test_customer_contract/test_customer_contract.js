@@ -153,6 +153,36 @@ frappe.ui.form.on("Test Customer Contract", {
                 };
             }
         });
+
+        frm.set_query("lead_approver", function() {
+            return {
+                filters: { role: "Team Lead" }
+            };
+        });
+
+        frm.set_query("legal_approver", function() {
+            return {
+                filters: { role: "Legal Approver" }
+            };
+        });
+
+        frm.set_query("finance_approver", function() {
+            return {
+                filters: { role: "Finance Approver" }
+            };
+        });
+
+        frm.set_query("hr_approver", function() {
+            return {
+                filters: { role: "HR Manager" }
+            };
+        });
+
+        frm.set_query("ceo_approver", function() {
+            return {
+                filters: { role: "CEO Approver" }
+            };
+        });
         if (frm.is_new()) {
             frm.save_disabled = false;
             if (typeof frm.enable_save === "function") frm.enable_save();
@@ -266,6 +296,7 @@ frappe.ui.form.on("Test Customer Contract", {
         // Render visual timeline tree on master contract
         render_contract_timeline_tree(frm);
         enforce_stage_approver_actions(frm);
+        apply_comments_and_activity_visibility(frm);
 
         frm.__orig_upload_signed_document = frm.doc.upload_signed_document;
         let is_commenced_contract = (frm.doc.workflow_state === "Commenced" || frm.doc.workflow_state === "Active/Amendment Initiated" || frm.doc.workflow_state === "On Hold" || frm.doc.contract_status === "Commenced" || frm.doc.contract_status === "On Hold" || frm.doc.docstatus === 1);
@@ -1927,6 +1958,54 @@ function enforce_stage_approver_actions(frm) {
                     }
                 };
             }
+        }
+    }
+}
+
+
+function apply_comments_and_activity_visibility(frm) {
+    if (!frm) return;
+
+    const user = frappe.session.user;
+    const is_admin = (user === "Administrator") || (frappe.user_roles && frappe.user_roles.includes("System Manager"));
+
+    if (!is_admin) {
+        frappe.dom.set_style(`
+            [data-doctype="Test Customer Contract"] .form-footer,
+            [data-doctype="Test Customer Contract"] .form-timeline,
+            [data-doctype="Test Customer Contract"] .timeline,
+            [data-doctype="Test Customer Contract"] .new-timeline,
+            [data-doctype="Test Customer Contract"] .comment-box,
+            [data-doctype="Test Customer Contract"] .timeline-items,
+            [data-doctype="Test Customer Contract"] .timeline-actions {
+                display: none !important;
+            }
+        `, "hide-tcc-comments-activity");
+
+        if (frm.wrapper) {
+            $(frm.wrapper).find(".form-footer, .form-timeline, .timeline, .new-timeline, .comment-box, .timeline-items, .timeline-actions").hide();
+        }
+        if (frm.footer && frm.footer.wrapper) {
+            frm.footer.wrapper.hide();
+        }
+    } else {
+        frappe.dom.set_style(`
+            [data-doctype="Test Customer Contract"] .form-footer,
+            [data-doctype="Test Customer Contract"] .form-timeline,
+            [data-doctype="Test Customer Contract"] .timeline,
+            [data-doctype="Test Customer Contract"] .new-timeline,
+            [data-doctype="Test Customer Contract"] .comment-box,
+            [data-doctype="Test Customer Contract"] .timeline-items,
+            [data-doctype="Test Customer Contract"] .timeline-actions {
+                display: block !important;
+            }
+        `, "hide-tcc-comments-activity");
+
+        if (frm.wrapper) {
+            $(frm.wrapper).find(".form-footer, .form-timeline, .timeline, .new-timeline, .comment-box, .timeline-items, .timeline-actions").show();
+        }
+        if (frm.footer && frm.footer.wrapper) {
+            frm.footer.wrapper.show();
         }
     }
 }

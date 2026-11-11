@@ -6,6 +6,7 @@ frappe.ui.form.on("Consultant Contract", {
         // Inject custom scoped CSS for Consultant Contract textareas and UI badges
         inject_consultant_contract_styles();
         apply_section_visibility(frm);
+        setup_leadership_queries(frm);
 
         // Pre-fill Request ID with the creator / Contract Manager's name & employee ID
         if (frm.is_new() && (!frm.doc.request_id || frm.doc.request_id.startsWith("CC-") || frm.doc.request_id.includes("/"))) {
@@ -22,16 +23,51 @@ frappe.ui.form.on("Consultant Contract", {
 
 
     requesting_organization(frm) {
-        if (frm.doc.requesting_organization) {
-            frm.set_value("organization", frm.doc.requesting_organization);
+        let comp = frm.doc.requesting_organization;
+        if (comp) {
+            frm.set_value("organization", comp);
+            frappe.call({
+                method: "frappe.client.get_value",
+                args: {
+                    doctype: "Contract Template",
+                    filters: { company: comp },
+                    fieldname: "name"
+                },
+                callback: function(r) {
+                    if (!r.message || !r.message.name) {
+                        frappe.msgprint({
+                            title: __("No Dedicated Template"),
+                            indicator: "red",
+                            message: __("There is no dedicated template for <b>{0}</b>. Please contact the admin.", [comp])
+                        });
+                        frm.set_value("requesting_organization", "");
+                        frm.set_value("organization", "");
+                        frm.set_value("contract_template", "");
+                    }
+                }
+            });
         }
         if (frm.doc.contract_template) {
             let current_comp = frm.doc.requesting_organization || frm.doc.organization;
-            frappe.db.get_value("Contract Template", frm.doc.contract_template, "company", (r) => {
-                if (r && r.company && r.company !== current_comp) {
-                    frm.set_value("contract_template", "");
+            frappe.call({
+                method: "frappe.client.get_value",
+                args: {
+                    doctype: "Contract Template",
+                    filters: { name: frm.doc.contract_template },
+                    fieldname: "company"
+                },
+                callback: function(r) {
+                    if (r && r.message && r.message.company && r.message.company !== current_comp) {
+                        frm.set_value("contract_template", "");
+                    }
                 }
             });
+        }
+    },
+
+    organization(frm) {
+        if (!frm.doc.requesting_organization && frm.doc.organization) {
+            frm.set_value("requesting_organization", frm.doc.organization);
         }
     },
 
@@ -48,6 +84,18 @@ frappe.ui.form.on("Consultant Contract", {
                 message: __(`Selected Template: <b>${frappe.utils.escape_html(frm.doc.contract_template)}</b>`),
                 indicator: "green"
             }, 3);
+        }
+    },
+
+    custom_grade_level(frm) {
+        if (frm.doc.custom_grade_level && frm.doc.grade !== frm.doc.custom_grade_level) {
+            frm.set_value("grade", frm.doc.custom_grade_level);
+        }
+    },
+
+    grade(frm) {
+        if (frm.doc.grade && frm.doc.custom_grade_level !== frm.doc.grade) {
+            frm.set_value("custom_grade_level", frm.doc.grade);
         }
     },
 
@@ -2283,6 +2331,34 @@ function setup_leadership_queries(frm) {
             filters: {
                 "employment_type": ["in", ["Full Time Consultant", "Part Time Consultant", "Short Term Consultant"]]
             }
+        };
+    });
+
+    frm.set_query("team_lead_approver", function() {
+        return {
+            query: "access_custom.access_custom.doctype.consultant_contract.consultant_contract.get_approver_users",
+            filters: { role: "Team Lead" }
+        };
+    });
+
+    frm.set_query("hr_approver", function() {
+        return {
+            query: "access_custom.access_custom.doctype.consultant_contract.consultant_contract.get_approver_users",
+            filters: { role: ["HR Manager", "HR User"] }
+        };
+    });
+
+    frm.set_query("ceo_approver", function() {
+        return {
+            query: "access_custom.access_custom.doctype.consultant_contract.consultant_contract.get_approver_users",
+            filters: { role: "CEO Approver" }
+        };
+    });
+
+    frm.set_query("final_hr_approver", function() {
+        return {
+            query: "access_custom.access_custom.doctype.consultant_contract.consultant_contract.get_approver_users",
+            filters: { role: ["HR Manager", "HR User"] }
         };
     });
 }

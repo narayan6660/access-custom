@@ -14,7 +14,7 @@
    "fieldname": "forms",
    "fieldtype": "Select",
    "label": "Forms",
-   "options": "Conflict of Interest Form\nHR and Final Policy Form & W8 Form (For AHI US Consultant Contracts)\nOffice Assets Acknowledgement Form (Laptop/Tab/Mobile etc.)"
+   "options": "Offer Letter\nProbono\nConflict of Interest Form\nHR and Finace Form\nW8 Form (For AHI US Consultant Contracts)\nOffice Assets Acknowledgement Form (Laptop/Tab/Mobile etc.)\nSigned Contract\nJoining Letter\nContract Extension Letter\nProbation Confirmation Letter\nStaff Requisation Form\nJob Description (JD)\nRFP"
   },
   {
    "fieldname": "upload",
@@ -26,7 +26,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-06-11 12:47:14.352847",
+ "modified": "2026-11-11 16:54:49.891386",
  "modified_by": "Administrator",
  "module": "Access Custom",
  "name": "Emp Docs Acknowledgement Forms",

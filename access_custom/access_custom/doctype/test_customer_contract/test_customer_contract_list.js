@@ -1,3 +1,104 @@
+
+// Helper to add clean circular (x) clear button, instant dropdown on click, and proper width to Link filters
+function setup_company_filter_clear(listview, fieldname, placeholder_label) {
+    if (!listview || !listview.page || !listview.page.fields_dict) return;
+    let field = listview.page.fields_dict[fieldname];
+    if (!field || !field.$input) return;
+
+    let $wrapper = field.$wrapper || field.$input.parent();
+    if ($wrapper) {
+        $wrapper.css({
+            "position": "relative",
+            "min-width": "260px"
+        });
+    }
+    field.$input.css({
+        "min-width": "260px",
+        "padding-right": "32px",
+        "text-overflow": "ellipsis",
+        "cursor": "pointer"
+    });
+
+    function open_dropdown_instantly() {
+        let doctype = (field.get_options && field.get_options()) || "Company";
+        if (field.$input.cache && field.$input.cache[doctype] && field.$input.cache[doctype][""]) {
+            if (field.awesomplete) {
+                field.awesomplete.list = field.$input.cache[doctype][""];
+            }
+        }
+        field.$input.trigger("input");
+        setTimeout(function() {
+            if (field.awesomplete) {
+                field.awesomplete.evaluate();
+            }
+        }, 30);
+    }
+
+    // Always open dropdown immediately when input is clicked or focused
+    field.$input.off("click.instant_open focus.instant_open")
+        .on("click.instant_open focus.instant_open", function() {
+            open_dropdown_instantly();
+        });
+
+    function do_clear_filter() {
+        field.set_value("");
+        field.$input.val("").trigger("change");
+        if (window.history && window.history.replaceState) {
+            let url = new URL(window.location.href);
+            url.searchParams.delete(fieldname);
+            window.history.replaceState({}, document.title, url.pathname + (url.search ? url.search : ""));
+        }
+        if (frappe.route_options && frappe.route_options[fieldname]) {
+            delete frappe.route_options[fieldname];
+        }
+        if (listview.filter_area) {
+            listview.filter_area.remove(fieldname);
+        }
+        listview.refresh();
+        if (field.awesomplete) {
+            field.awesomplete.close();
+        }
+        field.$input.blur();
+    }
+
+    // Add distinct circular (x) clear icon inside the input wrapper
+    if ($wrapper) {
+        $wrapper.find(".link-field-clear-btn").remove();
+        let $clear_btn = $(`
+            <div class="link-field-clear-btn" title="Clear filter" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; line-height: 18px; text-align: center; border-radius: 50%; background: #e2e8f0; color: #475569; font-size: 14px; font-weight: bold; cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 10; transition: all 0.15s ease;">&times;</div>
+        `);
+
+        $clear_btn.on("mousedown click", function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            do_clear_filter();
+            $clear_btn.hide();
+        });
+
+        $clear_btn.hover(
+            function() { $(this).css({ "background": "#ef4444", "color": "#ffffff" }); },
+            function() { $(this).css({ "background": "#e2e8f0", "color": "#475569" }); }
+        );
+
+        $wrapper.append($clear_btn);
+
+        function toggle_clear_btn() {
+            let val = field.get_value() || field.$input.val();
+            if (val) {
+                $clear_btn.css("display", "flex");
+                field.$input.css("padding-right", "32px");
+            } else {
+                $clear_btn.hide();
+                field.$input.css("padding-right", "");
+            }
+        }
+
+        field.$input.off("input.clear_btn change.clear_btn blur.clear_btn")
+            .on("input.clear_btn change.clear_btn blur.clear_btn", toggle_clear_btn);
+        toggle_clear_btn();
+    }
+}
+
 // Global Status Direct Route Handler
 window.open_contract_status_doc = function(contract_name, raw_status, e, target_doctype, target_docname) {
     if (e) {
@@ -836,6 +937,7 @@ frappe.listview_settings['Test Customer Contract'] = {
 
         // Robust status filter sanitization to keep only original & active statuses
         sanitize_status_filter(listview);
+        setup_company_filter_clear(listview, "access_entity", "Entities");
 
         listview.setup_columns = function() {
             this.columns = [];
@@ -1093,6 +1195,7 @@ frappe.listview_settings['Test Customer Contract'] = {
         }
         sync_active_lifecycle_cache(listview);
         sanitize_status_filter(listview);
+        setup_company_filter_clear(listview, "access_entity", "Entities");
     },
     get_indicator: function(doc) {
         let info = resolve_contract_display_status(doc, cur_list);

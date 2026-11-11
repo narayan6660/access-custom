@@ -17,6 +17,8 @@ class ConsultantContract(Document):
         self.validate_pdf_attachments()
         self.validate_approver_permissions()
         self.validate_contact_details()
+        self.validate_submission_requirements()
+        self.validate_company_template_availability()
 
     def calculate_tenure_and_end_date(self):
         start = self.proposed_start_date or self.start_date
@@ -64,6 +66,23 @@ class ConsultantContract(Document):
                     self.total_contract_value = fee * diff_days
                 elif not self.total_contract_value:
                     self.total_contract_value = fee
+        elif start and not end and self.initial_tenure_value:
+            from dateutil.relativedelta import relativedelta
+            unit = (self.tenure_unit or "Months").lower()
+            val = int(self.initial_tenure_value)
+            s_date = getdate(start)
+            if "year" in unit:
+                e_date = s_date + relativedelta(years=val) - relativedelta(days=1)
+            elif "day" in unit:
+                e_date = s_date + relativedelta(days=val - 1)
+            else:
+                e_date = s_date + relativedelta(months=val) - relativedelta(days=1)
+            self.end_date = e_date
+            self.proposed_end_date = e_date
+            self.start_date = start
+            self.proposed_start_date = start
+            if not self.contract_tenure:
+                self.contract_tenure = f"{val} {self.tenure_unit or 'Months'}"
 
     def calculate_allocation_totals(self):
         total = 0.0
@@ -108,6 +127,17 @@ class ConsultantContract(Document):
         if self.initial_tenure_value and not self.contract_tenure:
             self.contract_tenure = f"{self.initial_tenure_value} {self.tenure_unit or 'Months'}"
 
+        # Sync grade and custom_grade_level
+        if hasattr(self, "custom_grade_level") and self.custom_grade_level and not getattr(self, "grade", None):
+            self.grade = self.custom_grade_level
+        elif hasattr(self, "grade") and self.grade and not getattr(self, "custom_grade_level", None):
+            self.custom_grade_level = self.grade
+
+        # Sync email aliases
+        if self.email_id:
+            self.email = self.email_id
+            self.consultant_email = self.email_id
+
         # Sync Team Lead Approver from Section A Team Lead
         if self.team_lead:
             user_id = frappe.db.get_value("Employee", self.team_lead, "user_id")
@@ -136,19 +166,19 @@ class ConsultantContract(Document):
     def compile_consultant_address(self):
         parts = []
         if self.address_line_1:
-            parts.append(self.address_line_1.strip())
+            parts.append(str(self.address_line_1).strip())
         if getattr(self, "address_line_2", None) and self.address_line_2:
-            parts.append(self.address_line_2.strip())
+            parts.append(str(self.address_line_2).strip())
         if self.city:
-            parts.append(self.city.strip())
+            parts.append(str(self.city).strip())
         if self.state:
-            parts.append(self.state.strip())
+            parts.append(str(self.state).strip())
         
         country_pin = []
         if self.country:
-            country_pin.append(self.country.strip())
+            country_pin.append(str(self.country).strip())
         if self.pin_code:
-            country_pin.append(self.pin_code.strip())
+            country_pin.append(str(self.pin_code).strip())
         
         if country_pin:
             parts.append(" – ".join(country_pin) if (self.country and self.pin_code) else country_pin[0])
@@ -184,6 +214,26 @@ class ConsultantContract(Document):
 
         old_doc = self.get_doc_before_save()
         if not old_doc:
+            return
+
+        # Validate Submit / Resubmit from Draft or Returned for Revision: Strictly Contract Manager / document creator
+        if old_doc and old_doc.workflow_state in ["Draft", "Returned for Revision"] and self.workflow_state == "Pending Team Lead Approval":
+            is_cm = ("Contract Manager" in roles) or (self.owner == user) or is_admin
+            is_approver = user in [self.team_lead_approver, self.hr_approver, self.ceo_approver, self.final_hr_approver]
+            if is_approver and not is_admin and self.owner != user:
+                frappe.throw(frappe._("Approvers are not permitted to submit/resubmit a returned contract. This must be handled by the Contract Manager."))
+            if not is_cm:
+                frappe.throw(frappe._("Only the Contract Manager or document creator can submit this contract for approval."))
+
+            # Clean reset of all approver decisions and remarks for the new approval sequence
+            self.team_lead_decision = None
+            self.hr_decision = None
+            self.ceo_decision = None
+            self.final_hr_decision = None
+            self.team_lead_remarks = None
+            self.hr_remarks = None
+            self.ceo_remarks = None
+            self.final_hr_remarks = None
             return
 
         # Check remarks locking
@@ -232,6 +282,8 @@ class ConsultantContract(Document):
                 self.final_hr_remarks != old_doc.final_hr_remarks):
                 if not is_admin:
                     frappe.throw(frappe._("Approver remarks cannot be modified at this stage."))
+
+
 
         # Enforce all Section G fields must be filled before Contract Manager can execute/activate contract
         if self.workflow_state == "Active":
@@ -316,7 +368,7 @@ class ConsultantContract(Document):
                     message=msg_all,
                     reference_doctype="Consultant Contract",
                     reference_name=self.name,
-                    now=True
+                    now=False
                 )
 
             # 2. Dedicated follow-up action mail to Contract Manager
@@ -365,7 +417,7 @@ class ConsultantContract(Document):
                     message=msg_cm,
                     reference_doctype="Consultant Contract",
                     reference_name=self.name,
-                    now=True
+                    now=False
                 )
         except Exception as e:
             frappe.log_error(title=f"Error sending CEO approved emails for {self.name}", message=str(e))
@@ -411,10 +463,11 @@ class ConsultantContract(Document):
 
             attachments = []
             try:
+                pf_to_use = self.contract_template or "Consultant Agreement"
                 pdf_attachment = frappe.attach_print(
                     doctype="Consultant Contract",
                     name=self.name,
-                    print_format="Consultant Agreement",
+                    print_format=pf_to_use,
                     doc=self
                 )
                 if pdf_attachment:
@@ -430,7 +483,7 @@ class ConsultantContract(Document):
                     attachments=attachments,
                     reference_doctype="Consultant Contract",
                     reference_name=self.name,
-                    now=True
+                    now=False
                 )
         except Exception as e:
             frappe.log_error(title=f"Error sending Final HR review email for {self.name}", message=str(e))
@@ -462,10 +515,50 @@ class ConsultantContract(Document):
                     message=msg,
                     reference_doctype="Consultant Contract",
                     reference_name=self.name,
-                    now=True
+                    now=False
                 )
         except Exception as e:
             frappe.log_error(title=f"Error sending Approved for Issuance email for {self.name}", message=str(e))
+
+
+    def validate_submission_requirements(self):
+        """
+        Validates that mandatory fields (Start Date and Compensation) are populated
+        before the contract can be submitted for approval or progressed through the workflow.
+        Note: End Date is autocalculated from Start Date and tenure, so it is not manually required.
+        """
+        state = self.workflow_state or self.status or "Draft"
+        if state not in ["Draft", "Returned for Revision", "Rejected", "Cancelled"]:
+            # 1. Start Date is mandatory
+            start = self.start_date or self.proposed_start_date
+            if not start:
+                frappe.throw(
+                    frappe._("<b>Start Date</b> is mandatory before submitting the contract for approval. Please enter a valid Start Date."),
+                    title=frappe._("Missing Start Date")
+                )
+
+            # 2. Salary / Compensation is mandatory and must be > 0
+            fee = float(self.compensation_amount or self.proposed_fee or 0)
+            if fee <= 0:
+                frappe.throw(
+                    frappe._("<b>Compensation / Salary</b> is mandatory before submitting the contract for approval. Please enter a valid compensation amount greater than 0."),
+                    title=frappe._("Missing Salary / Compensation")
+                )
+
+
+    def validate_company_template_availability(self):
+        """
+        Validates that the selected company has a dedicated contract template.
+        If no dedicated template exists, warns/blocks creation and directs user to admin.
+        """
+        company = self.requesting_organization or self.organization
+        if company:
+            has_template = frappe.db.exists("Contract Template", {"company": company})
+            if not has_template:
+                frappe.throw(
+                    frappe._("There is no dedicated template for <b>{0}</b>. Please contact the admin.").format(company),
+                    title=frappe._("No Dedicated Template")
+                )
 
     def on_submit(self):
         # Auto-create Consultant Master if this is a new consultant
@@ -622,9 +715,144 @@ def record_consultant_approver_decision(name, decision_field, decision_val, rema
 
 
 @frappe.whitelist()
+def send_30_day_contract_expiry_reminders():
+    """
+    Sends automated 30-day expiry notification emails for active consultant contracts
+    reaching their scheduled end date within the next 30 days.
+    """
+    from frappe.utils import nowdate, add_days, formatdate, getdate
+    today = nowdate()
+    in_30_days = add_days(today, 30)
+
+    contracts = frappe.get_all(
+        "Consultant Contract",
+        filters={
+            "status": ["in", ["Active", "Signed by Consultant", "Contract Issued"]],
+            "end_date": ["between", [today, in_30_days]]
+        },
+        fields=[
+            "name", "request_id", "consultant_name", "start_date", "end_date",
+            "owner", "team_lead_approver", "hr_approver", "final_hr_approver",
+            "requesting_organization", "organization"
+        ]
+    )
+
+    sent_count = 0
+    for c in contracts:
+        if not c.end_date:
+            continue
+
+        # Prevent sending duplicate notification for this contract
+        already_sent = frappe.db.exists(
+            "Communication",
+            {
+                "reference_doctype": "Consultant Contract",
+                "reference_name": c.name,
+                "subject": ["like", "%30-Day Contract Expiry Notice%"]
+            }
+        )
+        if already_sent:
+            continue
+
+        recipients = set()
+        for field in [c.owner, c.team_lead_approver, c.hr_approver, c.final_hr_approver]:
+            if field and "@" in field:
+                recipients.add(field.strip())
+
+        if not (c.hr_approver or c.final_hr_approver):
+            hr_users = frappe.db.sql_list("""
+                SELECT DISTINCT u.name FROM `tabUser` u
+                INNER JOIN `tabHas Role` r ON r.parent = u.name
+                WHERE r.role IN ('HR Manager', 'HR User') AND u.enabled = 1
+            """)
+            for u in hr_users:
+                if u and "@" in u:
+                    recipients.add(u)
+
+        if not recipients:
+            continue
+
+        days_remaining = (getdate(c.end_date) - getdate(today)).days
+        consultant_name = c.consultant_name or "Consultant"
+        formatted_end = formatdate(c.end_date, "dd-MM-yyyy")
+        formatted_start = formatdate(c.start_date, "dd-MM-yyyy") if c.start_date else "N/A"
+        contract_url = frappe.utils.get_url_to_form("Consultant Contract", c.name)
+        org = c.requesting_organization or c.organization or "Organization"
+
+        subject = f"Action Required: 30-Day Contract Expiry Notice for {c.name} - {consultant_name}"
+        message = f"""
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1e293b; max-width: 650px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 24px; background: #ffffff;">
+            <div style="border-bottom: 2px solid #f59e0b; padding-bottom: 12px; margin-bottom: 18px;">
+                <h3 style="color: #b45309; margin: 0; font-size: 18px;">
+                    &#9888; Consultant Contract Expiry Reminder (30 Days)
+                </h3>
+            </div>
+            <p style="font-size: 14px; margin-bottom: 16px;">
+                This is an automated notification that the following consultant engagement is approaching its scheduled end date:
+            </p>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13.5px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px;">
+                <tr>
+                    <td style="padding: 10px 14px; font-weight: bold; width: 35%; color: #92400e; border-bottom: 1px solid #fde68a;">Contract Reference:</td>
+                    <td style="padding: 10px 14px; border-bottom: 1px solid #fde68a; color: #1e293b;"><b>{c.name}</b></td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px 14px; font-weight: bold; color: #92400e; border-bottom: 1px solid #fde68a;">Consultant Name:</td>
+                    <td style="padding: 10px 14px; border-bottom: 1px solid #fde68a; color: #1e293b;">{consultant_name}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px 14px; font-weight: bold; color: #92400e; border-bottom: 1px solid #fde68a;">Organization:</td>
+                    <td style="padding: 10px 14px; border-bottom: 1px solid #fde68a; color: #1e293b;">{org}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px 14px; font-weight: bold; color: #92400e; border-bottom: 1px solid #fde68a;">Contract Tenure:</td>
+                    <td style="padding: 10px 14px; border-bottom: 1px solid #fde68a; color: #1e293b;">{formatted_start} &rarr; <b>{formatted_end}</b></td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px 14px; font-weight: bold; color: #92400e;">Days Remaining:</td>
+                    <td style="padding: 10px 14px; color: #b45309; font-weight: bold;">{days_remaining} Day{'s' if days_remaining != 1 else ''}</td>
+                </tr>
+            </table>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 14px; border-radius: 6px; margin-bottom: 20px; font-size: 13px; color: #475569;">
+                <b>Recommended Actions:</b>
+                <ul style="margin: 6px 0 0 18px; padding: 0;">
+                    <li>If engagement should continue: Initiate a <b>Contract Extension</b> or amendment.</li>
+                    <li>If engagement concludes on schedule: Prepare completion sign-off and final deliverables review.</li>
+                </ul>
+            </div>
+            <p style="margin-top: 24px; text-align: center;">
+                <a href="{contract_url}" style="background: #0284c7; color: #ffffff; padding: 10px 22px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block; font-size: 14px;">
+                    View Contract in Desk &rarr;
+                </a>
+            </p>
+        </div>
+        """
+
+        try:
+            frappe.sendmail(
+                recipients=list(recipients),
+                subject=subject,
+                message=message,
+                reference_doctype="Consultant Contract",
+                reference_name=c.name,
+                now=False
+            )
+            sent_count += 1
+        except Exception as e:
+            frappe.log_error(title=f"Error sending 30-day expiry notice for {c.name}", message=str(e))
+
+    frappe.db.commit()
+    return sent_count
+
+@frappe.whitelist()
 def check_and_mark_expired_contracts():
     from frappe.utils import nowdate
     today = nowdate()
+
+    # 1. Send 30-day expiry reminder emails for contracts nearing completion
+    try:
+        send_30_day_contract_expiry_reminders()
+    except Exception as re:
+        frappe.log_error(title="Error in send_30_day_contract_expiry_reminders", message=str(re))
 
     active_contracts = frappe.get_all(
         "Consultant Contract",
@@ -670,7 +898,7 @@ def get_consultant_pipeline_stats():
     in_90 = add_days(today, 90)
 
     ceo_count = frappe.db.count("Consultant Contract", {"workflow_state": "Pending CEO Approval"})
-    hr_count = frappe.db.count("Consultant Contract", {"workflow_state": "Pending HR Review"})
+    hr_count = frappe.db.count("Consultant Contract", {"workflow_state": ["in", ["Pending HR Review", "Pending Final HR Review"]]})
     to_issue_count = frappe.db.count("Consultant Contract", {"workflow_state": "CEO Approved"})
     awaiting_sign_count = frappe.db.count("Consultant Contract", {"workflow_state": "Contract Issued"})
     exp_30_count = frappe.db.count("Consultant Contract", {"status": "Active", "end_date": ["between", [today, in_30]]})
@@ -686,6 +914,52 @@ def get_consultant_pipeline_stats():
         "expiring_90": exp_90_count,
         "total_active": active_count
     }
+
+
+@frappe.whitelist()
+def get_approver_users(doctype, txt, searchfield, start, page_len, filters=None):
+    start = int(start or 0)
+    page_len = int(page_len or 20)
+
+    if isinstance(filters, str):
+        import json
+        try:
+            filters = json.loads(filters)
+        except Exception:
+            filters = {}
+    elif not filters:
+        filters = {}
+
+    role = (filters or {}).get("role")
+    roles = []
+    if isinstance(role, list):
+        roles = role
+    elif role:
+        roles = [role]
+
+    role_condition = ""
+    role_params = {}
+    if roles:
+        role_condition = "AND r.role IN %(roles)s"
+        role_params["roles"] = tuple(roles)
+
+    query = f"""
+        SELECT DISTINCT u.name, u.full_name
+        FROM `tabUser` u
+        JOIN `tabHas Role` r ON r.parent = u.name
+        WHERE u.enabled = 1
+          {role_condition}
+          AND (u.name LIKE %(txt)s OR u.full_name LIKE %(txt)s OR u.first_name LIKE %(txt)s OR u.last_name LIKE %(txt)s)
+        ORDER BY u.full_name ASC
+        LIMIT %(start)s, %(page_len)s
+    """
+    params = {
+        "txt": f"%{txt or ''}%",
+        "start": start,
+        "page_len": page_len,
+        **role_params
+    }
+    return frappe.db.sql(query, params)
 
 
 @frappe.whitelist()

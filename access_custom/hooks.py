@@ -343,7 +343,11 @@ fixtures = [
     
     # Leave Management Setup
     "Leave Type", 
-    "Email Template" 
+    "Email Template",
+
+    # Consultant Contract Templates & Print Formats
+    {"dt": "Print Format", "filters": [["doc_type", "=", "Consultant Contract"]]},
+    {"dt": "Contract Template"}
 ]
 
 

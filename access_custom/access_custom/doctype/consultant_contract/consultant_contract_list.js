@@ -1,3 +1,104 @@
+
+// Helper to add clean circular (x) clear button, instant dropdown on click, and proper width to Link filters
+function setup_company_filter_clear(listview, fieldname, placeholder_label) {
+    if (!listview || !listview.page || !listview.page.fields_dict) return;
+    let field = listview.page.fields_dict[fieldname];
+    if (!field || !field.$input) return;
+
+    let $wrapper = field.$wrapper || field.$input.parent();
+    if ($wrapper) {
+        $wrapper.css({
+            "position": "relative",
+            "min-width": "260px"
+        });
+    }
+    field.$input.css({
+        "min-width": "260px",
+        "padding-right": "32px",
+        "text-overflow": "ellipsis",
+        "cursor": "pointer"
+    });
+
+    function open_dropdown_instantly() {
+        let doctype = (field.get_options && field.get_options()) || "Company";
+        if (field.$input.cache && field.$input.cache[doctype] && field.$input.cache[doctype][""]) {
+            if (field.awesomplete) {
+                field.awesomplete.list = field.$input.cache[doctype][""];
+            }
+        }
+        field.$input.trigger("input");
+        setTimeout(function() {
+            if (field.awesomplete) {
+                field.awesomplete.evaluate();
+            }
+        }, 30);
+    }
+
+    // Always open dropdown immediately when input is clicked or focused
+    field.$input.off("click.instant_open focus.instant_open")
+        .on("click.instant_open focus.instant_open", function() {
+            open_dropdown_instantly();
+        });
+
+    function do_clear_filter() {
+        field.set_value("");
+        field.$input.val("").trigger("change");
+        if (window.history && window.history.replaceState) {
+            let url = new URL(window.location.href);
+            url.searchParams.delete(fieldname);
+            window.history.replaceState({}, document.title, url.pathname + (url.search ? url.search : ""));
+        }
+        if (frappe.route_options && frappe.route_options[fieldname]) {
+            delete frappe.route_options[fieldname];
+        }
+        if (listview.filter_area) {
+            listview.filter_area.remove(fieldname);
+        }
+        listview.refresh();
+        if (field.awesomplete) {
+            field.awesomplete.close();
+        }
+        field.$input.blur();
+    }
+
+    // Add distinct circular (x) clear icon inside the input wrapper
+    if ($wrapper) {
+        $wrapper.find(".link-field-clear-btn").remove();
+        let $clear_btn = $(`
+            <div class="link-field-clear-btn" title="Clear filter" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; line-height: 18px; text-align: center; border-radius: 50%; background: #e2e8f0; color: #475569; font-size: 14px; font-weight: bold; cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 10; transition: all 0.15s ease;">&times;</div>
+        `);
+
+        $clear_btn.on("mousedown click", function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            do_clear_filter();
+            $clear_btn.hide();
+        });
+
+        $clear_btn.hover(
+            function() { $(this).css({ "background": "#ef4444", "color": "#ffffff" }); },
+            function() { $(this).css({ "background": "#e2e8f0", "color": "#475569" }); }
+        );
+
+        $wrapper.append($clear_btn);
+
+        function toggle_clear_btn() {
+            let val = field.get_value() || field.$input.val();
+            if (val) {
+                $clear_btn.css("display", "flex");
+                field.$input.css("padding-right", "32px");
+            } else {
+                $clear_btn.hide();
+                field.$input.css("padding-right", "");
+            }
+        }
+
+        field.$input.off("input.clear_btn change.clear_btn blur.clear_btn")
+            .on("input.clear_btn change.clear_btn blur.clear_btn", toggle_clear_btn);
+        toggle_clear_btn();
+    }
+}
+
 // Copyright (c) 2026, Charan and contributors
 // For license information, please see license.txt
 
@@ -247,6 +348,23 @@ function sync_active_consultant_lifecycle_cache(listview) {
 
 // Custom CSS for Consultant Contract List View (Matching Customer Contract UI)
 const custom_consultant_list_css = `
+/* Expand page container to use the full available screen width */
+body:has([data-page-route*="consultant"]) .container,
+body:has([data-page-route*="Consultant"]) .container,
+.consultant-contract-custom-list-view .container,
+.consultant-contract-custom-list-view.page-container .container,
+[data-page-route*="Consultant Contract"] .container,
+[data-page-route*="consultant_contract"] .container,
+[data-page-route*="consultant-contract"] .container {
+    width: 96% !important;
+    max-width: 96% !important;
+}
+
+body.full-width .container {
+    width: 96% !important;
+    max-width: 96% !important;
+}
+
 /* Layout alignment for Consultant Contract List View */
 [data-page-route*="Consultant Contract"] .list-row,
 [data-page-route*="Consultant Contract"] .list-row-head,
@@ -263,6 +381,16 @@ const custom_consultant_list_css = `
     max-width: 100% !important;
 }
 
+.consultant-contract-custom-list-view .list-row,
+.consultant-contract-custom-list-view .list-row-col {
+    font-size: 12px !important;
+}
+
+.consultant-contract-custom-list-view .list-row-head,
+.consultant-contract-custom-list-view .list-row-head span {
+    font-size: 11px !important;
+}
+
 [data-page-route*="Consultant Contract"] .list-row .level-left,
 [data-page-route*="Consultant Contract"] .list-row-head .list-header-subject,
 [data-page-route*="consultant_contract"] .list-row .level-left,
@@ -275,10 +403,10 @@ const custom_consultant_list_css = `
     flex: 1 1 auto !important;
     flex-grow: 1 !important;
     align-items: center !important;
-    width: calc(100% - 90px) !important;
-    max-width: calc(100% - 90px) !important;
+    width: calc(100% - 115px) !important;
+    max-width: calc(100% - 115px) !important;
     min-width: 0 !important;
-    margin-right: 10px !important;
+    margin-right: 8px !important;
     overflow: hidden !important;
 }
 
@@ -290,94 +418,161 @@ const custom_consultant_list_css = `
 [data-page-route*="consultant-contract"] .list-row-head .level-right,
 .consultant-contract-custom-list-view .list-row .level-right,
 .consultant-contract-custom-list-view .list-row-head .level-right {
-    flex: 0 0 80px !important;
+    flex: 0 0 105px !important;
     flex-shrink: 0 !important;
-    min-width: 75px !important;
-    max-width: 85px !important;
+    min-width: 100px !important;
+    max-width: 115px !important;
+    display: flex !important;
+    align-items: center !important;
     justify-content: flex-end !important;
+    gap: 6px !important;
+    font-size: 11.5px !important;
 }
 
-/* 1. Contract ID (160px) */
+[data-page-route*="Consultant Contract"] .checkbox-actions,
+[data-page-route*="consultant_contract"] .checkbox-actions,
+[data-page-route*="consultant-contract"] .checkbox-actions,
+.consultant-contract-custom-list-view .checkbox-actions {
+    display: none !important;
+}
+
+/* 1. Contract ID (155px) */
 .col-contract-id,
 .list-row-col.col-contract-id,
 .list-subject.col-contract-id {
-    flex: 0 0 160px !important;
-    width: 160px !important;
-    min-width: 160px !important;
-    max-width: 160px !important;
+    flex: 0 0 155px !important;
+    width: 155px !important;
+    min-width: 150px !important;
+    max-width: 165px !important;
     flex-shrink: 0 !important;
     flex-grow: 0 !important;
-    padding-right: 8px !important;
+    padding-right: 6px !important;
+    margin-right: 14px !important;
+    font-size: 12px !important;
 }
 
-/* 2. Consultant Name (150px) */
+.col-contract-id a {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+}
+
+/* 2. Consultant Name (140px) */
 .col-consultant-name,
 .list-row-col.col-consultant-name {
-    flex: 0 0 150px !important;
-    width: 150px !important;
-    min-width: 150px !important;
+    flex: 0 0 140px !important;
+    width: 140px !important;
+    min-width: 130px !important;
     max-width: 150px !important;
     flex-shrink: 0 !important;
     flex-grow: 0 !important;
-    padding-right: 10px !important;
+    padding-right: 0px !important;
+    margin-right: 14px !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
     white-space: nowrap !important;
+    font-size: 12px !important;
 }
 
-/* 3. Organization (160px) */
+.col-consultant-name a,
+.col-consultant-name span {
+    font-size: 12px !important;
+    color: #334155 !important;
+}
+
+/* 3. Organization (Flex expands with wider container) */
 .col-organization,
 .list-row-col.col-organization {
-    flex: 0 0 160px !important;
-    width: 160px !important;
-    min-width: 160px !important;
-    max-width: 160px !important;
-    flex-shrink: 0 !important;
-    flex-grow: 0 !important;
-    padding-right: 10px !important;
+    flex: 1 1 200px !important;
+    min-width: 180px !important;
+    max-width: 340px !important;
+    flex-shrink: 1 !important;
+    flex-grow: 1 !important;
+    padding-right: 0px !important;
+    margin-right: 14px !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
     white-space: nowrap !important;
+    font-size: 12px !important;
 }
 
-/* 4. Project Name (Fluid expands to fill middle) */
+.col-organization span {
+    font-size: 12px !important;
+    color: #475569 !important;
+}
+
+/* 4. Project Name (Flex expands with wider container) */
 .col-project-name,
 .list-row-col.col-project-name {
-    flex: 1 1 auto !important;
+    flex: 1 1 120px !important;
+    min-width: 100px !important;
+    max-width: 220px !important;
+    flex-shrink: 1 !important;
     flex-grow: 1 !important;
-    min-width: 160px !important;
-    width: auto !important;
-    max-width: none !important;
-    padding-right: 15px !important;
+    text-align: left !important;
+    padding-right: 0px !important;
+    margin-right: 14px !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
     white-space: nowrap !important;
+    font-size: 12px !important;
 }
 
-/* 5. Type of Contract (120px) */
+.col-project-name *,
+.col-project-name span,
+.col-project-name a {
+    max-width: 100% !important;
+    display: inline !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    font-size: 12px !important;
+}
+
+.list-row-head .col-project-name,
+.list-row-head .col-project-name span {
+    max-width: 100% !important;
+    display: inline-block !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: nowrap !important;
+}
+
+/* 5. Type of Contract (110px) */
 .col-contract-type,
 .list-row-col.col-contract-type {
-    flex: 0 0 120px !important;
-    width: 120px !important;
-    min-width: 120px !important;
+    flex: 0 0 110px !important;
+    width: 110px !important;
+    min-width: 100px !important;
     max-width: 120px !important;
     flex-shrink: 0 !important;
     flex-grow: 0 !important;
-    text-align: center !important;
-    padding: 0 6px !important;
+    text-align: left !important;
+    padding: 0 !important;
+    margin-right: 14px !important;
     white-space: nowrap !important;
+    font-size: 12px !important;
 }
 
-/* 6. Status (170px) - Last Column */
+.col-contract-type span {
+    font-size: 12px !important;
+    color: #475569 !important;
+}
+
+/* 6. Status (185px, left-aligned, non-shrinking with clean gap) */
 .col-status,
 .list-row-col.col-status {
-    flex: 0 0 170px !important;
-    width: 170px !important;
-    min-width: 170px !important;
-    max-width: 170px !important;
+    flex: 0 0 185px !important;
+    width: 185px !important;
+    min-width: 185px !important;
+    max-width: 185px !important;
     flex-shrink: 0 !important;
     flex-grow: 0 !important;
-    text-align: center !important;
+    text-align: left !important;
+    padding-left: 0px !important;
+    margin-right: 10px !important;
+    display: flex !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
     overflow: visible !important;
     text-overflow: clip !important;
 }
@@ -386,13 +581,13 @@ const custom_consultant_list_css = `
 .custom-status-pill {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 6px !important;
-    padding: 4px 12px !important;
+    gap: 5px !important;
+    padding: 2.5px 8px !important;
     border-radius: 12px !important;
-    font-size: 11.5px !important;
+    font-size: 11px !important;
     font-weight: 500 !important;
     cursor: pointer !important;
-    line-height: 1.35 !important;
+    line-height: 1.3 !important;
     box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
     transition: all 0.15s ease !important;
     white-space: nowrap !important;
@@ -404,6 +599,7 @@ const custom_consultant_list_css = `
     white-space: nowrap !important;
     overflow: visible !important;
     text-overflow: clip !important;
+    font-size: 11px !important;
 }
 
 .custom-status-pill:hover {
@@ -460,7 +656,7 @@ const custom_consultant_list_css = `
 }
 .like-action::before, .list-row-like .like-action::before, .list-liked-by-me::before, [data-action="like"]::before {
     content: "☆" !important;
-    font-size: 16px !important;
+    font-size: 15px !important;
     color: #9ca3af !important;
     display: inline-block !important;
     transition: all 0.15s ease !important;
@@ -474,7 +670,7 @@ const custom_consultant_list_css = `
 .like-action.liked::before, .list-row-like .like-action.liked::before, .list-liked-by-me.active::before, [data-action="like"].liked::before, .liked::before {
     content: "★" !important;
     color: #f59e0b !important;
-    font-size: 16px !important;
+    font-size: 15px !important;
     text-shadow: 0 0 4px rgba(245, 158, 11, 0.45) !important;
 }
 .like-action.liked, .liked {
@@ -603,7 +799,14 @@ frappe.listview_settings["Consultant Contract"] = {
 
     onload(listview) {
         setup_consultant_lifecycle_filter_interceptor(listview);
+        try {
+            $(document.body).addClass("full-width");
+            if (listview.page && listview.page.wrapper) {
+                listview.page.wrapper.closest(".page-container").find(".container").css({ "width": "96%", "max-width": "96%" });
+            }
+        } catch(e) {}
         render_consultant_pipeline_cockpit(listview);
+        setup_company_filter_clear(listview, "requesting_organization", "Organizations");
         setup_list_actions(listview);
 
         frappe.dom.set_style(custom_consultant_list_css);
@@ -680,46 +883,46 @@ frappe.listview_settings["Consultant Contract"] = {
         listview.get_header_html = function() {
             return `
                 <header class="level list-row-head text-muted">
-                    <div class="level-left list-header-subject" style="display: flex !important; flex: 1 1 auto !important; align-items: center !important; width: calc(100% - 90px) !important; max-width: calc(100% - 90px) !important; min-width: 0 !important; margin-right: 10px !important; overflow: hidden !important;">
+                    <div class="level-left list-header-subject" style="display: flex !important; flex: 1 1 auto !important; align-items: center !important; width: calc(100% - 115px) !important; max-width: calc(100% - 115px) !important; min-width: 0 !important; margin-right: 8px !important; overflow: hidden !important;">
                         <!-- 1. Contract ID -->
-                        <div class="list-row-col list-subject level col-contract-id" style="flex: 0 0 160px !important; width: 160px !important; min-width: 160px !important; max-width: 160px !important; padding-right: 8px !important; display: flex !important; align-items: center !important;">
+                        <div class="list-row-col list-subject level col-contract-id" style="flex: 0 0 155px !important; width: 155px !important; min-width: 150px !important; max-width: 165px !important; padding-right: 6px !important; margin-right: 14px !important; display: flex !important; align-items: center !important;">
                             <input class="level-item list-check-all" type="checkbox" title="${__("Select All")}" style="margin-right: 8px !important;">
-                            <span class="level-item" data-sort-by="name" title="${__("Click to sort by Contract ID")}" style="font-weight: 600; cursor: pointer;">
+                            <span class="level-item" data-sort-by="name" title="${__("Click to sort by Contract ID")}" style="font-weight: 600; cursor: pointer; font-size: 11px !important; text-transform: uppercase !important; letter-spacing: 0.3px !important; color: #64748b !important;">
                                 ${__("Contract ID")}
                             </span>
                         </div>
                         <!-- 2. Consultant Name -->
-                        <div class="list-row-col hidden-xs col-consultant-name" style="flex: 0 0 150px !important; width: 150px !important; min-width: 150px !important; max-width: 150px !important; padding-right: 10px !important;">
-                            <span data-sort-by="consultant_name" title="${__("Click to sort by Consultant Name")}" style="font-weight: 600; cursor: pointer;">
+                        <div class="list-row-col hidden-xs col-consultant-name" style="flex: 0 0 140px !important; width: 140px !important; min-width: 130px !important; max-width: 150px !important; padding-right: 0px !important; margin-right: 14px !important;">
+                            <span data-sort-by="consultant_name" title="${__("Click to sort by Consultant Name")}" style="font-weight: 600; cursor: pointer; font-size: 11px !important; text-transform: uppercase !important; letter-spacing: 0.3px !important; color: #64748b !important;">
                                 ${__("Consultant Name")}
                             </span>
                         </div>
                         <!-- 3. Organization -->
-                        <div class="list-row-col hidden-xs col-organization" style="flex: 0 0 160px !important; width: 160px !important; min-width: 160px !important; max-width: 160px !important; padding-right: 10px !important;">
-                            <span data-sort-by="organization" title="${__("Click to sort by Organization")}" style="font-weight: 600; cursor: pointer;">
+                        <div class="list-row-col hidden-xs col-organization" style="flex: 1 1 200px !important; min-width: 180px !important; max-width: 340px !important; padding-right: 0px !important; margin-right: 14px !important;">
+                            <span data-sort-by="organization" title="${__("Click to sort by Organization")}" style="font-weight: 600; cursor: pointer; font-size: 11px !important; text-transform: uppercase !important; letter-spacing: 0.3px !important; color: #64748b !important;">
                                 ${__("Organization")}
                             </span>
                         </div>
                         <!-- 4. Project Name -->
-                        <div class="list-row-col hidden-xs col-project-name" style="flex: 1 1 auto !important; flex-grow: 1 !important; min-width: 160px !important; width: auto !important; max-width: none !important; padding-right: 15px !important;">
-                            <span data-sort-by="project_name" title="${__("Click to sort by Project Name")}" style="font-weight: 600; cursor: pointer;">
+                        <div class="list-row-col hidden-xs col-project-name" style="flex: 1 1 120px !important; min-width: 100px !important; max-width: 220px !important; text-align: left !important; padding-right: 0px !important; margin-right: 14px !important;">
+                            <span data-sort-by="project_name" title="${__("Click to sort by Project Name")}" style="font-weight: 600; cursor: pointer; font-size: 11px !important; text-transform: uppercase !important; letter-spacing: 0.3px !important; color: #64748b !important;">
                                 ${__("Project Name")}
                             </span>
                         </div>
                         <!-- 5. Type of Contract -->
-                        <div class="list-row-col hidden-xs col-contract-type text-center" style="flex: 0 0 120px !important; width: 120px !important; min-width: 120px !important; max-width: 120px !important; text-align: center !important; padding: 0 6px !important;">
-                            <span data-sort-by="contract_type" title="${__("Click to sort by Type of Contract")}" style="font-weight: 600; cursor: pointer;">
-                                ${__("Type of Contract")}
+                        <div class="list-row-col hidden-xs col-contract-type text-left" style="flex: 0 0 110px !important; width: 110px !important; min-width: 100px !important; max-width: 120px !important; text-align: left !important; padding: 0 !important; margin-right: 14px !important;">
+                            <span data-sort-by="contract_type" title="${__("Click to sort by Contract Type")}" style="font-weight: 600; cursor: pointer; font-size: 11px !important; text-transform: uppercase !important; letter-spacing: 0.3px !important; color: #64748b !important;">
+                                ${__("Contract Type")}
                             </span>
                         </div>
                         <!-- 6. Status (Last) -->
-                        <div class="list-row-col hidden-xs col-status text-center" style="flex: 0 0 170px !important; width: 170px !important; min-width: 170px !important; max-width: 170px !important; text-align: center !important;">
-                            <span style="font-weight: 600;">
+                        <div class="list-row-col hidden-xs col-status text-left" style="flex: 0 0 185px !important; width: 185px !important; min-width: 185px !important; max-width: 185px !important; text-align: left !important; padding-left: 0px !important; margin-right: 10px !important;">
+                            <span style="font-weight: 600; font-size: 11px !important; text-transform: uppercase !important; letter-spacing: 0.3px !important; color: #64748b !important;">
                                 ${__("Status")}
                             </span>
                         </div>
                     </div>
-                    <div class="level-right" style="flex: 0 0 80px !important; min-width: 75px !important; max-width: 85px !important; justify-content: flex-end !important;">
+                    <div class="level-right" style="flex: 0 0 105px !important; min-width: 100px !important; max-width: 115px !important; display: flex !important; align-items: center !important; justify-content: flex-end !important; gap: 6px !important;">
                         <span class="list-count"></span>
                         <span class="level-item list-liked-by-me">
                             <span class="likes-count"></span>
@@ -733,10 +936,10 @@ frappe.listview_settings["Consultant Contract"] = {
             return `
                 <div class="list-row-container" tabindex="1">
                     <div class="level list-row">
-                        <div class="level-left" style="display: flex !important; flex: 1 1 auto !important; align-items: center !important; width: calc(100% - 90px) !important; max-width: calc(100% - 90px) !important; min-width: 0 !important; margin-right: 10px !important; overflow: hidden !important;">
+                        <div class="level-left" style="display: flex !important; flex: 1 1 auto !important; align-items: center !important; width: calc(100% - 115px) !important; max-width: calc(100% - 115px) !important; min-width: 0 !important; margin-right: 8px !important; overflow: hidden !important;">
                             ${left}
                         </div>
-                        <div class="level-right text-muted" style="flex: 0 0 80px !important; min-width: 75px !important; max-width: 85px !important; justify-content: flex-end !important;">
+                        <div class="level-right text-muted" style="flex: 0 0 105px !important; min-width: 100px !important; max-width: 115px !important; display: flex !important; align-items: center !important; justify-content: flex-end !important; gap: 6px !important; font-size: 11.5px !important;">
                             ${right}
                         </div>
                     </div>
@@ -755,7 +958,7 @@ frappe.listview_settings["Consultant Contract"] = {
                 let target_dn = info.docname || "";
 
                 return `
-                    <div class="list-row-col hidden-xs col-status text-center" style="flex: 0 0 170px !important; width: 170px !important; min-width: 170px !important; max-width: 170px !important; text-align: center !important;">
+                    <div class="list-row-col hidden-xs col-status text-left" style="flex: 0 0 185px !important; width: 185px !important; min-width: 185px !important; max-width: 185px !important; text-align: left !important; padding-left: 0px !important; margin-right: 10px !important; display: flex !important; justify-content: flex-start !important; align-items: center !important; overflow: visible !important; text-overflow: clip !important;">
                         <span class="custom-status-pill badge-${info.color}" 
                               onclick="window.open_consultant_contract_status_doc('${doc.name}', '${info.raw}', event, '${target_dt}', '${target_dn}');"
                               title="${__('Click to open: ' + info.label)}">
@@ -781,10 +984,10 @@ frappe.listview_settings["Consultant Contract"] = {
             // 1. Contract ID (Subject Column with Checkbox)
             if (col.type === "Subject" || col.custom_class === "col-contract-id") {
                 return `
-                    <div class="list-row-col list-subject level col-contract-id" style="flex: 0 0 160px !important; width: 160px !important; min-width: 160px !important; max-width: 160px !important; padding-right: 8px !important; display: flex !important; align-items: center !important;">
+                    <div class="list-row-col list-subject level col-contract-id" style="flex: 0 0 155px !important; width: 155px !important; min-width: 150px !important; max-width: 165px !important; padding-right: 6px !important; margin-right: 14px !important; display: flex !important; align-items: center !important;">
                         <input class="level-item list-row-checkbox" type="checkbox" data-name="${frappe.utils.escape_html(doc.name)}" onclick="event.stopPropagation();" style="margin-right: 8px !important; flex-shrink: 0 !important;">
-                        <span class="level-item ellipsis" style="font-weight: 600; min-width: 0 !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important;" title="${frappe.utils.escape_html(doc.name)}">
-                            <a class="grey font-weight-bold" href="/app/consultant-contract/${encodeURIComponent(doc.name)}" title="${frappe.utils.escape_html(doc.name)}">
+                        <span class="level-item ellipsis" style="font-weight: 600; min-width: 0 !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; font-size: 12px !important;" title="${frappe.utils.escape_html(doc.name)}">
+                            <a class="grey font-weight-bold" href="/app/consultant-contract/${encodeURIComponent(doc.name)}" title="${frappe.utils.escape_html(doc.name)}" style="font-size: 12px !important; color: #1e293b !important;">
                                 ${frappe.utils.escape_html(doc.name)}
                             </a>
                         </span>
@@ -799,28 +1002,28 @@ frappe.listview_settings["Consultant Contract"] = {
             // 2. Consultant Name
             if (fieldname === "consultant_name" || col.custom_class === "col-consultant-name") {
                 return `
-                    <div class="list-row-col hidden-xs col-consultant-name" style="flex: 0 0 150px !important; width: 150px !important; min-width: 150px !important; max-width: 150px !important; padding-right: 10px !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important;">
-                        <a class="grey" href="/app/consultant-contract/${encodeURIComponent(doc.name)}" title="${frappe.utils.escape_html(value)}">
-                            ${frappe.utils.escape_html(value)}
+                    <div class="list-row-col hidden-xs col-consultant-name" style="flex: 0 0 140px !important; width: 140px !important; min-width: 130px !important; max-width: 150px !important; padding-right: 0px !important; margin-right: 14px !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; font-size: 12px !important;">
+                        <a class="grey font-weight-500" href="/app/consultant-contract/${encodeURIComponent(doc.name)}" title="${frappe.utils.escape_html(value)}" style="font-size: 12px !important; color: #334155 !important;">
+                            ${frappe.utils.escape_html(value || "-")}
                         </a>
                     </div>
                 `;
             }
 
-            // 3. Organization
+            // 3. Organization (Flex expands with wider container)
             if (fieldname === "organization" || col.custom_class === "col-organization") {
                 return `
-                    <div class="list-row-col hidden-xs col-organization" style="flex: 0 0 160px !important; width: 160px !important; min-width: 160px !important; max-width: 160px !important; padding-right: 10px !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important;">
-                        <span title="${frappe.utils.escape_html(value)}">${frappe.utils.escape_html(value)}</span>
+                    <div class="list-row-col hidden-xs col-organization" style="flex: 1 1 200px !important; min-width: 180px !important; max-width: 340px !important; padding-right: 0px !important; margin-right: 14px !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; font-size: 12px !important;">
+                        <span title="${frappe.utils.escape_html(value)}" style="font-size: 12px !important; color: #475569 !important;">${frappe.utils.escape_html(value || "-")}</span>
                     </div>
                 `;
             }
 
-            // 4. Project Name
+            // 4. Project Name (Flex expands with wider container)
             if (fieldname === "project_name" || col.custom_class === "col-project-name") {
                 return `
-                    <div class="list-row-col hidden-xs col-project-name" style="flex: 1 1 auto !important; flex-grow: 1 !important; min-width: 160px !important; width: auto !important; max-width: none !important; padding-right: 15px !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important;">
-                        <span title="${frappe.utils.escape_html(value)}">${frappe.utils.escape_html(value)}</span>
+                    <div class="list-row-col hidden-xs col-project-name" style="flex: 1 1 120px !important; min-width: 100px !important; max-width: 220px !important; text-align: left !important; padding-right: 0px !important; margin-right: 14px !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; font-size: 12px !important;">
+                        <span title="${frappe.utils.escape_html(value)}" style="font-size: 12px !important; color: ${value ? '#475569' : '#94a3b8'} !important;">${frappe.utils.escape_html(value || "-")}</span>
                     </div>
                 `;
             }
@@ -828,8 +1031,8 @@ frappe.listview_settings["Consultant Contract"] = {
             // 5. Type of Contract
             if (fieldname === "contract_type" || col.custom_class === "col-contract-type") {
                 return `
-                    <div class="list-row-col hidden-xs col-contract-type text-center" style="flex: 0 0 120px !important; width: 120px !important; min-width: 120px !important; max-width: 120px !important; text-align: center !important; padding: 0 6px !important; white-space: nowrap !important;">
-                        <span>${frappe.utils.escape_html(value || "Full-Time")}</span>
+                    <div class="list-row-col hidden-xs col-contract-type text-left" style="flex: 0 0 110px !important; width: 110px !important; min-width: 100px !important; max-width: 120px !important; text-align: left !important; padding: 0 !important; margin-right: 14px !important; white-space: nowrap !important; font-size: 12px !important;">
+                        <span style="font-size: 12px !important; color: #475569 !important;">${frappe.utils.escape_html(value || "Full-Time")}</span>
                     </div>
                 `;
             }
@@ -841,7 +1044,7 @@ frappe.listview_settings["Consultant Contract"] = {
             const numeric_class = frappe.model.is_numeric_field(df) ? "text-right" : "";
 
             return `
-                <div class="list-row-col hidden-xs ${numeric_class} ${custom_cls}">
+                <div class="list-row-col hidden-xs ${numeric_class} ${custom_cls}" style="font-size: 12px !important;">
                     ${value_display}
                 </div>
             `;
@@ -857,6 +1060,12 @@ frappe.listview_settings["Consultant Contract"] = {
 
     refresh(listview) {
         setup_consultant_lifecycle_filter_interceptor(listview);
+        try {
+            $(document.body).addClass("full-width");
+            if (listview.page && listview.page.wrapper) {
+                listview.page.wrapper.closest(".page-container").find(".container").css({ "width": "96%", "max-width": "96%" });
+            }
+        } catch(e) {}
         frappe.dom.set_style(custom_consultant_list_css);
         if (listview.$page) {
             listview.$page.addClass("consultant-contract-custom-list-view");
@@ -868,6 +1077,7 @@ frappe.listview_settings["Consultant Contract"] = {
             listview.render_header(true);
         }
         render_consultant_pipeline_cockpit(listview);
+        setup_company_filter_clear(listview, "requesting_organization", "Organizations");
         sync_active_consultant_lifecycle_cache(listview);
     }
 };
@@ -912,7 +1122,7 @@ function render_consultant_pipeline_cockpit(listview) {
 
             let cards = [
                 { title: "CEO Approval", count: d.ceo_approval || 0, color: "#9333ea", bg: "#faf5ff", border: "#d8b4fe", filter: ["workflow_state", "=", "Pending CEO Approval"] },
-                { title: "HR Review", count: d.hr_review || 0, color: "#ea580c", bg: "#fff7ed", border: "#fed7aa", filter: ["workflow_state", "=", "Pending HR Review"] },
+                { title: "HR Review", count: d.hr_review || 0, color: "#ea580c", bg: "#fff7ed", border: "#fed7aa", filter_special: "hr_review" },
                 { title: "To Be Issued", count: d.to_be_issued || 0, color: "#0284c7", bg: "#f0f9ff", border: "#bae6fd", filter: ["workflow_state", "=", "CEO Approved"] },
                 { title: "Awaiting Signature", count: d.awaiting_signature || 0, color: "#0d9488", bg: "#f0fdfa", border: "#99f6e4", filter: ["workflow_state", "=", "Contract Issued"] },
                 { title: "Expiring in 30 Days", count: d.expiring_30 || 0, color: "#dc2626", bg: "#fef2f2", border: "#fecaca", filter_special: "exp30" },
@@ -941,7 +1151,11 @@ function render_consultant_pipeline_cockpit(listview) {
                 );
                 $(this).on("click", function() {
                     listview.filter_area.clear();
-                    if (card.filter) {
+                    if (card.filter_special === "hr_review") {
+                        listview.filter_area.add([
+                            ["Consultant Contract", "workflow_state", "in", ["Pending HR Review", "Pending Final HR Review"], false]
+                        ]);
+                    } else if (card.filter) {
                         listview.filter_area.add([
                             ["Consultant Contract", card.filter[0], card.filter[1], card.filter[2], false]
                         ]);

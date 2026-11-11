@@ -34,6 +34,23 @@ frappe.ui.form.on("Contract Resume", {
     },
 
     onload: function(frm) {
+        frm.set_query("lead_approver", function() {
+            return { filters: { role: "Team Lead" } };
+        });
+        frm.set_query("legal_approver", function() {
+            return { filters: { role: "Legal Approver" } };
+        });
+        frm.set_query("finance_approver", function() {
+            return { filters: { role: "Finance Approver" } };
+        });
+        if (frm.fields_dict && frm.fields_dict.hr_approver) {
+            frm.set_query("hr_approver", function() {
+                return { filters: { role: "HR Manager" } };
+            });
+        }
+        frm.set_query("ceo_approver", function() {
+            return { filters: { role: "CEO Approver" } };
+        });
         setup_pdf_restrictions(frm);
         if (frm.is_new()) {
             frm.doc.lead_approver_status = null;

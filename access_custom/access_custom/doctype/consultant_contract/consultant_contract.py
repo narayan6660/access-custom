@@ -917,6 +917,27 @@ def get_consultant_pipeline_stats():
 
 
 @frappe.whitelist()
+def check_company_has_contract_template(company):
+    if not company:
+        return {"has_template": False, "template_name": None}
+
+    tpl = frappe.db.get_value("Contract Template", {"company": company}, "name")
+    if tpl:
+        return {"has_template": True, "template_name": tpl}
+
+    res = frappe.db.sql("""
+        SELECT name FROM `tabContract Template` 
+        WHERE LOWER(TRIM(company)) = LOWER(TRIM(%s))
+        LIMIT 1
+    """, (company,), as_dict=True)
+
+    if res and res[0].get("name"):
+        return {"has_template": True, "template_name": res[0]["name"]}
+
+    return {"has_template": False, "template_name": None}
+
+
+@frappe.whitelist()
 def get_approver_users(doctype, txt, searchfield, start, page_len, filters=None):
     start = int(start or 0)
     page_len = int(page_len or 20)

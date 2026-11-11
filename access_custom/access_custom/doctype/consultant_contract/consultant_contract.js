@@ -27,14 +27,11 @@ frappe.ui.form.on("Consultant Contract", {
         if (comp) {
             frm.set_value("organization", comp);
             frappe.call({
-                method: "frappe.client.get_value",
-                args: {
-                    doctype: "Contract Template",
-                    filters: { company: comp },
-                    fieldname: "name"
-                },
+                method: "access_custom.access_custom.doctype.consultant_contract.consultant_contract.check_company_has_contract_template",
+                args: { company: comp },
                 callback: function(r) {
-                    if (!r.message || !r.message.name) {
+                    let res = r.message || {};
+                    if (!res.has_template) {
                         frappe.msgprint({
                             title: __("No Dedicated Template"),
                             indicator: "red",

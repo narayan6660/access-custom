@@ -1240,6 +1240,54 @@ def debug_inspect_roles_and_contract():
 
 
 
+def has_uncompleted_midterm_appraisal(doc_obj):
+    emp = doc_obj.get("employee")
+    if not emp:
+        return False, None
+
+    appraisals = frappe.db.sql("""
+        SELECT a.name, a.appraisal_cycle, a.workflow_state, c.custom_cycle_type
+        FROM `tabAppraisal` a
+        LEFT JOIN `tabAppraisal Cycle` c ON c.name = a.appraisal_cycle
+        WHERE a.employee = %s 
+          AND a.name != %s
+          AND a.docstatus < 2
+          AND (a.workflow_state IS NULL OR a.workflow_state != 'Completed')
+    """, (emp, doc_obj.get("name") or ""), as_dict=True)
+
+    for a in appraisals:
+        cycle_name = (a.get("appraisal_cycle") or "").lower()
+        cycle_type = (a.get("custom_cycle_type") or "").strip()
+        is_mid = (cycle_type == "Mid-Term") or ("mid" in cycle_name) or ("half" in cycle_name)
+        if is_mid:
+            return True, a
+
+    return False, None
+
+
+@frappe.whitelist()
+def get_midterm_appraisal_status(appraisal_name):
+    if not appraisal_name or not frappe.db.exists("Appraisal", appraisal_name):
+        return {"has_uncompleted": False}
+
+    doc = frappe.get_doc("Appraisal", appraisal_name)
+    cycle_name = (doc.appraisal_cycle or "").lower()
+    cycle_type = frappe.db.get_value("Appraisal Cycle", doc.appraisal_cycle, "custom_cycle_type") or ""
+    is_ann = (cycle_type == "Annual") or ("annual" in cycle_name)
+    if not is_ann:
+        return {"has_uncompleted": False}
+
+    has_uncomp, midterm_doc = has_uncompleted_midterm_appraisal(doc)
+    if has_uncomp and midterm_doc:
+        return {
+            "has_uncompleted": True,
+            "midterm_name": midterm_doc.get("name"),
+            "midterm_cycle": midterm_doc.get("appraisal_cycle"),
+            "midterm_state": midterm_doc.get("workflow_state") or "Pending"
+        }
+    return {"has_uncompleted": False}
+
+
 @frappe.whitelist()
 def custom_get_transitions(doc, workflow=None, raise_exception=False):
     """
@@ -1298,6 +1346,9 @@ def custom_get_transitions(doc, workflow=None, raise_exception=False):
                 cycle_type = frappe.db.get_value("Appraisal Cycle", doc_obj.get("appraisal_cycle"), "custom_cycle_type") or ""
                 is_ann = (cycle_type == "Annual") or ("annual" in cycle_name)
                 if is_ann:
+                    has_uncompleted, _ = has_uncompleted_midterm_appraisal(doc_obj)
+                    if has_uncompleted:
+                        return []
                     return [t for t in transitions if t.action == "Submit Appraisal"]
                 else:
                     return [t for t in transitions if t.action == "Submit Objectives"]
@@ -1416,6 +1467,16 @@ def custom_apply_workflow(doc, action):
                         frappe._("Cannot submit appraisal while in 'Pending'. Please submit your objectives first for manager review."),
                         frappe.ValidationError
                     )
+                is_ann = (cycle_type == "Annual") or ("annual" in cycle_name)
+                if is_ann:
+                    has_uncompleted, midterm_doc = has_uncompleted_midterm_appraisal(doc_obj)
+                    if has_uncompleted:
+                        frappe.throw(
+                            frappe._("Cannot submit Annual Appraisal: Your Mid-Term Appraisal (<b>{0}</b>) is still pending completion.").format(
+                                midterm_doc.get("name")
+                            ),
+                            frappe.ValidationError
+                        )
 
             if current_state in ["Pending", "Objectives Rejected", "Objectives Approved", "Appraisal Rejected"]:
                 if not emp_email or user != emp_email:

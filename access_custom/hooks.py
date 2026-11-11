@@ -151,6 +151,9 @@ override_doctype_class = {
 # Hook on document methods and events
 
 doc_events = {
+    "Appraisal": {
+        "validate": "access_custom.contract_lifecycle.validate_appraisal_midterm_prerequisite",
+    },
     "Customer": {
         "validate": "access_custom.contract_lifecycle.validate_customer_status_and_inactivation",
     },

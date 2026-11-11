@@ -1240,29 +1240,58 @@ def debug_inspect_roles_and_contract():
 
 
 
+def is_annual_appraisal_cycle(cycle_name, cycle_type=""):
+    c_type = (cycle_type or "").strip().lower()
+    c_name = (cycle_name or "").strip().lower()
+    return c_type == "annual" or "annual" in c_name
+
+
 def has_uncompleted_midterm_appraisal(doc_obj):
     emp = doc_obj.get("employee")
     if not emp:
         return False, None
 
+    curr_cycle = doc_obj.get("appraisal_cycle") or ""
+    curr_cycle_type = frappe.db.get_value("Appraisal Cycle", curr_cycle, "custom_cycle_type") or ""
+    if not is_annual_appraisal_cycle(curr_cycle, curr_cycle_type):
+        return False, None
+
     appraisals = frappe.db.sql("""
-        SELECT a.name, a.appraisal_cycle, a.workflow_state, c.custom_cycle_type
+        SELECT a.name, a.appraisal_cycle, a.workflow_state, a.docstatus, c.custom_cycle_type
         FROM `tabAppraisal` a
         LEFT JOIN `tabAppraisal Cycle` c ON c.name = a.appraisal_cycle
         WHERE a.employee = %s 
           AND a.name != %s
           AND a.docstatus < 2
-          AND (a.workflow_state IS NULL OR a.workflow_state != 'Completed')
     """, (emp, doc_obj.get("name") or ""), as_dict=True)
 
     for a in appraisals:
-        cycle_name = (a.get("appraisal_cycle") or "").lower()
-        cycle_type = (a.get("custom_cycle_type") or "").strip()
-        is_mid = (cycle_type == "Mid-Term") or ("mid" in cycle_name) or ("half" in cycle_name)
-        if is_mid:
-            return True, a
+        a_cycle = a.get("appraisal_cycle") or ""
+        a_cycle_type = a.get("custom_cycle_type") or ""
+        if not is_annual_appraisal_cycle(a_cycle, a_cycle_type):
+            state = a.get("workflow_state") or "Pending"
+            if state != "Completed":
+                return True, a
 
     return False, None
+
+
+def validate_appraisal_midterm_prerequisite(doc, method=None):
+    """
+    Doc event hook on Appraisal 'validate'.
+    Prevents Annual Appraisal from being saved past Pending or submitted if Mid-Term is not Completed.
+    """
+    has_uncompleted, midterm_doc = has_uncompleted_midterm_appraisal(doc)
+    if has_uncompleted:
+        current_state = doc.get("workflow_state") or "Pending"
+        if current_state != "Pending" or doc.docstatus > 0:
+            frappe.throw(
+                frappe._("Cannot advance or submit Annual Appraisal: Your Mid-Term Appraisal (<b>{0}</b>) is still in '<b>{1}</b>'. Mid-Term must reach 'Completed' first.").format(
+                    midterm_doc.get("name"),
+                    midterm_doc.get("workflow_state") or "Pending"
+                ),
+                frappe.ValidationError
+            )
 
 
 @frappe.whitelist()
@@ -1315,6 +1344,11 @@ def custom_get_transitions(doc, workflow=None, raise_exception=False):
 
     doctype = doc_obj.doctype
     if doctype == "Appraisal":
+        # Prerequisite: Annual Appraisal actions are locked for ALL users until Mid-Term is Completed
+        has_uncompleted, _ = has_uncompleted_midterm_appraisal(doc_obj)
+        if has_uncompleted:
+            return []
+
         user = frappe.session.user
         if user == "Administrator":
             return transitions
@@ -1443,6 +1477,16 @@ def custom_apply_workflow(doc, action):
 
     doctype = doc_obj.doctype
     if doctype == "Appraisal":
+        has_uncompleted, midterm_doc = has_uncompleted_midterm_appraisal(doc_obj)
+        if has_uncompleted:
+            frappe.throw(
+                frappe._("Cannot advance or submit Annual Appraisal: Your Mid-Term Appraisal (<b>{0}</b>) is still in '<b>{1}</b>'. Mid-Term must reach 'Completed' first.").format(
+                    midterm_doc.get("name"),
+                    midterm_doc.get("workflow_state") or "Pending"
+                ),
+                frappe.ValidationError
+            )
+
         user = frappe.session.user
         if user != "Administrator":
             current_state = doc_obj.get("workflow_state")

@@ -271,3 +271,98 @@ def get_approver_users(doctype, txt, searchfield, start, page_len, filters):
         LIMIT %s, %s
     """, (role_to_filter, f"%{txt}%", f"%{txt}%", int(start), int(page_len)), as_list=True)
     return users
+
+
+@frappe.whitelist()
+def get_leadership_employees(doctype, txt, searchfield, start, page_len, filters=None):
+    start = int(start or 0)
+    page_len = int(page_len or 20)
+
+    if isinstance(filters, str):
+        import json
+        try:
+            filters = json.loads(filters)
+        except Exception:
+            filters = {}
+    elif not filters:
+        filters = {}
+
+    role = (filters or {}).get("role", "")
+    if role == "Team Lead":
+        return get_team_leads(doctype, txt, searchfield, start, page_len, filters)
+    elif role in ["Projects Manager", "Project Manager"]:
+        return get_project_managers(doctype, txt, searchfield, start, page_len, filters)
+    elif role in ["Reporting Manager", "Reporting Managers"]:
+        return get_reporting_managers(doctype, txt, searchfield, start, page_len, filters)
+
+    role_pattern = f"%{role}%" if role else "%"
+    return frappe.db.sql("""
+        SELECT e.name, e.employee_name
+        FROM `tabEmployee` e
+        LEFT JOIN `tabUser` u ON e.user_id = u.name
+        LEFT JOIN `tabHas Role` r ON r.parent = u.name
+        WHERE e.status = 'Active'
+          AND (r.role = %(role)s OR e.designation LIKE %(role_pattern)s)
+          AND (e.name LIKE %(txt)s OR e.employee_name LIKE %(txt)s)
+        GROUP BY e.name
+        ORDER BY e.employee_name ASC
+        LIMIT %(start)s, %(page_len)s
+    """, {"role": role, "role_pattern": role_pattern, "txt": f"%{txt or ''}%", "start": start, "page_len": page_len})
+
+
+@frappe.whitelist()
+def get_team_leads(doctype, txt, searchfield, start, page_len, filters=None):
+    start = int(start or 0)
+    page_len = int(page_len or 20)
+    return frappe.db.sql("""
+        SELECT e.name, e.employee_name
+        FROM `tabEmployee` e
+        LEFT JOIN `tabUser` u ON e.user_id = u.name
+        LEFT JOIN `tabHas Role` r ON r.parent = u.name
+        WHERE e.status = 'Active'
+          AND (r.role = 'Team Lead' OR e.designation LIKE '%%Team Lead%%')
+          AND (e.name LIKE %(txt)s OR e.employee_name LIKE %(txt)s)
+        GROUP BY e.name
+        ORDER BY e.employee_name ASC
+        LIMIT %(start)s, %(page_len)s
+    """, {"txt": f"%{txt or ''}%", "start": start, "page_len": page_len})
+
+
+@frappe.whitelist()
+def get_project_managers(doctype, txt, searchfield, start, page_len, filters=None):
+    start = int(start or 0)
+    page_len = int(page_len or 20)
+    return frappe.db.sql("""
+        SELECT e.name, e.employee_name
+        FROM `tabEmployee` e
+        LEFT JOIN `tabUser` u ON e.user_id = u.name
+        LEFT JOIN `tabHas Role` r ON r.parent = u.name
+        WHERE e.status = 'Active'
+          AND (r.role IN ('Project Manager', 'Projects Manager') OR e.designation LIKE '%%Project Manager%%' OR e.designation LIKE '%%Projects Manager%%')
+          AND (e.name LIKE %(txt)s OR e.employee_name LIKE %(txt)s)
+        GROUP BY e.name
+        ORDER BY e.employee_name ASC
+        LIMIT %(start)s, %(page_len)s
+    """, {"txt": f"%{txt or ''}%", "start": start, "page_len": page_len})
+
+
+@frappe.whitelist()
+def get_reporting_managers(doctype, txt, searchfield, start, page_len, filters=None):
+    start = int(start or 0)
+    page_len = int(page_len or 20)
+    return frappe.db.sql("""
+        SELECT e.name, e.employee_name
+        FROM `tabEmployee` e
+        LEFT JOIN `tabUser` u ON e.user_id = u.name
+        LEFT JOIN `tabHas Role` r ON r.parent = u.name
+        WHERE e.status = 'Active'
+          AND (r.role IN ('Reporting Manager', 'Team Lead', 'Projects Manager', 'Project Manager') 
+               OR e.designation LIKE '%%Manager%%' 
+               OR e.designation LIKE '%%Lead%%' 
+               OR e.designation LIKE '%%Director%%' 
+               OR e.designation LIKE '%%Head%%')
+          AND (e.name LIKE %(txt)s OR e.employee_name LIKE %(txt)s)
+        GROUP BY e.name
+        ORDER BY e.employee_name ASC
+        LIMIT %(start)s, %(page_len)s
+    """, {"txt": f"%{txt or ''}%", "start": start, "page_len": page_len})

@@ -37,6 +37,7 @@ frappe.ui.form.on("Employment Contract", {
         if (frm.wrapper) $(frm.wrapper).addClass("employment-contract-wrapper");
         if (frm.page && frm.page.wrapper) $(frm.page.wrapper).addClass("employment-contract-wrapper");
 
+        setup_leadership_queries(frm);
         render_contract_progress_tracker(frm);
         setup_auto_expand_textareas(frm);
         apply_contract_approver_field_locking(frm);
@@ -1088,6 +1089,27 @@ function render_contract_progress_tracker(frm) {
 // 8. Approver Role Queries
 // ==============================================================================
 function setup_leadership_queries(frm) {
+    frm.set_query("team_lead", function() {
+        return {
+            query: "access_custom.access_custom.doctype.employment_contract.employment_contract.get_leadership_employees",
+            filters: { role: "Team Lead" }
+        };
+    });
+
+    frm.set_query("project_manager", function() {
+        return {
+            query: "access_custom.access_custom.doctype.employment_contract.employment_contract.get_leadership_employees",
+            filters: { role: "Projects Manager" }
+        };
+    });
+
+    frm.set_query("reporting_manager", function() {
+        return {
+            query: "access_custom.access_custom.doctype.employment_contract.employment_contract.get_leadership_employees",
+            filters: { role: "Reporting Manager" }
+        };
+    });
+
     frm.set_query("team_lead_approver", function() {
         return {
             query: "access_custom.access_custom.doctype.employment_contract.employment_contract.get_approver_users",
@@ -1115,8 +1137,6 @@ function setup_leadership_queries(frm) {
             filters: { role: "HR Manager" }
         };
     });
-
-
 }
 
 

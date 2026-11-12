@@ -186,7 +186,8 @@
    "fieldname": "team_lead",
    "fieldtype": "Link",
    "label": "Team Lead",
-   "options": "Employee"
+   "options": "Employee",
+   "ignore_user_permissions": 1
   },
   {
    "default": "Grant",
@@ -216,7 +217,8 @@
    "fieldname": "project_manager",
    "fieldtype": "Link",
    "label": "Project Manager",
-   "options": "Employee"
+   "options": "Employee",
+   "ignore_user_permissions": 1
   },
   {
    "default": "30",
@@ -637,7 +639,8 @@
    "fieldname": "reporting_manager",
    "fieldtype": "Link",
    "label": "Reporting Manager",
-   "options": "Employee"
+   "options": "Employee",
+   "ignore_user_permissions": 1
   },
   {
    "fieldname": "sec_break_e_sow",

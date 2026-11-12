@@ -45,6 +45,24 @@ frappe.ui.form.on("Employment Contract", {
         toggle_engagement_type_fields(frm);
         calculate_and_render_salary_breakup(frm);
         setup_workflow_action_buttons(frm);
+
+        setTimeout(() => {
+            apply_contract_approver_field_locking(frm);
+            align_contract_approver_rows(frm);
+        }, 80);
+        setTimeout(() => {
+            apply_contract_approver_field_locking(frm);
+            align_contract_approver_rows(frm);
+        }, 250);
+        setTimeout(() => {
+            apply_contract_approver_field_locking(frm);
+            align_contract_approver_rows(frm);
+        }, 600);
+
+        $(frm.wrapper).off("render_complete.ec_lock").on("render_complete.ec_lock", function() {
+            apply_contract_approver_field_locking(frm);
+            align_contract_approver_rows(frm);
+        });
     },
 
     engagement_type(frm) {
@@ -451,32 +469,6 @@ function align_contract_approver_rows(frm) {
 function apply_contract_approver_field_locking(frm) {
     if (!frm || !frm.doc) return;
 
-    if (frm.is_new()) {
-        const review_fields = [
-            { status: "team_lead_decision", review: "team_lead_remarks" },
-            { status: "hr_decision", review: "hr_remarks" },
-            { status: "ceo_decision", review: "ceo_remarks" },
-            { status: "final_hr_decision", review: "final_hr_remarks" }
-        ];
-        review_fields.forEach(item => {
-            let status_field = frm.get_field(item.status);
-            if (status_field && status_field.$wrapper) {
-                status_field.$wrapper.find(".approver-decision-badge").remove();
-                status_field.$wrapper.find(".control-input-wrapper, .control-input, .control-value").show();
-            }
-            let review_field = frm.get_field(item.review);
-            if (review_field && review_field.$wrapper) {
-                review_field.$wrapper.find(".approver-remarks-content").remove();
-                review_field.$wrapper.find(".control-input-wrapper, .control-input, .control-value").show();
-            }
-        });
-        if (frm.wrapper) {
-            $(frm.wrapper).find(".approver-decision-badge, .approver-remarks-content").remove();
-            $(frm.wrapper).find(".control-input-wrapper, .control-input, .control-value").show();
-        }
-        return;
-    }
-
     try {
         let state = frm.doc.workflow_state || frm.doc.status || "Draft";
         let user = frappe.session.user;
@@ -490,11 +482,11 @@ function apply_contract_approver_field_locking(frm) {
         ];
 
         review_matrix.forEach(item => {
-            let status_val = frm.doc[item.status] || "";
+            let status_val = frm.doc[item.status] || "Pending";
             let review_val = frm.doc[item.review] || "";
 
             frm.set_df_property(item.status, "read_only", 1);
-            let is_active_stage = (state === item.state);
+            let is_active_stage = !frm.is_new() && (state === item.state);
             let assigned_user = frm.doc[item.approver];
             if (item.role === "Final HR" && !assigned_user) {
                 assigned_user = frm.doc.hr_approver;
@@ -562,23 +554,27 @@ function apply_contract_approver_field_locking(frm) {
 
                     let $rem = $('<div class="approver-remarks-content" style="margin-top: 0px; display: block !important;"></div>');
                     if (review_val && review_val.trim()) {
-                        let border_color = "#cbd5e1";
-                        let text_color = "#1e293b";
                         let bg_color = "#f8fafc";
+                        let border_color = "#e2e8f0";
+                        let text_color = "#334155";
                         if (status_val && status_val.includes("Rejected")) {
-                            border_color = "#fca5a5";
                             bg_color = "#fef2f2";
+                            border_color = "#fca5a5";
                             text_color = "#991b1b";
+                        } else if (status_val && (status_val.includes("Returned") || status_val.includes("Revision"))) {
+                            bg_color = "#fffbeb";
+                            border_color = "#fcd34d";
+                            text_color = "#92400e";
                         }
                         $rem.html(`
-                            <div style="padding: 6px 12px; background: ${bg_color}; border: 1px solid ${border_color}; border-radius: 6px; font-size: 13px; color: ${text_color}; line-height: 1.45; min-height: 32px; white-space: pre-wrap;">
-                                ${frappe.utils.escape_html(review_val)}
+                            <div style="padding: 6px 12px; background: ${bg_color}; border: 1px solid ${border_color}; border-radius: 6px; font-size: 12px; color: ${text_color}; line-height: 1.45; white-space: pre-wrap; word-break: break-word;">
+                                "${frappe.utils.escape_html(review_val)}"
                             </div>
                         `);
                     } else {
                         $rem.html(`
-                            <div style="padding: 6px 12px; background: #f8fafc; border: 1px dashed #e2e8f0; border-radius: 6px; font-size: 12px; color: #94a3b8; font-style: italic; min-height: 32px;">
-                                No remarks entered.
+                            <div style="padding: 6px 12px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; font-size: 12px; color: #94a3b8; font-style: italic;">
+                                No comments provided
                             </div>
                         `);
                     }
@@ -588,6 +584,8 @@ function apply_contract_approver_field_locking(frm) {
                     } else {
                         review_field.$wrapper.append($rem);
                     }
+                } else {
+                    review_field.$wrapper.find(".control-input-wrapper, .control-input").show();
                 }
             }
         });
@@ -1118,9 +1116,7 @@ function setup_leadership_queries(frm) {
         };
     });
 
-    frm.set_query("work_location", function() {
-        return { filters: { is_active: 1 } };
-    });
+
 }
 
 

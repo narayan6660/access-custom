@@ -601,6 +601,13 @@ function apply_contract_approver_field_locking(frm) {
 // 4. Section Visibility Enforcement
 // ==============================================================================
 function apply_section_visibility(frm) {
+    if (frm.dashboard && typeof frm.dashboard.clear_headline === "function") {
+        frm.dashboard.clear_headline();
+    }
+    frm.set_df_property("naming_series", "hidden", 1);
+    frm.set_df_property("status", "hidden", 1);
+    $(frm.wrapper).find('.form-section:has([data-fieldname="naming_series"])').hide();
+
     if (!frm.doc) return;
 
     let state = frm.doc.workflow_state || frm.doc.status || "Draft";
@@ -857,10 +864,42 @@ function render_salary_html_table(frm, gross, annual_ctc, b_pct, basic, basic_an
 // ==============================================================================
 // 7. Visual Workflow Stepper Tracker
 // ==============================================================================
+function get_contract_rejection_stage(frm) {
+    const check_stages = [
+        { name: "Pending Final HR Review", status: frm.doc.final_hr_decision, review: frm.doc.final_hr_remarks, role: "Final HR", user: frm.doc.final_hr_approver || frm.doc.hr_approver },
+        { name: "Pending CEO Approval", status: frm.doc.ceo_decision, review: frm.doc.ceo_remarks, role: "CEO", user: frm.doc.ceo_approver },
+        { name: "Pending HR Review", status: frm.doc.hr_decision, review: frm.doc.hr_remarks, role: "HR", user: frm.doc.hr_approver },
+        { name: "Pending Team Lead Approval", status: frm.doc.team_lead_decision, review: frm.doc.team_lead_remarks, role: "Team Lead", user: frm.doc.team_lead_approver },
+    ];
+    for (let cs of check_stages) {
+        if (cs.status && cs.status.includes("Reject")) {
+            return cs;
+        }
+    }
+    return null;
+}
+
+function get_contract_revision_stage(frm) {
+    const check_stages = [
+        { name: "Pending Final HR Review", status: frm.doc.final_hr_decision, review: frm.doc.final_hr_remarks, role: "Final HR", user: frm.doc.final_hr_approver || frm.doc.hr_approver },
+        { name: "Pending CEO Approval", status: frm.doc.ceo_decision, review: frm.doc.ceo_remarks, role: "CEO", user: frm.doc.ceo_approver },
+        { name: "Pending HR Review", status: frm.doc.hr_decision, review: frm.doc.hr_remarks, role: "HR", user: frm.doc.hr_approver },
+        { name: "Pending Team Lead Approval", status: frm.doc.team_lead_decision, review: frm.doc.team_lead_remarks, role: "Team Lead", user: frm.doc.team_lead_approver },
+    ];
+    for (let cs of check_stages) {
+        if (cs.status && (cs.status.includes("Return") || cs.status.includes("Revision"))) {
+            return cs;
+        }
+    }
+    return null;
+}
+
+
 function render_contract_progress_tracker(frm) {
     if (!frm || !frm.wrapper) return;
 
     try {
+        // Clean up any prior instances
         $(".contract-progress-container").remove();
 
         let steps = [
@@ -875,26 +914,42 @@ function render_contract_progress_tracker(frm) {
 
         let current_state = frm.doc.workflow_state || frm.doc.status || "Draft";
         let is_rejected = current_state.includes("Reject") || (frm.doc.status === "Rejected");
-        let is_revision = current_state.includes("Returned for Revision") || (frm.doc.status === "Returned for Revision");
+        let is_revision = (current_state === "Returned for Revision") || (frm.doc.status === "Returned for Revision");
+
+        let rejected_stage = get_contract_rejection_stage(frm);
+        if (rejected_stage) is_rejected = true;
+
+        let revision_stage = get_contract_revision_stage(frm);
+        if (revision_stage && !is_rejected) is_revision = true;
+
+        let has_all_section_g = !!(
+            frm.doc.sent_to_employee_date &&
+            frm.doc.employee_signed_contract &&
+            frm.doc.employee_signed_date &&
+            frm.doc.employee_received_date &&
+            frm.doc.final_executed_contract &&
+            frm.doc.countersigned_date
+        );
 
         let active_index = 0;
         if (current_state === "Active") {
-            active_index = 6;
-        } else if (current_state === "Signed by Employee" || current_state === "Approved for Issuance" || current_state === "Awaiting Employee Signature") {
-            active_index = 5;
+            active_index = steps.length - 1;
+        } else if (rejected_stage) {
+            active_index = steps.findIndex(s => s.id === rejected_stage.name);
+            if (active_index < 0) active_index = 1;
+        } else if (revision_stage && is_revision) {
+            active_index = steps.findIndex(s => s.id === revision_stage.name);
+            if (active_index < 0) active_index = 1;
         } else if (current_state === "CEO Approved" || current_state === "Pending Final HR Review") {
             active_index = 4;
-        } else if (current_state === "Pending CEO Approval") {
-            active_index = 3;
-        } else if (current_state === "Pending HR Review") {
-            active_index = 2;
-        } else if (current_state === "Pending Team Lead Approval") {
-            active_index = 1;
+        } else if (current_state === "Signed by Employee" || current_state === "Approved for Issuance" || current_state === "Contract Issued") {
+            active_index = 5;
         } else {
-            active_index = 0;
+            let idx = steps.findIndex(s => s.id === current_state || current_state.includes(s.label));
+            active_index = idx >= 0 ? idx : 0;
         }
 
-        let percent = (active_index === 6 && current_state === "Active") ? 100 : Math.round((active_index / 6) * 100);
+        let percent = (active_index === steps.length - 1 && current_state === "Active") ? 100 : Math.round((active_index / (steps.length - 1)) * 100);
 
         let status_bg = "#16a34a";
         let bar_color = "#16a34a";
@@ -902,80 +957,133 @@ function render_contract_progress_tracker(frm) {
             status_bg = "#dc2626";
             bar_color = "#dc2626";
         } else if (is_revision) {
-            status_bg = "#f59e0b";
-            bar_color = "#f59e0b";
+            status_bg = "#d97706";
+            bar_color = "#d97706";
         }
 
-        let progress_html = `
-            <div class="contract-progress-container" style="background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:18px 24px; margin-bottom:20px; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
-                    <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#4b5563;">
-                        Employment Contract Approval Workflow Route
-                    </div>
-                    <div>
-                        <span style="background:${status_bg}; color:#fff; font-size:11px; font-weight:700; padding:4px 10px; border-radius:12px;">
-                            ${frappe.utils.escape_html(current_state)} (${percent}%)
-                        </span>
-                    </div>
-                </div>
-                <div style="position:relative; display:flex; justify-content:space-between; align-items:flex-start;">
-                    <div style="position:absolute; top:13px; left:25px; right:25px; height:2px; background:#e5e7eb; z-index:1;"></div>
-                    <div style="position:absolute; top:13px; left:25px; width:${Math.min(active_index * 16.66, 100)}%; height:2px; background:${bar_color}; z-index:2; transition:width 0.4s ease;"></div>
-        `;
+        let display_status = current_state;
+        if (current_state === "Signed by Employee" || current_state === "Approved for Issuance" || current_state === "Contract Issued") {
+            display_status = has_all_section_g ? "Signed Contract (Ready to Activate)" : "Signed Contract (Pending Uploads)";
+        }
 
-        steps.forEach((step, idx) => {
-            let is_completed = idx < active_index || (active_index === 6 && current_state === "Active");
-            let is_current = idx === active_index && current_state !== "Active";
+        let nodes_html = steps.map((s, idx) => {
+            let is_completed = (idx < active_index) || (active_index === steps.length - 1 && current_state === "Active");
+            let is_active = (idx === active_index) && !(active_index === steps.length - 1 && current_state === "Active");
 
-            let circle_bg = "#fff";
-            let circle_border = "#e5e7eb";
-            let circle_color = "#9ca3af";
+            let circle_bg = "#f1f5f9";
+            let circle_border = "#cbd5e1";
+            let circle_color = "#64748b";
+            let circle_content = idx + 1;
+            let label_color = "#64748b";
+            let label_weight = "500";
+            let pulse_style = "";
 
             if (is_completed) {
                 circle_bg = "#16a34a";
                 circle_border = "#16a34a";
-                circle_color = "#fff";
-            } else if (is_current) {
+                circle_color = "#ffffff";
+                circle_content = "&#10003;";
+                label_color = "#15803d";
+                label_weight = "600";
+            } else if (is_active) {
                 if (is_rejected) {
                     circle_bg = "#dc2626";
                     circle_border = "#dc2626";
+                    circle_color = "#ffffff";
+                    circle_content = "&#10007;";
+                    label_color = "#dc2626";
+                    label_weight = "700";
                 } else if (is_revision) {
-                    circle_bg = "#f59e0b";
-                    circle_border = "#f59e0b";
+                    circle_bg = "#d97706";
+                    circle_border = "#d97706";
+                    circle_color = "#ffffff";
+                    circle_content = "&#8635;";
+                    label_color = "#d97706";
+                    label_weight = "700";
+                    pulse_style = "box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.25);";
                 } else {
                     circle_bg = "#16a34a";
-                    circle_border = "#16a34a";
+                    circle_border = "#15803d";
+                    circle_color = "#ffffff";
+                    circle_content = (s.id === "Signed by Employee" && has_all_section_g) ? "&#10003;" : (idx + 1);
+                    label_color = "#15803d";
+                    label_weight = "700";
+                    pulse_style = "box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.25);";
                 }
-                circle_color = "#fff";
             }
 
-            progress_html += `
-                <div style="position:relative; z-index:3; display:flex; flex-direction:column; align-items:center; width:65px;">
-                    <div style="width:28px; height:28px; border-radius:50%; background:${circle_bg}; border:2px solid ${circle_border}; color:${circle_color}; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; margin-bottom:6px; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
-                        ${is_completed ? "✓" : idx + 1}
-                    </div>
-                    <div style="font-size:11px; font-weight:${is_current ? "700" : "500"}; color:${is_current ? "#111827" : "#6b7280"}; text-align:center; white-space:nowrap;">
-                        ${step.label}
-                    </div>
-                </div>
-            `;
-        });
+            let extra_hint = "";
+            if (s.id === "Signed by Employee" && is_active) {
+                extra_hint = has_all_section_g ?
+                    `<div style="font-size: 10px; color: #16a34a; font-weight: 600; margin-top: 2px;">(Uploaded)</div>` :
+                    `<div style="font-size: 10px; color: #d97706; font-weight: 600; margin-top: 2px;">(Pending)</div>`;
+            }
 
-        progress_html += `
+            return `
+            <div style="display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 50px; position: relative; z-index: 2;">
+                <div style="width: 26px; height: 26px; border-radius: 50%; background: ${circle_bg}; border: 2px solid ${circle_border}; color: ${circle_color}; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; margin-bottom: 5px; ${pulse_style}">
+                    ${circle_content}
+                </div>
+                <div style="font-size: 11px; font-weight: ${label_weight}; color: ${label_color}; text-align: center; line-height: 1.2;">
+                    ${s.label}
+                    ${extra_hint}
                 </div>
             </div>
+            `;
+        }).join("");
+
+        let container_html = `
+        <div class="contract-progress-container" style="margin-bottom: 14px; padding: 12px 18px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <div style="font-weight: 700; font-size: 12px; color: #1e293b; display: flex; align-items: center; gap: 8px;">
+                    <span>Employment Contract Approval Workflow Route</span>
+                </div>
+                <div>
+                    <span class="badge" style="background: ${status_bg}; color: #fff; font-size: 11px; padding: 3px 9px; border-radius: 12px; font-weight: 600;">
+                        ${frappe.utils.escape_html(display_status)} (${percent}%)
+                    </span>
+                </div>
+            </div>
+
+            <!-- Progress Line Bar -->
+            <div style="position: relative; height: 5px; background: #e2e8f0; border-radius: 3px; margin: 6px 12px 12px 12px;">
+                <div style="position: absolute; top: 0; left: 0; height: 100%; width: ${percent}%; background: ${bar_color}; border-radius: 3px; transition: width 0.3s ease;"></div>
+            </div>
+
+            <!-- Stepper Nodes -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; position: relative;">
+                ${nodes_html}
+            </div>
+        </div>
         `;
 
-        let $target = frm.page.wrapper.find(".form-tabs-list, .nav-tabs, .form-tabs").first();
-        if ($target.length) {
-            $target.before(progress_html);
+        let $container = $(container_html);
+
+        if (frm.layout && typeof frm.layout.show_dashboard === "function") {
+            frm.layout.show_dashboard();
+        }
+
+        if (frm.dashboard && frm.dashboard.parent && frm.dashboard.parent.length) {
+            $container.prependTo(frm.dashboard.parent);
+            frm.dashboard.show();
+            frm.dashboard.parent.show().removeClass("hide hidden");
+            frm.dashboard.parent.closest(".form-dashboard-wrapper").show().removeClass("hide hidden");
         } else {
-            frm.dashboard.set_headline_alert(progress_html);
+            let $target = $(frm.wrapper).find(".form-layout");
+            if ($target.length) {
+                $container.insertBefore($target.first());
+            } else {
+                $container.prependTo($(frm.wrapper).find(".form-page"));
+            }
         }
     } catch (e) {
-        console.error("Progress tracker render error:", e);
+        console.error("Error in render_contract_progress_tracker:", e);
     }
 }
+
+// ==============================================================================
+// 2. Approver Field Locking & High-Contrast Visual Stamping
+// ==============================================================================
 
 
 // ==============================================================================

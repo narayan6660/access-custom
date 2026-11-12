@@ -147,7 +147,8 @@
    "no_copy": 1,
    "options": "EC-.YYYY.-.#####.\nEC-.#####.\n.#####.",
    "reqd": 1,
-   "set_only_once": 1
+   "set_only_once": 1,
+   "hidden": 1
   },
   {
    "fieldname": "status",
@@ -158,7 +159,8 @@
    "no_copy": 1,
    "options": "Draft\nPending Team Lead Approval\nReturned for Revision (Team Lead)\nPending HR Review\nReturned for Revision (HR)\nPending CEO Approval\nReturned for Revision (CEO)\nCEO Approved\nPending Final HR Review\nApproved for Issuance\nContract Generated\nAwaiting Employee Signature\nSigned by Employee\nActive\nExpired\nTerminated\nClosed\nContract Issued\nReturned for Revision\nRejected",
    "read_only": 1,
-   "default": "Draft"
+   "default": "Draft",
+   "hidden": 1
   },
   {
    "fieldname": "workflow_state",

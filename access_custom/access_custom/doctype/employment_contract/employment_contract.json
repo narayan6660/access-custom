@@ -1,0 +1,977 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "autoname",
+ "creation": "2026-11-12 12:30:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "status",
+  "workflow_state",
+  "section_a",
+  "request_id",
+  "team_lead",
+  "funding_source",
+  "interim_notice_period",
+  "col_break_a1",
+  "request_date",
+  "project_manager",
+  "notice_period",
+  "col_break_a2",
+  "requesting_organization",
+  "project",
+  "reason_for_engagement",
+  "col_break_a3",
+  "requesting_department",
+  "project_contract",
+  "section_b",
+  "employee_name",
+  "col_break_b1",
+  "email_id",
+  "col_break_b2",
+  "contact_number",
+  "col_break_b3",
+  "employee_cv",
+  "sec_break_employee_address",
+  "address_line_1",
+  "address_line_2",
+  "city",
+  "col_break_addr1",
+  "state",
+  "country",
+  "col_break_addr2",
+  "pin_code",
+  "employee_address",
+  "section_c",
+  "engagement_type",
+  "col_break_c1",
+  "work_arrangement",
+  "col_break_c2",
+  "work_location",
+  "sec_break_dates",
+  "proposed_start_date",
+  "proposed_end_date",
+  "col_break_c3",
+  "contract_tenure",
+  "initial_tenure_value",
+  "tenure_unit",
+  "col_break_c4",
+  "payment_frequency",
+  "currency",
+  "sec_break_salary",
+  "compensation_amount",
+  "col_break_sal_head",
+  "annual_ctc",
+  "total_contract_value",
+  "sec_break_salary_details",
+  "basic_percent",
+  "basic_monthly",
+  "basic_annual",
+  "col_break_sal1",
+  "hra_percent",
+  "hra_monthly",
+  "hra_annual",
+  "col_break_sal2",
+  "lta_percent",
+  "lta_monthly",
+  "lta_annual",
+  "col_break_sal3",
+  "other_allowance_monthly",
+  "other_allowance_annual",
+  "sec_break_salary_preview",
+  "salary_breakup_html",
+  "section_d",
+  "project_allocations",
+  "total_allocation_percent",
+  "section_e",
+  "role",
+  "col_break_e1",
+  "designation",
+  "col_break_e2",
+  "grade",
+  "sec_break_e2",
+  "contract_template",
+  "col_break_e3",
+  "reporting_manager",
+  "sec_break_e_sow",
+  "scope_summary",
+  "key_responsibilities",
+  "deliverables",
+  "milestones",
+  "expected_outputs",
+  "performance_acceptance_criteria",
+  "section_f",
+  "team_lead_approver",
+  "col_break_f1_1",
+  "team_lead_decision",
+  "col_break_f1_2",
+  "team_lead_remarks",
+  "sec_break_f2",
+  "hr_approver",
+  "col_break_f2_1",
+  "hr_decision",
+  "col_break_f2_2",
+  "hr_remarks",
+  "sec_break_f3",
+  "ceo_approver",
+  "col_break_f3_1",
+  "ceo_decision",
+  "col_break_f3_2",
+  "ceo_remarks",
+  "sec_break_f4",
+  "final_hr_approver",
+  "col_break_f4_1",
+  "final_hr_decision",
+  "col_break_f4_2",
+  "final_hr_remarks",
+  "section_g",
+  "employee_signed_contract",
+  "employee_signed_date",
+  "employee_received_date",
+  "col_break_g",
+  "final_executed_contract",
+  "countersigned_date",
+  "sent_to_employee_date",
+  "section_rfp_summary",
+  "organization",
+  "project_name",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "no_copy": 1,
+   "options": "EC-.YYYY.-.#####.\nEC-.#####.\n.#####.",
+   "reqd": 1,
+   "set_only_once": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "no_copy": 1,
+   "options": "Draft\nPending Team Lead Approval\nReturned for Revision (Team Lead)\nPending HR Review\nReturned for Revision (HR)\nPending CEO Approval\nReturned for Revision (CEO)\nCEO Approved\nPending Final HR Review\nApproved for Issuance\nContract Generated\nAwaiting Employee Signature\nSigned by Employee\nActive\nExpired\nTerminated\nClosed\nContract Issued\nReturned for Revision\nRejected",
+   "read_only": 1,
+   "default": "Draft"
+  },
+  {
+   "fieldname": "workflow_state",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Workflow State",
+   "no_copy": 1,
+   "options": "Workflow State",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_a",
+   "fieldtype": "Section Break",
+   "label": "Section A \u2014 Request Details"
+  },
+  {
+   "fieldname": "request_id",
+   "fieldtype": "Data",
+   "label": "Request ID",
+   "read_only": 1
+  },
+  {
+   "fieldname": "team_lead",
+   "fieldtype": "Link",
+   "label": "Team Lead",
+   "options": "Employee"
+  },
+  {
+   "default": "Grant",
+   "fieldname": "funding_source",
+   "fieldtype": "Select",
+   "label": "Funding Source",
+   "options": "Grant\nProject\nOverhead"
+  },
+  {
+   "default": "15",
+   "fieldname": "interim_notice_period",
+   "fieldtype": "Int",
+   "label": "Interim / Probation Notice Period"
+  },
+  {
+   "fieldname": "col_break_a1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Today",
+   "fieldname": "request_date",
+   "fieldtype": "Date",
+   "label": "Request Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "project_manager",
+   "fieldtype": "Link",
+   "label": "Project Manager",
+   "options": "Employee"
+  },
+  {
+   "default": "30",
+   "fieldname": "notice_period",
+   "fieldtype": "Int",
+   "label": "Notice Period"
+  },
+  {
+   "fieldname": "col_break_a2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "requesting_organization",
+   "fieldtype": "Link",
+   "label": "Requesting Organization",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "label": "Project",
+   "options": "Project"
+  },
+  {
+   "fieldname": "reason_for_engagement",
+   "fieldtype": "Small Text",
+   "label": "Reason for Engagement"
+  },
+  {
+   "fieldname": "col_break_a3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "requesting_department",
+   "fieldtype": "Link",
+   "label": "Requesting Department",
+   "options": "Department"
+  },
+  {
+   "fieldname": "project_contract",
+   "fieldtype": "Data",
+   "label": "Project Contract"
+  },
+  {
+   "fieldname": "section_b",
+   "fieldtype": "Section Break",
+   "label": "Section B \u2014 Employee"
+  },
+  {
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Employee Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "col_break_b1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "email_id",
+   "fieldtype": "Data",
+   "label": "Email",
+   "options": "Email"
+  },
+  {
+   "fieldname": "col_break_b2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "contact_number",
+   "fieldtype": "Data",
+   "label": "Mobile / Phone"
+  },
+  {
+   "fieldname": "col_break_b3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "employee_cv",
+   "fieldtype": "Attach",
+   "label": "Employee CV (PDF upload)"
+  },
+  {
+   "fieldname": "sec_break_employee_address",
+   "fieldtype": "Section Break",
+   "label": "Employee Address"
+  },
+  {
+   "fieldname": "address_line_1",
+   "fieldtype": "Data",
+   "label": "Address Line 1"
+  },
+  {
+   "fieldname": "address_line_2",
+   "fieldtype": "Data",
+   "label": "Address Line 2"
+  },
+  {
+   "fieldname": "city",
+   "fieldtype": "Data",
+   "label": "City"
+  },
+  {
+   "fieldname": "col_break_addr1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "state",
+   "fieldtype": "Data",
+   "label": "State"
+  },
+  {
+   "default": "India",
+   "fieldname": "country",
+   "fieldtype": "Link",
+   "label": "Country",
+   "options": "Country"
+  },
+  {
+   "fieldname": "col_break_addr2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "pin_code",
+   "fieldtype": "Data",
+   "label": "Pin Code"
+  },
+  {
+   "fieldname": "employee_address",
+   "fieldtype": "Small Text",
+   "hidden": 1,
+   "label": "Address"
+  },
+  {
+   "fieldname": "section_c",
+   "fieldtype": "Section Break",
+   "label": "Section C \u2014 Engagement Details"
+  },
+  {
+   "default": "Open-ended",
+   "fieldname": "engagement_type",
+   "fieldtype": "Select",
+   "label": "Engagement Type",
+   "options": "Open-ended\nClose-ended",
+   "reqd": 1
+  },
+  {
+   "fieldname": "col_break_c1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "On-site",
+   "fieldname": "work_arrangement",
+   "fieldtype": "Select",
+   "label": "Work Arrangement",
+   "options": "On-site\nRemote\nHybrid"
+  },
+  {
+   "fieldname": "col_break_c2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "work_location",
+   "fieldtype": "Link",
+   "label": "Work Location",
+   "options": "Branch"
+  },
+  {
+   "fieldname": "sec_break_dates",
+   "fieldtype": "Section Break",
+   "label": "Tenure & Dates"
+  },
+  {
+   "fieldname": "proposed_start_date",
+   "fieldtype": "Date",
+   "label": "Proposed Start Date"
+  },
+  {
+   "depends_on": "eval:doc.engagement_type=='Close-ended'",
+   "fieldname": "proposed_end_date",
+   "fieldtype": "Date",
+   "label": "Proposed End Date"
+  },
+  {
+   "fieldname": "col_break_c3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "contract_tenure",
+   "fieldtype": "Data",
+   "label": "Contract Tenure",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:doc.engagement_type=='Close-ended'",
+   "fieldname": "initial_tenure_value",
+   "fieldtype": "Int",
+   "label": "Initial Tenure"
+  },
+  {
+   "default": "Months",
+   "depends_on": "eval:doc.engagement_type=='Close-ended'",
+   "fieldname": "tenure_unit",
+   "fieldtype": "Select",
+   "label": "Tenure Unit",
+   "options": "Months\nDays\nWeeks\nYears"
+  },
+  {
+   "fieldname": "col_break_c4",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Monthly",
+   "fieldname": "payment_frequency",
+   "fieldtype": "Select",
+   "label": "Payment Frequency",
+   "options": "Monthly\nQuarterly\nLump Sum"
+  },
+  {
+   "default": "INR",
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "Currency",
+   "options": "Currency"
+  },
+  {
+   "fieldname": "sec_break_salary",
+   "fieldtype": "Section Break",
+   "label": "Compensation & Salary Breakup"
+  },
+  {
+   "fieldname": "compensation_amount",
+   "fieldtype": "Currency",
+   "label": "Total Monthly Gross (INR)",
+   "options": "currency",
+   "reqd": 1
+  },
+  {
+   "fieldname": "col_break_sal_head",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "annual_ctc",
+   "fieldtype": "Currency",
+   "label": "Annual CTC (INR)",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_contract_value",
+   "fieldtype": "Currency",
+   "label": "Total Contract Value",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sec_break_salary_details",
+   "fieldtype": "Section Break",
+   "label": "Salary Components Breakdown"
+  },
+  {
+   "default": "50.0",
+   "fieldname": "basic_percent",
+   "fieldtype": "Percent",
+   "label": "Basic %"
+  },
+  {
+   "fieldname": "basic_monthly",
+   "fieldtype": "Currency",
+   "label": "Basic (Monthly)",
+   "options": "currency"
+  },
+  {
+   "fieldname": "basic_annual",
+   "fieldtype": "Currency",
+   "label": "Basic (Annual)",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "col_break_sal1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "50.0",
+   "fieldname": "hra_percent",
+   "fieldtype": "Percent",
+   "label": "HRA % (of Basic)"
+  },
+  {
+   "fieldname": "hra_monthly",
+   "fieldtype": "Currency",
+   "label": "HRA (Monthly)",
+   "options": "currency"
+  },
+  {
+   "fieldname": "hra_annual",
+   "fieldtype": "Currency",
+   "label": "HRA (Annual)",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "col_break_sal2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "10.0",
+   "fieldname": "lta_percent",
+   "fieldtype": "Percent",
+   "label": "LTA % (of Gross)"
+  },
+  {
+   "fieldname": "lta_monthly",
+   "fieldtype": "Currency",
+   "label": "LTA (Monthly)",
+   "options": "currency"
+  },
+  {
+   "fieldname": "lta_annual",
+   "fieldtype": "Currency",
+   "label": "LTA (Annual)",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "col_break_sal3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "other_allowance_monthly",
+   "fieldtype": "Currency",
+   "label": "Other Allowance (Monthly)",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "other_allowance_annual",
+   "fieldtype": "Currency",
+   "label": "Other Allowance (Annual)",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sec_break_salary_preview",
+   "fieldtype": "Section Break",
+   "label": "Salary Breakup Table Preview"
+  },
+  {
+   "fieldname": "salary_breakup_html",
+   "fieldtype": "HTML",
+   "label": "Salary Summary View"
+  },
+  {
+   "fieldname": "section_d",
+   "fieldtype": "Section Break",
+   "label": "Section D \u2014 Project Allocation"
+  },
+  {
+   "fieldname": "project_allocations",
+   "fieldtype": "Table",
+   "label": "Project Allocations",
+   "options": "Project Allocation Item"
+  },
+  {
+   "fieldname": "total_allocation_percent",
+   "fieldtype": "Percent",
+   "label": "Total Allocation % (Auto-calculate)",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_e",
+   "fieldtype": "Section Break",
+   "label": "Section E \u2014 Terms & Job Description"
+  },
+  {
+   "fieldname": "role",
+   "fieldtype": "Data",
+   "label": "Role"
+  },
+  {
+   "fieldname": "col_break_e1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "designation",
+   "fieldtype": "Link",
+   "label": "Designation",
+   "options": "Designation"
+  },
+  {
+   "fieldname": "col_break_e2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "grade",
+   "fieldtype": "Link",
+   "label": "Grade / Level",
+   "options": "Employee Grade"
+  },
+  {
+   "fieldname": "sec_break_e2",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "contract_template",
+   "fieldtype": "Link",
+   "label": "Contract Template",
+   "options": "Contract Template"
+  },
+  {
+   "fieldname": "col_break_e3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "reporting_manager",
+   "fieldtype": "Link",
+   "label": "Reporting Manager",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "sec_break_e_sow",
+   "fieldtype": "Section Break",
+   "label": "Job Description & Deliverables"
+  },
+  {
+   "fieldname": "scope_summary",
+   "fieldtype": "Text",
+   "label": "Job Summary / Scope"
+  },
+  {
+   "fieldname": "key_responsibilities",
+   "fieldtype": "Text",
+   "label": "Key Responsibilities"
+  },
+  {
+   "fieldname": "deliverables",
+   "fieldtype": "Text",
+   "label": "Deliverables"
+  },
+  {
+   "fieldname": "milestones",
+   "fieldtype": "Text",
+   "label": "Milestones"
+  },
+  {
+   "fieldname": "expected_outputs",
+   "fieldtype": "Text",
+   "label": "Expected Outputs"
+  },
+  {
+   "fieldname": "performance_acceptance_criteria",
+   "fieldtype": "Text",
+   "label": "Performance / Acceptance Criteria"
+  },
+  {
+   "fieldname": "section_f",
+   "fieldtype": "Section Break",
+   "label": "Section F \u2014 Approval Section"
+  },
+  {
+   "fieldname": "team_lead_approver",
+   "fieldtype": "Link",
+   "label": "Level 1 Team Lead Approver",
+   "options": "User"
+  },
+  {
+   "fieldname": "col_break_f1_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "team_lead_decision",
+   "fieldtype": "Data",
+   "label": "Team Lead Decision",
+   "read_only": 1
+  },
+  {
+   "fieldname": "col_break_f1_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "team_lead_remarks",
+   "fieldtype": "Small Text",
+   "label": "Team Lead Remarks"
+  },
+  {
+   "fieldname": "sec_break_f2",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "hr_approver",
+   "fieldtype": "Link",
+   "label": "Level 2 HR Approver",
+   "options": "User"
+  },
+  {
+   "fieldname": "col_break_f2_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "hr_decision",
+   "fieldtype": "Data",
+   "label": "HR Decision",
+   "read_only": 1
+  },
+  {
+   "fieldname": "col_break_f2_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "hr_remarks",
+   "fieldtype": "Small Text",
+   "label": "HR Remarks"
+  },
+  {
+   "fieldname": "sec_break_f3",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "ceo_approver",
+   "fieldtype": "Link",
+   "label": "Level 3 CEO Approver",
+   "options": "User"
+  },
+  {
+   "fieldname": "col_break_f3_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ceo_decision",
+   "fieldtype": "Data",
+   "label": "CEO Decision",
+   "read_only": 1
+  },
+  {
+   "fieldname": "col_break_f3_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ceo_remarks",
+   "fieldtype": "Small Text",
+   "label": "CEO Remarks"
+  },
+  {
+   "fieldname": "sec_break_f4",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "final_hr_approver",
+   "fieldtype": "Link",
+   "label": "Level 4 Final HR Approver",
+   "options": "User"
+  },
+  {
+   "fieldname": "col_break_f4_1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "final_hr_decision",
+   "fieldtype": "Data",
+   "label": "Final HR Decision",
+   "read_only": 1
+  },
+  {
+   "fieldname": "col_break_f4_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "final_hr_remarks",
+   "fieldtype": "Small Text",
+   "label": "Final HR Remarks"
+  },
+  {
+   "fieldname": "section_g",
+   "fieldtype": "Section Break",
+   "label": "Section G \u2014 Employee Signed Contract"
+  },
+  {
+   "fieldname": "employee_signed_contract",
+   "fieldtype": "Attach",
+   "label": "Employee Signed Contract (Upload PDF)"
+  },
+  {
+   "fieldname": "employee_signed_date",
+   "fieldtype": "Date",
+   "label": "Employee Signed Date"
+  },
+  {
+   "fieldname": "employee_received_date",
+   "fieldtype": "Date",
+   "label": "Received Date"
+  },
+  {
+   "fieldname": "col_break_g",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "final_executed_contract",
+   "fieldtype": "Attach",
+   "label": "Final Executed Contract (Upload PDF)"
+  },
+  {
+   "fieldname": "countersigned_date",
+   "fieldtype": "Date",
+   "label": "Management Countersigned Date"
+  },
+  {
+   "fieldname": "sent_to_employee_date",
+   "fieldtype": "Date",
+   "label": "Sent to Employee Date"
+  },
+  {
+   "fieldname": "section_rfp_summary",
+   "fieldtype": "Section Break",
+   "hidden": 1,
+   "label": "Additional RFP Reference Details"
+  },
+  {
+   "fieldname": "organization",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Organization",
+   "options": "Company"
+  },
+  {
+   "fieldname": "project_name",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Project Name",
+   "options": "Project"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Amended From",
+   "options": "Employment Contract",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-11-12 12:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "Access Custom",
+ "name": "Employment Contract",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "role": "System Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 1,
+   "cancel": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "report": 1,
+   "share": 1
+  },
+  {
+   "role": "HR Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 1,
+   "cancel": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "report": 1,
+   "share": 1
+  },
+  {
+   "role": "Contract Manager",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 1,
+   "cancel": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "report": 1,
+   "share": 1
+  },
+  {
+   "role": "HR User",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 1,
+   "cancel": 1,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "report": 1,
+   "share": 1
+  },
+  {
+   "role": "Team Lead",
+   "read": 1,
+   "write": 1,
+   "create": 0,
+   "submit": 0,
+   "cancel": 0,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "report": 1,
+   "share": 1
+  },
+  {
+   "role": "CEO Approver",
+   "read": 1,
+   "write": 1,
+   "create": 0,
+   "submit": 0,
+   "cancel": 0,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "report": 1,
+   "share": 1
+  },
+  {
+   "role": "Employee",
+   "read": 1,
+   "write": 1,
+   "create": 1,
+   "submit": 0,
+   "cancel": 0,
+   "delete": 0,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "report": 1,
+   "share": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "search_fields": "employee_name",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

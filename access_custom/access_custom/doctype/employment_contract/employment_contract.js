@@ -16,6 +16,27 @@ const TARGET_TEXT_FIELDS = [
 ];
 
 frappe.ui.form.on("Employment Contract", {
+    validate(frm) {
+        let v1 = validate_pdf_attachment(frm, "employee_cv");
+        let v2 = validate_pdf_attachment(frm, "employee_signed_contract");
+        let v3 = validate_pdf_attachment(frm, "final_executed_contract");
+        if (!v1 || !v2 || !v3) {
+            frappe.validated = false;
+            return false;
+        }
+    },
+
+    employee_cv(frm) {
+        validate_pdf_attachment(frm, "employee_cv");
+    },
+
+    employee_signed_contract(frm) {
+        validate_pdf_attachment(frm, "employee_signed_contract");
+    },
+
+    final_executed_contract(frm) {
+        validate_pdf_attachment(frm, "final_executed_contract");
+    },
     onload(frm) {
         inject_employment_contract_styles();
         apply_section_visibility(frm);
@@ -1235,4 +1256,63 @@ function prompt_revision_reason(frm, target_state) {
         frm.set_value("status", target_state);
         frm.save();
     }, __("Return for Revision"), __("Submit Feedback"));
+}
+
+
+// ==============================================================================
+// 10. PDF Attachment Validation (Strict PDF-Only)
+// ==============================================================================
+function validate_pdf_attachment(frm, fieldname) {
+    let file_url = frm.doc[fieldname];
+    if (!file_url) return true;
+
+    let clean_path = file_url.split("?")[0].split("#")[0].toLowerCase().trim();
+    let ext = clean_path.split(".").pop();
+
+    if (ext !== "pdf") {
+        let field_label = frm.get_docfield(fieldname)?.label || fieldname;
+        frm.set_value(fieldname, null);
+
+        // Deduplicate: prevent firing duplicate popups within 1.5 seconds
+        let now = Date.now();
+        if (frm._last_pdf_err_time && (now - frm._last_pdf_err_time < 1500) && frm._last_pdf_err_field === fieldname) {
+            return false;
+        }
+        frm._last_pdf_err_time = now;
+        frm._last_pdf_err_field = fieldname;
+
+        if (frm._pdf_err_timer) {
+            clearTimeout(frm._pdf_err_timer);
+        }
+
+        frm._pdf_err_timer = setTimeout(() => {
+            if (frappe.msg_dialog && typeof frappe.msg_dialog.clear === "function") {
+                frappe.msg_dialog.clear();
+            }
+
+            frappe.msgprint({
+                title: __("Invalid Document Format"),
+                indicator: "red",
+                message: __(
+                    "<div style='font-size: 14px; line-height: 1.6; padding: 4px 0;'>" +
+                    "<p style='margin-bottom: 8px;'><b>" + frappe.utils.escape_html(field_label) + "</b> only accepts <b>PDF (.pdf)</b> files.</p>" +
+                    "<p style='color: #dc2626; margin-bottom: 8px;'>The uploaded file (<b>." + frappe.utils.escape_html(ext) + "</b>) is not permitted and has been removed.</p>" +
+                    "<p style='color: #475569; font-size: 13px;'>Please select and upload a valid PDF document.</p>" +
+                    "</div>"
+                ),
+                primary_action: {
+                    label: __("Understood"),
+                    action: function() {
+                        frappe.hide_msgprint(true);
+                        if (frappe.msg_dialog && typeof frappe.msg_dialog.hide === "function") {
+                            frappe.msg_dialog.hide();
+                        }
+                    }
+                }
+            });
+        }, 400);
+
+        return false;
+    }
+    return true;
 }

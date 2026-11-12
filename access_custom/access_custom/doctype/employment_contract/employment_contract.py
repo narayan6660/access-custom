@@ -202,11 +202,14 @@ class EmploymentContract(Document):
         ]
         for fieldname, label in attachments_to_check:
             val = self.get(fieldname)
-            if val and not str(val).lower().endswith(".pdf"):
-                frappe.throw(
-                    frappe._(f"Only PDF files are permitted for <b>{label}</b>. Please upload a valid PDF."),
-                    frappe.ValidationError
-                )
+            if val:
+                clean_val = str(val).split("?")[0].split("#")[0].strip().lower()
+                if not clean_val.endswith(".pdf"):
+                    ext = clean_val.split(".")[-1] if "." in clean_val else "unknown"
+                    frappe.throw(
+                        frappe._(f"Only PDF (.pdf) files are permitted for <b>{label}</b>. The uploaded file (<b>.{ext}</b>) is not permitted."),
+                        frappe.ValidationError
+                    )
 
     def validate_contact_details(self):
         email = self.get("email_id")

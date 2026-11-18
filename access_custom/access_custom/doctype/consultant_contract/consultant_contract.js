@@ -2299,14 +2299,15 @@ function calculate_total_allocation(frm) {
 function setup_leadership_queries(frm) {
     frm.set_query("contract_template", function() {
         let comp = frm.doc.requesting_organization || frm.doc.organization;
+        let filters = {
+            name: ["not like", "%Employment%"]
+        };
         if (comp) {
-            return {
-                filters: {
-                    company: comp
-                }
-            };
+            filters.company = comp;
         }
-        return {};
+        return {
+            filters: filters
+        };
     });
 
     frm.set_query("team_lead", function() {

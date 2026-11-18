@@ -21,6 +21,7 @@
   {
    "fieldname": "rating",
    "fieldtype": "Select",
+   "hidden": 1,
    "in_list_view": 1,
    "label": "MidTerm Rating",
    "options": "\nProficient\nAdvanced\nExpert\nNot Applicable"
@@ -37,7 +38,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-07-22 15:07:34.464447",
+ "modified": "2026-11-17 13:41:31.616249",
  "modified_by": "Administrator",
  "module": "Access Custom",
  "name": "Competency Assessment Row",

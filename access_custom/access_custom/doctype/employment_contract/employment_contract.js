@@ -108,7 +108,11 @@ frappe.ui.form.on("Employment Contract", {
     },
 
     compensation_amount(frm) {
-        calculate_and_render_salary_breakup(frm, true);
+        calculate_and_render_salary_breakup(frm, false, "compensation_amount");
+    },
+
+    annual_ctc(frm) {
+        calculate_and_render_salary_breakup(frm, false, "annual_ctc");
     },
 
     basic_percent(frm) {
@@ -148,12 +152,27 @@ frappe.ui.form.on("Employment Contract", {
                         frappe.msgprint({
                             title: __("No Dedicated Template"),
                             indicator: "red",
-                            message: __("There is no dedicated template for <b>{0}</b>. Please contact the admin.", [comp])
+                            message: __("There is no dedicated Employment Contract template for <b>{0}</b>. Please contact the admin.", [comp])
                         });
                         frm.set_value("requesting_organization", "");
                         frm.set_value("organization", "");
                         frm.set_value("contract_template", "");
+                    } else if (res.template_name) {
+                        frm.set_value("contract_template", res.template_name);
                     }
+                }
+            });
+        } else {
+            frm.set_value("organization", "");
+            frm.set_value("contract_template", "");
+        }
+    },
+
+    team_lead(frm) {
+        if (frm.doc.team_lead) {
+            frappe.db.get_value("Employee", frm.doc.team_lead, "user_id").then(r => {
+                if (r && r.message && r.message.user_id) {
+                    frm.set_value("team_lead_approver", r.message.user_id);
                 }
             });
         }
@@ -167,6 +186,7 @@ frappe.ui.form.on("Employment Contract", {
 function inject_employment_contract_styles() {
     $("#ec-custom-ui-style").remove();
     $(`<style id="ec-custom-ui-style">
+        .employment-contract-wrapper [data-fieldname="project_contract"],
         .employment-contract-wrapper [data-fieldname="reason_for_engagement"] textarea,
         .employment-contract-wrapper [data-fieldname="scope_summary"] textarea,
         .employment-contract-wrapper [data-fieldname="key_responsibilities"] textarea,
@@ -626,6 +646,7 @@ function apply_section_visibility(frm) {
     }
     frm.set_df_property("naming_series", "hidden", 1);
     frm.set_df_property("status", "hidden", 1);
+    frm.set_df_property("project_contract", "hidden", 1);
     $(frm.wrapper).find('.form-section:has([data-fieldname="naming_series"])').hide();
 
     if (!frm.doc) return;
@@ -745,80 +766,127 @@ function calculate_end_date_from_tenure(frm) {
 // ==============================================================================
 function calculate_and_render_salary_breakup(frm, reset_all = false, source = "") {
     let gross = flt(frm.doc.compensation_amount);
-    let annual_ctc = Math.round(gross * 12);
+    let annual_ctc = flt(frm.doc.annual_ctc);
 
-    let b_pct = flt(frm.doc.basic_percent || 50.0);
-    let h_pct = flt(frm.doc.hra_percent || 50.0);
-    let l_pct = flt(frm.doc.lta_percent || 10.0);
-
-    let basic = 0;
-    let hra = 0;
-    let lta = 0;
-
-    if (reset_all || source === "basic_pct" || !frm.doc.basic_monthly) {
-        basic = Math.round(gross * (b_pct / 100.0));
-    } else if (source === "basic_val") {
-        basic = flt(frm.doc.basic_monthly);
-        b_pct = gross > 0 ? ((basic / gross) * 100).toFixed(2) : 50.0;
+    if (source === "annual_ctc") {
+        if (annual_ctc > 0) {
+            gross = Math.round(annual_ctc / 12.0);
+            frm.doc.compensation_amount = gross;
+        }
+    } else if (source === "compensation_amount") {
+        if (gross > 0) {
+            if (!annual_ctc || Math.abs(annual_ctc - (gross * 12.0)) > 12.0) {
+                annual_ctc = Math.round(gross * 12.0);
+                frm.doc.annual_ctc = annual_ctc;
+            }
+        }
     } else {
-        basic = flt(frm.doc.basic_monthly) || Math.round(gross * (b_pct / 100.0));
+        if (annual_ctc > 0 && (!gross || gross === 0)) {
+            gross = Math.round(annual_ctc / 12.0);
+            frm.doc.compensation_amount = gross;
+        } else if (gross > 0 && (!annual_ctc || annual_ctc === 0)) {
+            annual_ctc = Math.round(gross * 12.0);
+            frm.doc.annual_ctc = annual_ctc;
+        }
     }
 
-    if (reset_all || source === "hra_pct" || source === "basic_pct" || source === "basic_val" || !frm.doc.hra_monthly) {
-        hra = Math.round(basic * (h_pct / 100.0));
-    } else if (source === "hra_val") {
-        hra = flt(frm.doc.hra_monthly);
-        h_pct = basic > 0 ? ((hra / basic) * 100).toFixed(2) : 50.0;
+    if (annual_ctc <= 0 && gross <= 0) return;
+
+    let b_pct = flt(frm.doc.basic_percent != null && frm.doc.basic_percent !== "" ? frm.doc.basic_percent : 50.0);
+    let h_pct = flt(frm.doc.hra_percent != null && frm.doc.hra_percent !== "" ? frm.doc.hra_percent : 50.0);
+    let l_pct = flt(frm.doc.lta_percent != null && frm.doc.lta_percent !== "" ? frm.doc.lta_percent : 10.0);
+
+    // Exact unrounded monthly base for formula fidelity to Excel
+    let d4 = annual_ctc > 0 ? (annual_ctc / 12.0) : gross;
+    let e4 = annual_ctc > 0 ? annual_ctc : (gross * 12.0);
+
+    // 1. Basic: D5 = D4 * b_pct, E5 = D5 * 12
+    let d5 = 0;
+    let e5 = 0;
+    if (source === "basic_val") {
+        d5 = flt(frm.doc.basic_monthly);
+        e5 = d5 * 12.0;
+        b_pct = d4 > 0 ? flt(((d5 / d4) * 100).toFixed(2)) : 50.0;
     } else {
-        hra = flt(frm.doc.hra_monthly) || Math.round(basic * (h_pct / 100.0));
+        d5 = d4 * (b_pct / 100.0);
+        e5 = d5 * 12.0;
     }
 
-    if (reset_all || source === "lta_pct" || !frm.doc.lta_monthly) {
-        lta = Math.round(gross * (l_pct / 100.0));
-    } else if (source === "lta_val") {
-        lta = flt(frm.doc.lta_monthly);
-        l_pct = gross > 0 ? ((lta / gross) * 100).toFixed(2) : 10.0;
+    // 2. HRA: D6 = D5 * h_pct, E6 = D6 * 12
+    let d6 = 0;
+    let e6 = 0;
+    if (source === "hra_val") {
+        d6 = flt(frm.doc.hra_monthly);
+        e6 = d6 * 12.0;
+        h_pct = d5 > 0 ? flt(((d6 / d5) * 100).toFixed(2)) : 50.0;
     } else {
-        lta = flt(frm.doc.lta_monthly) || Math.round(gross * (l_pct / 100.0));
+        d6 = d5 * (h_pct / 100.0);
+        e6 = d6 * 12.0;
     }
 
-    let other = Math.round(gross - (basic + hra + lta));
-    if (other < 0) other = 0;
+    // 3. LTA: D7 = D4 * l_pct, E7 = D7 * 12
+    let d7 = 0;
+    let e7 = 0;
+    if (source === "lta_val") {
+        d7 = flt(frm.doc.lta_monthly);
+        e7 = d7 * 12.0;
+        l_pct = d4 > 0 ? flt(((d7 / d4) * 100).toFixed(2)) : 10.0;
+    } else {
+        d7 = d4 * (l_pct / 100.0);
+        e7 = d7 * 12.0;
+    }
 
-    let basic_ann = Math.round(basic * 12);
-    let hra_ann = Math.round(hra * 12);
-    let lta_ann = Math.round(lta * 12);
-    let other_ann = Math.round(other * 12);
+    // 4. Other Allowance: balancing amount
+    // D8 = D4 - (D5 + D6 + D7)
+    // E8 = E4 - (E5 + E6 + E7)
+    let d8 = d4 - (d5 + d6 + d7);
+    let e8 = e4 - (e5 + e6 + e7);
+    if (d8 < 0) d8 = 0;
+    if (e8 < 0) e8 = 0;
+
+    let basic_mon = Math.round(d5);
+    let basic_ann = Math.round(e5);
+    let hra_mon = Math.round(d6);
+    let hra_ann = Math.round(e6);
+    let lta_mon = Math.round(d7);
+    let lta_ann = Math.round(e7);
+    let other_mon = Math.round(d8);
+    let other_ann = Math.round(e8);
+
+    let display_gross = Math.round(d4);
+    let display_annual = Math.round(e4);
 
     frm.doc.basic_percent = b_pct;
-    frm.doc.basic_monthly = basic;
+    frm.doc.basic_monthly = basic_mon;
     frm.doc.basic_annual = basic_ann;
 
     frm.doc.hra_percent = h_pct;
-    frm.doc.hra_monthly = hra;
+    frm.doc.hra_monthly = hra_mon;
     frm.doc.hra_annual = hra_ann;
 
     frm.doc.lta_percent = l_pct;
-    frm.doc.lta_monthly = lta;
+    frm.doc.lta_monthly = lta_mon;
     frm.doc.lta_annual = lta_ann;
 
-    frm.doc.other_allowance_monthly = other;
+    frm.doc.other_allowance_monthly = other_mon;
     frm.doc.other_allowance_annual = other_ann;
 
-    frm.doc.annual_ctc = annual_ctc;
+    frm.doc.compensation_amount = display_gross;
+    frm.doc.annual_ctc = display_annual;
+
     if (frm.doc.engagement_type === "Open-ended" || !frm.doc.total_contract_value) {
-        frm.doc.total_contract_value = annual_ctc;
+        frm.doc.total_contract_value = display_annual;
     }
 
     frm.refresh_fields([
+        "compensation_amount", "annual_ctc", "total_contract_value",
         "basic_percent", "basic_monthly", "basic_annual",
         "hra_percent", "hra_monthly", "hra_annual",
         "lta_percent", "lta_monthly", "lta_annual",
-        "other_allowance_monthly", "other_allowance_annual",
-        "annual_ctc", "total_contract_value"
+        "other_allowance_monthly", "other_allowance_annual"
     ]);
 
-    render_salary_html_table(frm, gross, annual_ctc, b_pct, basic, basic_ann, h_pct, hra, hra_ann, l_pct, lta, lta_ann, other, other_ann);
+    render_salary_html_table(frm, display_gross, display_annual, b_pct, basic_mon, basic_ann, h_pct, hra_mon, hra_ann, l_pct, lta_mon, lta_ann, other_mon, other_ann);
 }
 
 function render_salary_html_table(frm, gross, annual_ctc, b_pct, basic, basic_ann, h_pct, hra, hra_ann, l_pct, lta, lta_ann, other, other_ann) {
@@ -1110,6 +1178,16 @@ function render_contract_progress_tracker(frm) {
 // 8. Approver Role Queries
 // ==============================================================================
 function setup_leadership_queries(frm) {
+    frm.set_query("contract_template", function() {
+        let comp = frm.doc.requesting_organization || frm.doc.organization;
+        return {
+            query: "access_custom.access_custom.doctype.employment_contract.employment_contract.get_employment_contract_templates",
+            filters: {
+                company: comp || ""
+            }
+        };
+    });
+
     frm.set_query("team_lead", function() {
         return {
             query: "access_custom.access_custom.doctype.employment_contract.employment_contract.get_leadership_employees",
@@ -1182,46 +1260,66 @@ function setup_workflow_action_buttons(frm) {
     } else if (state === "Pending Team Lead Approval") {
         if (is_admin || roles.includes("Team Lead") || user === frm.doc.team_lead_approver) {
             frm.add_custom_button(__("Approve (Team Lead)"), function() {
-                frm.set_value("team_lead_decision", "Approved");
+                let now_str = frappe.datetime.now_datetime();
+                frm.set_value("team_lead_decision", `Approved [${now_str}]`);
                 frm.set_value("status", "Pending HR Review");
                 frm.save();
             }).addClass("btn-success");
 
             frm.add_custom_button(__("Return for Revision"), function() {
-                prompt_revision_reason(frm, "Returned for Revision (Team Lead)");
+                prompt_revision_reason(frm, "Team Lead");
             }).addClass("btn-warning");
+
+            frm.add_custom_button(__("Reject"), function() {
+                prompt_rejection_reason(frm, "Team Lead");
+            }).addClass("btn-danger");
         }
     } else if (state === "Pending HR Review") {
         if (is_admin || roles.includes("HR Manager") || user === frm.doc.hr_approver) {
             frm.add_custom_button(__("Approve (HR Review)"), function() {
-                frm.set_value("hr_decision", "Approved");
+                let now_str = frappe.datetime.now_datetime();
+                frm.set_value("hr_decision", `Approved [${now_str}]`);
                 frm.set_value("status", "Pending CEO Approval");
                 frm.save();
             }).addClass("btn-success");
 
             frm.add_custom_button(__("Return for Revision"), function() {
-                prompt_revision_reason(frm, "Returned for Revision (HR)");
+                prompt_revision_reason(frm, "HR Review");
             }).addClass("btn-warning");
+
+            frm.add_custom_button(__("Reject"), function() {
+                prompt_rejection_reason(frm, "HR Review");
+            }).addClass("btn-danger");
         }
     } else if (state === "Pending CEO Approval") {
         if (is_admin || roles.includes("CEO Approver") || user === frm.doc.ceo_approver) {
             frm.add_custom_button(__("Approve (CEO)"), function() {
-                frm.set_value("ceo_decision", "Approved");
+                let now_str = frappe.datetime.now_datetime();
+                frm.set_value("ceo_decision", `Approved [${now_str}]`);
                 frm.set_value("status", "CEO Approved");
                 frm.save();
             }).addClass("btn-success");
 
             frm.add_custom_button(__("Return for Revision"), function() {
-                prompt_revision_reason(frm, "Returned for Revision (CEO)");
+                prompt_revision_reason(frm, "CEO");
             }).addClass("btn-warning");
+
+            frm.add_custom_button(__("Reject"), function() {
+                prompt_rejection_reason(frm, "CEO");
+            }).addClass("btn-danger");
         }
     } else if (state === "CEO Approved" || state === "Pending Final HR Review") {
         if (is_admin || roles.includes("HR Manager") || user === frm.doc.final_hr_approver) {
             frm.add_custom_button(__("Issue for Employee Signature"), function() {
-                frm.set_value("final_hr_decision", "Approved");
+                let now_str = frappe.datetime.now_datetime();
+                frm.set_value("final_hr_decision", `Approved [${now_str}]`);
                 frm.set_value("status", "Awaiting Employee Signature");
                 frm.save();
             }).addClass("btn-primary");
+
+            frm.add_custom_button(__("Reject"), function() {
+                prompt_rejection_reason(frm, "Final HR");
+            }).addClass("btn-danger");
         }
     } else if (state === "Awaiting Employee Signature" || state === "Signed by Employee") {
         if (is_admin || roles.includes("HR Manager")) {
@@ -1238,24 +1336,90 @@ function setup_workflow_action_buttons(frm) {
                 frm.save();
             }).addClass("btn-success");
         }
+    } else if (state === "Rejected" && (is_admin || user === frm.doc.owner)) {
+        frm.add_custom_button(__("Reopen as Draft"), function() {
+            frappe.confirm(__("Are you sure you want to reopen this rejected contract as Draft?"), function() {
+                frm.set_value("status", "Draft");
+                frm.set_value("team_lead_decision", "Pending");
+                frm.set_value("hr_decision", "Pending");
+                frm.set_value("ceo_decision", "Pending");
+                frm.set_value("final_hr_decision", "Pending");
+                frm.save();
+            });
+        }).addClass("btn-primary");
     }
 }
 
-function prompt_revision_reason(frm, target_state) {
-    frappe.prompt([
-        {
-            fieldname: "remarks",
-            fieldtype: "Small Text",
-            label: __("Revision Remarks / Feedback"),
-            reqd: 1
+function prompt_revision_reason(frm, tier_name) {
+    let now_str = frappe.datetime.now_datetime();
+    let d = new frappe.ui.Dialog({
+        title: __(`Return for Revision — ${tier_name}`),
+        fields: [
+            {
+                label: __("Revision Instructions / Remarks (Mandatory)"),
+                fieldname: "comments",
+                fieldtype: "Small Text",
+                reqd: 1
+            }
+        ],
+        primary_action_label: __("Return for Revision"),
+        primary_action: function(values) {
+            if (!values.comments || !values.comments.trim()) {
+                frappe.msgprint(__("Revision instructions are mandatory."));
+                return;
+            }
+            if (tier_name.includes("Team Lead")) {
+                frm.set_value("team_lead_decision", `Returned for Revision [${now_str}]`);
+                frm.set_value("team_lead_remarks", values.comments);
+            } else if (tier_name.includes("HR")) {
+                frm.set_value("hr_decision", `Returned for Revision [${now_str}]`);
+                frm.set_value("hr_remarks", values.comments);
+            } else if (tier_name.includes("CEO")) {
+                frm.set_value("ceo_decision", `Returned for Revision [${now_str}]`);
+                frm.set_value("ceo_remarks", values.comments);
+            }
+            frm.set_value("status", "Returned for Revision");
+            frm.save();
+            d.hide();
         }
-    ], function(values) {
-        if (target_state.includes("Team Lead")) frm.set_value("team_lead_remarks", values.remarks);
-        if (target_state.includes("HR")) frm.set_value("hr_remarks", values.remarks);
-        if (target_state.includes("CEO")) frm.set_value("ceo_remarks", values.remarks);
-        frm.set_value("status", target_state);
-        frm.save();
-    }, __("Return for Revision"), __("Submit Feedback"));
+    });
+    d.show();
+}
+
+function prompt_rejection_reason(frm, tier_name) {
+    let now_str = frappe.datetime.now_datetime();
+    let d = new frappe.ui.Dialog({
+        title: __(`Reject Employment Contract — ${tier_name}`),
+        fields: [
+            {
+                label: __("Rejection Reason / Comments (Mandatory)"),
+                fieldname: "comments",
+                fieldtype: "Small Text",
+                reqd: 1
+            }
+        ],
+        primary_action_label: __("Confirm Rejection"),
+        primary_action: function(values) {
+            if (!values.comments || !values.comments.trim()) {
+                frappe.msgprint(__("Rejection comments are mandatory."));
+                return;
+            }
+            if (tier_name.includes("Team Lead")) {
+                frm.set_value("team_lead_decision", `Rejected [${now_str}]`);
+                frm.set_value("team_lead_remarks", values.comments);
+            } else if (tier_name.includes("HR")) {
+                frm.set_value("hr_decision", `Rejected [${now_str}]`);
+                frm.set_value("hr_remarks", values.comments);
+            } else if (tier_name.includes("CEO")) {
+                frm.set_value("ceo_decision", `Rejected [${now_str}]`);
+                frm.set_value("ceo_remarks", values.comments);
+            }
+            frm.set_value("status", "Rejected");
+            frm.save();
+            d.hide();
+        }
+    });
+    d.show();
 }
 
 

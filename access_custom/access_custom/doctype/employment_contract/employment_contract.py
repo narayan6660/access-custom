@@ -32,7 +32,8 @@ class EmploymentContract(Document):
                 self.end_date = None
             self.initial_tenure_value = None
             fee = float(self.get("compensation_amount") or 0)
-            self.annual_ctc = round(fee * 12, 2)
+            if not self.get("annual_ctc") or abs(float(self.annual_ctc) - (fee * 12.0)) > 12.0:
+                self.annual_ctc = round(fee * 12, 2)
             self.total_contract_value = self.annual_ctc
             if start:
                 self.proposed_start_date = start
@@ -98,41 +99,78 @@ class EmploymentContract(Document):
 
     def calculate_salary_breakup(self):
         gross = float(self.get("compensation_amount") or 0)
-        if gross <= 0:
+        annual = float(self.get("annual_ctc") or 0)
+
+        if annual <= 0 and gross <= 0:
             return
+
+        if annual > 0 and (gross <= 0 or abs(annual - (gross * 12.0)) <= 12.0):
+            d4 = annual / 12.0
+            e4 = annual
+        else:
+            d4 = gross
+            e4 = gross * 12.0
 
         b_pct = float(self.get("basic_percent") if self.get("basic_percent") is not None else 50.0)
         h_pct = float(self.get("hra_percent") if self.get("hra_percent") is not None else 50.0)
         l_pct = float(self.get("lta_percent") if self.get("lta_percent") is not None else 10.0)
 
-        # Basic is b_pct of gross
-        basic = float(self.get("basic_monthly")) if self.get("basic_monthly") else round(gross * (b_pct / 100.0), 2)
-        # HRA is h_pct of Basic
-        hra = float(self.get("hra_monthly")) if self.get("hra_monthly") else round(basic * (h_pct / 100.0), 2)
-        # LTA is l_pct of gross
-        lta = float(self.get("lta_monthly")) if self.get("lta_monthly") else round(gross * (l_pct / 100.0), 2)
+        def r_up(val):
+            return int(val + 0.5) if val >= 0 else int(val - 0.5)
 
-        # Other Allowance is balancing amount
-        other = round(gross - (basic + hra + lta), 2)
-        if other < 0:
-            other = 0.0
+        # 1. Basic
+        if self.get("basic_monthly") and not self.get("basic_percent"):
+            d5 = float(self.basic_monthly)
+            e5 = d5 * 12.0
+            b_pct = round((d5 / d4) * 100, 2) if d4 > 0 else 50.0
+        else:
+            d5 = d4 * (b_pct / 100.0)
+            e5 = d5 * 12.0
+
+        # 2. HRA
+        if self.get("hra_monthly") and not self.get("hra_percent"):
+            d6 = float(self.hra_monthly)
+            e6 = d6 * 12.0
+            h_pct = round((d6 / d5) * 100, 2) if d5 > 0 else 50.0
+        else:
+            d6 = d5 * (h_pct / 100.0)
+            e6 = d6 * 12.0
+
+        # 3. LTA
+        if self.get("lta_monthly") and not self.get("lta_percent"):
+            d7 = float(self.lta_monthly)
+            e7 = d7 * 12.0
+            l_pct = round((d7 / d4) * 100, 2) if d4 > 0 else 10.0
+        else:
+            d7 = d4 * (l_pct / 100.0)
+            e7 = d7 * 12.0
+
+        # 4. Other Allowance
+        d8 = d4 - (d5 + d6 + d7)
+        e8 = e4 - (e5 + e6 + e7)
+        if d8 < 0:
+            d8 = 0.0
+        if e8 < 0:
+            e8 = 0.0
 
         self.basic_percent = b_pct
-        self.basic_monthly = basic
-        self.basic_annual = round(basic * 12, 2)
+        self.basic_monthly = float(r_up(d5))
+        self.basic_annual = float(r_up(e5))
 
         self.hra_percent = h_pct
-        self.hra_monthly = hra
-        self.hra_annual = round(hra * 12, 2)
+        self.hra_monthly = float(r_up(d6))
+        self.hra_annual = float(r_up(e6))
 
         self.lta_percent = l_pct
-        self.lta_monthly = lta
-        self.lta_annual = round(lta * 12, 2)
+        self.lta_monthly = float(r_up(d7))
+        self.lta_annual = float(r_up(e7))
 
-        self.other_allowance_monthly = other
-        self.other_allowance_annual = round(other * 12, 2)
+        self.other_allowance_monthly = float(r_up(d8))
+        self.other_allowance_annual = float(r_up(e8))
 
-        self.annual_ctc = round(gross * 12, 2)
+        self.compensation_amount = float(r_up(d4))
+        self.annual_ctc = float(r_up(e4))
+
         if self.get("engagement_type") == "Open-ended" or not self.get("total_contract_value"):
             self.total_contract_value = self.annual_ctc
 
@@ -240,20 +278,70 @@ class EmploymentContract(Document):
 @frappe.whitelist()
 def check_company_has_contract_template(company):
     if not company:
-        return {"has_template": False, "count": 0}
+        return {"has_template": False, "template_name": None}
     clean_company = company.strip()
-    templates = frappe.get_all(
-        "Contract Template",
-        filters={"company": clean_company},
-        fields=["name", "company"]
-    )
-    if templates:
-        return {"has_template": True, "count": len(templates), "matched_company": templates[0].company}
-    all_tpls = frappe.get_all("Contract Template", fields=["name", "company"])
-    for t in all_tpls:
-        if (t.company or "").strip().lower() == clean_company.lower():
-            return {"has_template": True, "count": 1, "matched_company": t.company}
-    return {"has_template": False, "count": 0}
+
+    # Filter strictly for Employment Contract Template (never match Consultant templates)
+    res = frappe.db.sql("""
+        SELECT name, company FROM `tabContract Template`
+        WHERE (company = %(company)s OR LOWER(TRIM(company)) = LOWER(TRIM(%(company)s)))
+          AND (name LIKE '%%Employment%%' OR title LIKE '%%Employment%%')
+          AND name NOT LIKE '%%Consultant%%'
+        ORDER BY creation DESC
+        LIMIT 1
+    """, {"company": clean_company}, as_dict=True)
+
+    if res and res[0].get("name"):
+        return {
+            "has_template": True,
+            "template_name": res[0]["name"],
+            "matched_company": res[0].get("company")
+        }
+    return {"has_template": False, "template_name": None}
+
+
+@frappe.whitelist()
+def get_employment_contract_templates(doctype, txt, searchfield, start, page_len, filters=None):
+    start = int(start or 0)
+    page_len = int(page_len or 20)
+
+    if isinstance(filters, str):
+        import json
+        try:
+            filters = json.loads(filters)
+        except Exception:
+            filters = {}
+    elif not filters:
+        filters = {}
+
+    company = filters.get("company")
+
+    conds = [
+        "(name LIKE %(emp_pattern)s OR title LIKE %(emp_pattern)s)",
+        "(name NOT LIKE %(con_pattern)s AND title NOT LIKE %(con_pattern)s)"
+    ]
+    params = {
+        "emp_pattern": "%Employment%",
+        "con_pattern": "%Consultant%",
+        "txt": f"%{txt or ''}%",
+        "start": start,
+        "page_len": page_len
+    }
+
+    if company:
+        conds.append("(company = %(company)s OR LOWER(TRIM(company)) = LOWER(TRIM(%(company)s)))")
+        params["company"] = company.strip()
+
+    cond_sql = " AND ".join(conds)
+
+    return frappe.db.sql(f"""
+        SELECT name, company
+        FROM `tabContract Template`
+        WHERE {cond_sql}
+          AND (name LIKE %(txt)s OR title LIKE %(txt)s)
+        ORDER BY name ASC
+        LIMIT %(start)s, %(page_len)s
+    """, params)
 
 
 @frappe.whitelist()

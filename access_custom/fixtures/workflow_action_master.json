@@ -670,5 +670,40 @@
   "modified": "2026-10-28 12:48:44.775569",
   "name": "Resubmit Appraisal",
   "workflow_action_name": "Resubmit Appraisal"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-11-16 11:57:27.882982",
+  "name": "Submit Mid-Term Review",
+  "workflow_action_name": "Submit Mid-Term Review"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-11-16 11:57:27.960543",
+  "name": "Approve Mid-Term",
+  "workflow_action_name": "Approve Mid-Term"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-11-16 11:57:27.962307",
+  "name": "Reject Mid-Term",
+  "workflow_action_name": "Reject Mid-Term"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-11-16 11:57:27.963910",
+  "name": "Resubmit Mid-Term Review",
+  "workflow_action_name": "Resubmit Mid-Term Review"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow Action Master",
+  "modified": "2026-11-16 11:57:27.965444",
+  "name": "Submit Annual Appraisal",
+  "workflow_action_name": "Submit Annual Appraisal"
  }
 ]

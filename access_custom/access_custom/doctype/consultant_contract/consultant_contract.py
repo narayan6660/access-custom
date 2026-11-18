@@ -921,13 +921,19 @@ def check_company_has_contract_template(company):
     if not company:
         return {"has_template": False, "template_name": None}
 
-    tpl = frappe.db.get_value("Contract Template", {"company": company}, "name")
+    tpl = frappe.db.get_value(
+        "Contract Template",
+        {"company": company, "name": ["not like", "%Employment%"]},
+        "name"
+    )
     if tpl:
         return {"has_template": True, "template_name": tpl}
 
     res = frappe.db.sql("""
         SELECT name FROM `tabContract Template` 
         WHERE LOWER(TRIM(company)) = LOWER(TRIM(%s))
+          AND name NOT LIKE '%%Employment%%'
+          AND title NOT LIKE '%%Employment%%'
         LIMIT 1
     """, (company,), as_dict=True)
 

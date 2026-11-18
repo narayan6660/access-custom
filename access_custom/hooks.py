@@ -143,7 +143,8 @@ has_permission = {
 #   "ToDo": "custom_app.overrides.CustomToDo"
 # }
 override_doctype_class = {
-    "Company": "access_custom.overrides.company.CustomCompany"
+    "Company": "access_custom.overrides.company.CustomCompany",
+    "Appraisal Cycle": "access_custom.overrides.appraisal_cycle.CustomAppraisalCycle",
 }
 
 # Document Events

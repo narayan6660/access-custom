@@ -261,7 +261,8 @@
   {
    "fieldname": "project_contract",
    "fieldtype": "Data",
-   "label": "Project Contract"
+   "label": "Project Contract",
+   "hidden": 1
   },
   {
    "fieldname": "section_b",
@@ -466,8 +467,7 @@
    "fieldname": "annual_ctc",
    "fieldtype": "Currency",
    "label": "Annual CTC (INR)",
-   "options": "currency",
-   "read_only": 1
+   "options": "currency"
   },
   {
    "fieldname": "total_contract_value",

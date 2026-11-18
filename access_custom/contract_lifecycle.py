@@ -1241,57 +1241,124 @@ def debug_inspect_roles_and_contract():
 
 
 def is_annual_appraisal_cycle(cycle_name, cycle_type=""):
-    c_type = (cycle_type or "").strip().lower()
-    c_name = (cycle_name or "").strip().lower()
-    return c_type == "annual" or "annual" in c_name
+    return True
 
 
 def has_uncompleted_midterm_appraisal(doc_obj):
-    emp = doc_obj.get("employee")
-    if not emp:
-        return False, None
-
-    curr_cycle = doc_obj.get("appraisal_cycle") or ""
-    curr_cycle_type = frappe.db.get_value("Appraisal Cycle", curr_cycle, "custom_cycle_type") or ""
-    if not is_annual_appraisal_cycle(curr_cycle, curr_cycle_type):
-        return False, None
-
-    appraisals = frappe.db.sql("""
-        SELECT a.name, a.appraisal_cycle, a.workflow_state, a.docstatus, c.custom_cycle_type
-        FROM `tabAppraisal` a
-        LEFT JOIN `tabAppraisal Cycle` c ON c.name = a.appraisal_cycle
-        WHERE a.employee = %s 
-          AND a.name != %s
-          AND a.docstatus < 2
-    """, (emp, doc_obj.get("name") or ""), as_dict=True)
-
-    for a in appraisals:
-        a_cycle = a.get("appraisal_cycle") or ""
-        a_cycle_type = a.get("custom_cycle_type") or ""
-        if not is_annual_appraisal_cycle(a_cycle, a_cycle_type):
-            state = a.get("workflow_state") or "Pending"
-            if state != "Completed":
-                return True, a
-
     return False, None
 
 
 def validate_appraisal_midterm_prerequisite(doc, method=None):
     """
-    Doc event hook on Appraisal 'validate'.
-    Prevents Annual Appraisal from being saved past Pending or submitted if Mid-Term is not Completed.
+    Backend Security & Validation Hook on Appraisal 'validate'.
+    Auto-populates competencies if empty and strictly prevents employees 
+    from editing manager evaluation fields.
     """
-    has_uncompleted, midterm_doc = has_uncompleted_midterm_appraisal(doc)
-    if has_uncompleted:
-        current_state = doc.get("workflow_state") or "Pending"
-        if current_state != "Pending" or doc.docstatus > 0:
-            frappe.throw(
-                frappe._("Cannot advance or submit Annual Appraisal: Your Mid-Term Appraisal (<b>{0}</b>) is still in '<b>{1}</b>'. Mid-Term must reach 'Completed' first.").format(
-                    midterm_doc.get("name"),
-                    midterm_doc.get("workflow_state") or "Pending"
-                ),
-                frappe.ValidationError
+    # Auto-populate standard competencies if empty
+    if not doc.get("custom_behavioural_competencies"):
+        behav_list = [
+            'Communication', 'Persuasion and Influencing', 'Working with People', 
+            'Innovation', 'Strategic Thinking', 'Driving Results', 'Developing People', 
+            'Analytical Ability', 'Planning And Organizing', 'Managing Change'
+        ]
+        for item in behav_list:
+            doc.append("custom_behavioural_competencies", {
+                "competency_name": item, "rating": "", "annual_rating": ""
+            })
+
+    emp_grade = frappe.db.get_value("Employee", doc.employee, "grade") or "" if doc.get("employee") else ""
+    if emp_grade.startswith("E"):
+        if not doc.get("custom_executive_technical_competencies"):
+            exec_list = [
+                'Task Execution', 'Support to Team and Coordination', 'Problem Solving', 
+                'Supervision and Oversight', 'Information Management', 
+                'Support Planning and Adaptability', 'Learning Orientation'
+            ]
+            for item in exec_list:
+                doc.append("custom_executive_technical_competencies", {
+                    "competency_name": item, "rating": "", "annual_rating": ""
+                })
+    else:
+        if not doc.get("custom_leadership_technical_competencies"):
+            lead_list = [
+                'Program Design & Implementation', 'Health Systems Strengthening', 
+                'Research & Data Management', 'Community Engagement and Mobilization', 
+                'Partnerships & Stakeholder Management', 'Resource Mobilisation and Financial Management', 
+                'Governance & Leadership', 'Advocacy & Policy Influence', 'Digital and Innovation Capacity'
+            ]
+            for item in lead_list:
+                doc.append("custom_leadership_technical_competencies", {
+                    "competency_name": item, "rating": "", "annual_rating": ""
+                })
+    user = frappe.session.user
+    if user == "Administrator":
+        return
+
+    emp_email = doc.get("custom_employee_email")
+    if not emp_email and doc.get("employee"):
+        emp_email = frappe.db.get_value("Employee", doc.employee, "user_id")
+
+    roles = frappe.get_roles(user)
+    is_admin = (user == "Administrator" or "System Manager" in roles)
+
+    # Determine designated line manager
+    line_mgr_emp = doc.get("custom_manager")
+    if not line_mgr_emp and doc.get("employee"):
+        line_mgr_emp = frappe.db.get_value("Employee", doc.employee, "reports_to")
+    mgr_email = None
+    if line_mgr_emp:
+        mgr_email = frappe.db.get_value("Employee", line_mgr_emp, "user_id")
+    if not mgr_email:
+        mgr_email = doc.get("custom_manager_email")
+
+    is_line_manager = (user == mgr_email)
+
+    # If the user is the employee (or not the line manager / admin):
+    if (emp_email and user == emp_email) or (not is_line_manager and not is_admin and "HR Manager" not in roles):
+        if not doc.is_new():
+            old_doc = frappe.db.get_value(
+                "Appraisal", doc.name,
+                [
+                    "custom_midterm_manager_feedback",
+                    "custom_annual_manager_feedback",
+                    "custom_annual_manager_rating"
+                ],
+                as_dict=True
             )
+            if old_doc:
+                # Strictly restore manager evaluation values
+                doc.custom_midterm_manager_feedback = old_doc.custom_midterm_manager_feedback
+                doc.custom_annual_manager_feedback = old_doc.custom_annual_manager_feedback
+                doc.custom_annual_manager_rating = old_doc.custom_annual_manager_rating
+
+            # Also ensure competency ratings are not modified by employee
+            for tbl in ["custom_behavioural_competencies", "custom_executive_technical_competencies", "custom_leadership_technical_competencies"]:
+                old_rows = frappe.db.sql(f"SELECT name, rating, annual_rating FROM `tab{tbl.replace('custom_', 'Appraisal ')}` WHERE parent=%s", (doc.name,), as_dict=True) if frappe.db.table_exists(f"tab{tbl.replace('custom_', 'Appraisal ')}") else []
+                # If table exists in doc
+                new_rows = doc.get(tbl) or []
+                if old_rows and new_rows:
+                    old_map = {r.name: r for r in old_rows}
+                    for nr in new_rows:
+                        if nr.name in old_map:
+                            nr.rating = old_map[nr.name].rating
+                            nr.annual_rating = old_map[nr.name].annual_rating
+
+    # Strictly prevent Line Manager (or any non-employee user) from modifying employee self-appraisal fields:
+    if is_line_manager or (emp_email and user != emp_email and not is_admin):
+        if not doc.is_new():
+            old_self = frappe.db.get_value(
+                "Appraisal", doc.name,
+                [
+                    "custom_midterm_employee_upward_feedback",
+                    "custom_self_assessment_on_annual_progress",
+                    "custom_upward_feedback_to_manager"
+                ],
+                as_dict=True
+            )
+            if old_self:
+                doc.custom_midterm_employee_upward_feedback = old_self.custom_midterm_employee_upward_feedback
+                doc.custom_self_assessment_on_annual_progress = old_self.custom_self_assessment_on_annual_progress
+                doc.custom_upward_feedback_to_manager = old_self.custom_upward_feedback_to_manager
 
 
 @frappe.whitelist()
@@ -1344,11 +1411,6 @@ def custom_get_transitions(doc, workflow=None, raise_exception=False):
 
     doctype = doc_obj.doctype
     if doctype == "Appraisal":
-        # Prerequisite: Annual Appraisal actions are locked for ALL users until Mid-Term is Completed
-        has_uncompleted, _ = has_uncompleted_midterm_appraisal(doc_obj)
-        if has_uncompleted:
-            return []
-
         user = frappe.session.user
         if user == "Administrator":
             return transitions
@@ -1361,39 +1423,53 @@ def custom_get_transitions(doc, workflow=None, raise_exception=False):
         if not emp_email and doc_obj.get("employee"):
             emp_email = frappe.db.get_value("Employee", doc_obj.employee, "user_id")
 
-        mgr_email = doc_obj.get("custom_manager_email")
-        if not mgr_email and doc_obj.get("custom_manager"):
-            mgr_email = frappe.db.get_value("Employee", doc_obj.custom_manager, "user_id")
-        if not mgr_email and doc_obj.get("employee"):
-            reports_to = frappe.db.get_value("Employee", doc_obj.employee, "reports_to")
-            if reports_to:
-                mgr_email = frappe.db.get_value("Employee", reports_to, "user_id")
+        # Line Manager resolution from Employee reports_to
+        line_mgr_emp = doc_obj.get("custom_manager")
+        if not line_mgr_emp and doc_obj.get("employee"):
+            line_mgr_emp = frappe.db.get_value("Employee", doc_obj.employee, "reports_to")
+        mgr_email = None
+        if line_mgr_emp:
+            mgr_email = frappe.db.get_value("Employee", line_mgr_emp, "user_id")
+        if not mgr_email:
+            mgr_email = doc_obj.get("custom_manager_email")
 
         # Employee Stages: ONLY the assigned employee can see/execute actions
-        if current_state in ["Pending", "Objectives Rejected", "Objectives Approved", "Appraisal Rejected"]:
+        employee_states = [
+            "Pending", 
+            "Objectives Rejected", 
+            "Objectives Approved", 
+            "Mid-Term Rejected", 
+            "Mid-Term Completed", 
+            "Appraisal Rejected"
+        ]
+        if current_state in employee_states:
             if not emp_email or user != emp_email:
                 return []
-
-            # In Pending, show 'Submit Objectives' for Mid-Term, and 'Submit Appraisal' for Annual
-            if current_state == "Pending":
-                cycle_name = (doc_obj.get("appraisal_cycle") or "").lower()
-                cycle_type = frappe.db.get_value("Appraisal Cycle", doc_obj.get("appraisal_cycle"), "custom_cycle_type") or ""
-                is_ann = (cycle_type == "Annual") or ("annual" in cycle_name)
-                if is_ann:
-                    has_uncompleted, _ = has_uncompleted_midterm_appraisal(doc_obj)
-                    if has_uncompleted:
-                        return []
-                    return [t for t in transitions if t.action == "Submit Appraisal"]
-                else:
-                    return [t for t in transitions if t.action == "Submit Objectives"]
-
             return transitions
 
-        # Manager Review Stages: ONLY the assigned reporting manager can see/execute actions
-        if current_state in ["Objective Review Pending", "Pending Manager Review"]:
-            if not mgr_email or user != mgr_email:
+        # Manager Review Stages: Assigned reporting manager, HR Manager, or Administrator
+        manager_states = [
+            "Objective Review Pending", 
+            "Mid-Term Review Pending", 
+            "Pending Manager Review"
+        ]
+        if current_state in manager_states:
+            roles = frappe.get_roles(user)
+            is_authorized_manager = (
+                user == mgr_email 
+                or user == "Administrator" 
+                or "HR Manager" in roles 
+                or "System Manager" in roles
+            )
+            if not is_authorized_manager:
                 return []
-            return transitions
+            seen = set()
+            unique = []
+            for t in transitions:
+                if t.action not in seen:
+                    seen.add(t.action)
+                    unique.append(t)
+            return unique
 
         if current_state == "Completed":
             return []
@@ -1477,16 +1553,6 @@ def custom_apply_workflow(doc, action):
 
     doctype = doc_obj.doctype
     if doctype == "Appraisal":
-        has_uncompleted, midterm_doc = has_uncompleted_midterm_appraisal(doc_obj)
-        if has_uncompleted:
-            frappe.throw(
-                frappe._("Cannot advance or submit Annual Appraisal: Your Mid-Term Appraisal (<b>{0}</b>) is still in '<b>{1}</b>'. Mid-Term must reach 'Completed' first.").format(
-                    midterm_doc.get("name"),
-                    midterm_doc.get("workflow_state") or "Pending"
-                ),
-                frappe.ValidationError
-            )
-
         user = frappe.session.user
         if user != "Administrator":
             current_state = doc_obj.get("workflow_state")
@@ -1502,27 +1568,15 @@ def custom_apply_workflow(doc, action):
                 if reports_to:
                     mgr_email = frappe.db.get_value("Employee", reports_to, "user_id")
 
-            if current_state == "Pending" and action == "Submit Appraisal":
-                cycle_name = (doc_obj.get("appraisal_cycle") or "").lower()
-                cycle_type = frappe.db.get_value("Appraisal Cycle", doc_obj.get("appraisal_cycle"), "custom_cycle_type") or ""
-                is_mid = (cycle_type == "Mid-Term") or ("mid" in cycle_name) or ("half" in cycle_name)
-                if is_mid:
-                    frappe.throw(
-                        frappe._("Cannot submit appraisal while in 'Pending'. Please submit your objectives first for manager review."),
-                        frappe.ValidationError
-                    )
-                is_ann = (cycle_type == "Annual") or ("annual" in cycle_name)
-                if is_ann:
-                    has_uncompleted, midterm_doc = has_uncompleted_midterm_appraisal(doc_obj)
-                    if has_uncompleted:
-                        frappe.throw(
-                            frappe._("Cannot submit Annual Appraisal: Your Mid-Term Appraisal (<b>{0}</b>) is still pending completion.").format(
-                                midterm_doc.get("name")
-                            ),
-                            frappe.ValidationError
-                        )
-
-            if current_state in ["Pending", "Objectives Rejected", "Objectives Approved", "Appraisal Rejected"]:
+            employee_states = [
+                "Pending", 
+                "Objectives Rejected", 
+                "Objectives Approved", 
+                "Mid-Term Rejected", 
+                "Mid-Term Completed", 
+                "Appraisal Rejected"
+            ]
+            if current_state in employee_states:
                 if not emp_email or user != emp_email:
                     emp_name = doc_obj.get("employee_name") or "the assigned employee"
                     frappe.throw(
@@ -1532,23 +1586,61 @@ def custom_apply_workflow(doc, action):
                         frappe.PermissionError
                     )
 
-            if current_state in ["Objective Review Pending", "Pending Manager Review"]:
-                if not mgr_email or user != mgr_email:
-                    mgr_name = frappe.db.get_value("User", mgr_email, "full_name") or mgr_email or "the Reporting Manager"
+            manager_states = [
+                "Objective Review Pending", 
+                "Mid-Term Review Pending", 
+                "Pending Manager Review"
+            ]
+            if current_state in manager_states:
+                roles = frappe.get_roles(user)
+                is_authorized_manager = (
+                    user == mgr_email 
+                    or user == "Administrator" 
+                    or "HR Manager" in roles 
+                    or "System Manager" in roles
+                )
+                if not is_authorized_manager:
+                    mgr_name = frappe.db.get_value("User", mgr_email, "full_name") or mgr_email or "the Line Manager"
                     frappe.throw(
-                        frappe._("Access Denied: Only the designated Reporting Manager ({0}) is permitted to review or approve this appraisal.").format(
+                        frappe._("Access Denied: Only the designated Line Manager ({0}) or HR Manager is permitted to review or approve this appraisal.").format(
                             mgr_name
                         ),
                         frappe.PermissionError
                     )
 
-            if current_state == "Pending Manager Review" and action == "Reject":
+            if action in ["Reject Objectives", "Reject Mid-Term", "Reject"]:
                 rejection_reason = captured_rejection_reason
                 if not rejection_reason or not str(rejection_reason).strip():
                     frappe.throw(
                         frappe._("Please provide a reason for rejecting the appraisal."),
                         frappe.ValidationError
                     )
+
+            if action == "Finalize & Complete":
+                fb = (doc_obj.get("custom_annual_manager_feedback") or "").strip()
+                rating = (doc_obj.get("custom_annual_manager_rating") or "").strip()
+                if not fb:
+                    frappe.throw(
+                        frappe._("Please provide <b>Annual Appraisal: Manager assessment/feedback</b> before completing the appraisal."),
+                        frappe.ValidationError
+                    )
+                if not rating:
+                    frappe.throw(
+                        frappe._("Please select an <b>Annual Manager Rating</b> before completing the appraisal."),
+                        frappe.ValidationError
+                    )
+
+                # Validate Technical & Behavioural Competencies
+                for table_field in ["custom_behavioural_competencies", "custom_executive_technical_competencies", "custom_leadership_technical_competencies"]:
+                    rows = doc_obj.get(table_field) or []
+                    for r in rows:
+                        r_rating = (r.get("annual_rating") if hasattr(r, "get") else getattr(r, "annual_rating", None)) or ""
+                        if not str(r_rating).strip():
+                            comp_name = (r.get("competency_name") if hasattr(r, "get") else getattr(r, "competency_name", None)) or "Competency"
+                            frappe.throw(
+                                frappe._("Please provide an Annual Rating for '{0}' under Technical & Behavioural Competencies before completing the appraisal.").format(comp_name),
+                                frappe.ValidationError
+                            )
 
     if doctype in STAGE_APPROVER_MAP:
         user = frappe.session.user
@@ -1605,11 +1697,11 @@ def custom_apply_workflow(doc, action):
     try:
         res = orig_apply_workflow(doc, action)
         if doctype == "Appraisal":
-            if action == "Reject" and captured_rejection_reason:
+            if action in ["Reject Objectives", "Reject Mid-Term", "Reject"] and captured_rejection_reason:
                 reason_val = captured_rejection_reason
                 frappe.db.set_value("Appraisal", doc_obj.name, "custom_rejection_reason", reason_val)
                 res.custom_rejection_reason = reason_val
-            elif action == "Resubmit Appraisal":
+            elif action in ["Resubmit Objectives", "Resubmit Mid-Term Review", "Resubmit Appraisal"]:
                 frappe.db.set_value("Appraisal", doc_obj.name, "custom_rejection_reason", None)
                 res.custom_rejection_reason = None
         return res

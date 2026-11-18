@@ -426,15 +426,6 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
-  "modified": "2026-06-26 13:48:03.689331",
-  "name": "Objective Review Pending",
-  "style": "",
-  "workflow_state_name": "Objective Review Pending"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
-  "icon": "",
   "modified": "2026-09-19 13:17:39.858128",
   "name": "Pending Legal Review",
   "style": "Primary",
@@ -732,10 +723,10 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
-  "modified": "2026-06-26 13:48:24.101501",
-  "name": "Objectives Approved",
+  "modified": "2026-06-26 13:48:03.689331",
+  "name": "Objective Review Pending",
   "style": "",
-  "workflow_state_name": "Objectives Approved"
+  "workflow_state_name": "Objective Review Pending"
  },
  {
   "docstatus": 0,
@@ -750,10 +741,10 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
-  "modified": "2026-11-16 11:57:27.971048",
-  "name": "Mid-Term Review Pending",
-  "style": "Warning",
-  "workflow_state_name": "Mid-Term Review Pending"
+  "modified": "2026-06-26 13:48:24.101501",
+  "name": "Objectives Approved",
+  "style": "",
+  "workflow_state_name": "Objectives Approved"
  },
  {
   "docstatus": 0,
@@ -772,5 +763,14 @@
   "name": "Pending",
   "style": "",
   "workflow_state_name": "Pending"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-11-16 11:57:27.971048",
+  "name": "Mid-Term Review Pending",
+  "style": "Warning",
+  "workflow_state_name": "Mid-Term Review Pending"
  }
 ]

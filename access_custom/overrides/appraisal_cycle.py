@@ -39,17 +39,31 @@ def format_appraisal_status(wf_state: str) -> str:
         return "Objectives Pending"
     status_map = {
         "Pending": "Objectives Pending",
-        "Objective Review Pending": "Objective Review Pending",
+        "Objective Review Pending": "Objectives Review Pending",
         "Objectives Approved": "Objectives Approved",
         "Objectives Rejected": "Objectives Rejected",
-        "Mid-Term Review Pending": "Mid-Term Review Pending",
+        "Mid-Term Review Pending": "Mid-Term Pending",
         "Mid-Term Rejected": "Mid-Term Rejected",
         "Mid-Term Completed": "Mid-Term Completed",
         "Pending Manager Review": "Annual Review Pending",
-        "Appraisal Rejected": "Annual Rejected",
+        "Appraisal Rejected": "Annual Review Rejected",
         "Completed": "Completed",
     }
     return status_map.get(wf_state, wf_state)
+
+
+def sync_appraisal_status_to_cycle(doc, method=None):
+    """Keep tabAppraisee.custom_appraisal_status synchronized whenever an Appraisal is updated or trashed"""
+    if doc.appraisal_cycle and doc.employee:
+        formatted = format_appraisal_status(doc.workflow_state)
+        frappe.db.sql(
+            """
+            UPDATE `tabAppraisee`
+            SET custom_appraisal_status = %s
+            WHERE parent = %s AND employee = %s
+            """,
+            (formatted, doc.appraisal_cycle, doc.employee),
+        )
 
 
 class CustomAppraisalCycle(AppraisalCycle):
@@ -241,19 +255,33 @@ class CustomAppraisalCycle(AppraisalCycle):
 @frappe.whitelist()
 def get_cycle_stage_summary(cycle_name: str) -> dict:
     """
-    Returns exact counts of employees assigned and in each step/state of the appraisal cycle.
+    Returns exact counts of employees assigned and in each step/state of the appraisal cycle,
+    and synchronizes tabAppraisee.custom_appraisal_status in real-time.
     """
     appraisees_count = frappe.db.count("Appraisee", {"parent": cycle_name})
     appraisals = frappe.get_all(
         "Appraisal",
         filters={"appraisal_cycle": cycle_name, "docstatus": ["!=", 2]},
-        fields=["name", "workflow_state"]
+        fields=["name", "employee", "workflow_state"]
     )
 
     state_counts = {}
+    status_by_employee = {}
     for a in appraisals:
         st = a.workflow_state or "Pending"
         state_counts[st] = state_counts.get(st, 0) + 1
+        fmt_st = format_appraisal_status(st)
+        if a.employee:
+            status_by_employee[a.employee] = fmt_st
+            frappe.db.sql(
+                """
+                UPDATE `tabAppraisee`
+                SET custom_appraisal_status = %s
+                WHERE parent = %s AND employee = %s
+                """,
+                (fmt_st, cycle_name, a.employee),
+            )
+    frappe.db.commit()
 
     # Stage 1: Objectives
     obj_pending = (
@@ -290,6 +318,7 @@ def get_cycle_stage_summary(cycle_name: str) -> dict:
         "mid_completed": mid_completed,
         "annual_pending": annual_pending,
         "completed": completed,
+        "status_by_employee": status_by_employee,
     }
 
 

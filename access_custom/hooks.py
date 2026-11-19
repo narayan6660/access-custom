@@ -154,6 +154,8 @@ override_doctype_class = {
 doc_events = {
     "Appraisal": {
         "validate": "access_custom.contract_lifecycle.validate_appraisal_midterm_prerequisite",
+        "on_update": "access_custom.overrides.appraisal_cycle.sync_appraisal_status_to_cycle",
+        "on_trash": "access_custom.overrides.appraisal_cycle.sync_appraisal_status_to_cycle",
     },
     "Customer": {
         "validate": "access_custom.contract_lifecycle.validate_customer_status_and_inactivation",

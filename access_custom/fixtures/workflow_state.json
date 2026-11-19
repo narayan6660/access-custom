@@ -741,15 +741,6 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
-  "modified": "2026-06-26 13:48:24.101501",
-  "name": "Objectives Approved",
-  "style": "",
-  "workflow_state_name": "Objectives Approved"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
-  "icon": "",
   "modified": "2026-06-11 15:30:37.409536",
   "name": "Pending Manager Review",
   "style": "",
@@ -763,6 +754,15 @@
   "name": "Pending",
   "style": "",
   "workflow_state_name": "Pending"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-06-26 13:48:24.101501",
+  "name": "Objectives Approved",
+  "style": "",
+  "workflow_state_name": "Objectives Approved"
  },
  {
   "docstatus": 0,

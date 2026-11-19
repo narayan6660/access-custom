@@ -3,19 +3,95 @@ from frappe import _
 from hrms.hr.doctype.appraisal_cycle.appraisal_cycle import (
     AppraisalCycle,
 )
+import hrms.hr.doctype.appraisal_cycle.appraisal_cycle as ac_module
+import hrms.hr.doctype.appraisal.appraisal as appr_module
+
+
+def custom_validate_active_appraisal_cycle(appraisal_cycle: str) -> None:
+    if frappe.db.get_value("Appraisal Cycle", appraisal_cycle, "status") == "Completed":
+        msg = _(
+            "This appraisal cycle has been officially closed and completed by HR. "
+            "Further changes, submissions, or approvals are no longer accepted."
+        )
+        frappe.throw(msg, title=_("Appraisal Cycle Closed"))
+
+
+# Monkey patch to ensure professional message on backend
+ac_module.validate_active_appraisal_cycle = custom_validate_active_appraisal_cycle
+appr_module.validate_active_appraisal_cycle = custom_validate_active_appraisal_cycle
+
+
+@frappe.whitelist()
+def custom_get_appraisal_cycle_summary(cycle_name: str):
+    """
+    Whitelisted override for standard summary call.
+    Returns None so standard appraisal_cycle.js does not render
+    the generic (Self Appraisal Pending, Goals Missing, Feedback Missing) indicators.
+    """
+    return None
+
+
+ac_module.get_appraisal_cycle_summary = custom_get_appraisal_cycle_summary
+
+
+def format_appraisal_status(wf_state: str) -> str:
+    if not wf_state:
+        return "Objectives Pending"
+    status_map = {
+        "Pending": "Objectives Pending",
+        "Objective Review Pending": "Objective Review Pending",
+        "Objectives Approved": "Objectives Approved",
+        "Objectives Rejected": "Objectives Rejected",
+        "Mid-Term Review Pending": "Mid-Term Review Pending",
+        "Mid-Term Rejected": "Mid-Term Rejected",
+        "Mid-Term Completed": "Mid-Term Completed",
+        "Pending Manager Review": "Annual Review Pending",
+        "Appraisal Rejected": "Annual Rejected",
+        "Completed": "Completed",
+    }
+    return status_map.get(wf_state, wf_state)
 
 
 class CustomAppraisalCycle(AppraisalCycle):
     def validate(self):
-        super().validate()
         # Keep primary company synchronized with the first applicable company if available
         if hasattr(self, "custom_applicable_companies") and self.custom_applicable_companies:
             first_comp = self.custom_applicable_companies[0].company
-            if first_comp and not self.company:
+            if first_comp:
                 self.company = first_comp
+        elif not self.company:
+            default_comp = frappe.db.get_single_value("Global Defaults", "default_company") or frappe.db.get_value("Company", {}, "name")
+            self.company = default_comp
+
+        # Populate custom_manager and custom_appraisal_status for every appraisee row
+        if hasattr(self, "appraisees"):
+            for row in self.appraisees:
+                if row.employee:
+                    if not getattr(row, "custom_manager", None):
+                        row.custom_manager = frappe.db.get_value("Employee", row.employee, "reports_to")
+                    if not getattr(row, "custom_company", None):
+                        row.custom_company = frappe.db.get_value("Employee", row.employee, "company")
+                    
+                    wf_state = None
+                    if self.name:
+                        wf_state = frappe.db.get_value(
+                            "Appraisal",
+                            {"appraisal_cycle": self.name, "employee": row.employee, "docstatus": ["!=", 2]},
+                            "workflow_state"
+                        )
+                    row.custom_appraisal_status = format_appraisal_status(wf_state)
+
+        super().validate()
+
+    def on_update(self):
+        if hasattr(super(), "on_update"):
+            super().on_update()
+        # Automatically create appraisals for any newly added employees anytime while cycle is In Progress
+        if self.status == "In Progress":
+            create_appraisals_for_multicompany_cycle(self, publish_progress=False)
 
     def get_employees_for_appraisal(self):
-        """Pull employees based on filters across all selected applicable companies"""
+        """Pull employees based on filters across selected applicable companies"""
         companies = []
         if hasattr(self, "custom_applicable_companies") and self.custom_applicable_companies:
             companies = [d.company for d in self.custom_applicable_companies if d.company]
@@ -26,19 +102,22 @@ class CustomAppraisalCycle(AppraisalCycle):
         filters = {
             "status": "Active",
         }
-        if len(companies) == 1:
+
+        # 1. Filter by Company
+        if hasattr(self, "custom_filter_company") and self.custom_filter_company:
+            filters["company"] = self.custom_filter_company
+        elif len(companies) == 1:
             filters["company"] = companies[0]
         elif len(companies) > 1:
             filters["company"] = ["in", companies]
 
-        if self.department:
-            filters["department"] = self.department
-        if self.branch:
-            filters["branch"] = self.branch
-        if self.designation:
-            filters["designation"] = self.designation
-        if hasattr(self, "custom_grade") and self.custom_grade:
-            filters["grade"] = self.custom_grade
+        # 2. Filter by Manager (Line Manager)
+        if hasattr(self, "custom_filter_manager") and self.custom_filter_manager:
+            filters["reports_to"] = self.custom_filter_manager
+
+        # 3. Filter by specific Employee
+        if hasattr(self, "custom_filter_employee") and self.custom_filter_employee:
+            filters["name"] = self.custom_filter_employee
 
         employees = frappe.db.get_all(
             "Employee",
@@ -50,41 +129,82 @@ class CustomAppraisalCycle(AppraisalCycle):
                 "branch",
                 "designation",
                 "department",
+                "reports_to",
             ],
             order_by="company, employee_name",
         )
 
         return employees
 
+    @frappe.whitelist()
     def set_employees(self):
-        """Pull employees in appraisee list based on selected filters across companies"""
+        """
+        Pull employees in appraisee list across companies.
+        If existing employees already exist in cycle, PRESERVE them and append new matching ones.
+        """
         employees = self.get_employees_for_appraisal()
         appraisal_templates = self.get_appraisal_template_map()
+        default_template = (
+            frappe.db.get_value("Appraisal Template", {"name": "Default Hidden Template"})
+            or frappe.db.get_value("Appraisal Template", {}, "name")
+        )
 
-        if employees:
-            self.set("appraisees", [])
-            template_missing = False
+        existing_employees = {row.employee for row in (self.appraisees or []) if row.employee}
+        added_count = 0
 
-            for data in employees:
-                template = appraisal_templates.get(data.designation)
-                if not template:
-                    template_missing = True
+        for data in (employees or []):
+            if data.name in existing_employees:
+                continue
 
-                self.append(
-                    "appraisees",
-                    {
-                        "employee": data.name,
-                        "employee_name": data.employee_name,
-                        "custom_company": data.company,
-                        "branch": data.branch,
-                        "designation": data.designation,
-                        "department": data.department,
-                        "appraisal_template": template,
-                    },
+            template = (
+                appraisal_templates.get(data.designation)
+                if data.designation else None
+            ) or default_template
+
+            wf_state = None
+            if self.name:
+                wf_state = frappe.db.get_value(
+                    "Appraisal",
+                    {"appraisal_cycle": self.name, "employee": data.name, "docstatus": ["!=", 2]},
+                    "workflow_state"
                 )
 
-            if template_missing:
-                self.show_missing_template_message()
+            display_status = format_appraisal_status(wf_state)
+
+            self.append(
+                "appraisees",
+                {
+                    "employee": data.name,
+                    "employee_name": data.employee_name,
+                    "custom_manager": data.reports_to,
+                    "custom_company": data.company,
+                    "custom_appraisal_status": display_status,
+                    "branch": data.branch or "",
+                    "designation": data.designation or "",
+                    "department": data.department or "",
+                    "appraisal_template": template,
+                },
+            )
+            added_count += 1
+
+        if added_count > 0:
+            frappe.msgprint(
+                _("Added {0} new employee(s) to this cycle.").format(added_count),
+                alert=True,
+                indicator="green",
+            )
+        elif not employees:
+            frappe.msgprint(
+                _("No active employees found matching the selected filter."),
+                alert=True,
+                indicator="orange",
+            )
+        else:
+            frappe.msgprint(
+                _("All {0} matching employee(s) are already in this cycle.").format(len(employees)),
+                alert=True,
+                indicator="blue",
+            )
 
     @frappe.whitelist()
     def create_appraisals(self):
@@ -95,12 +215,96 @@ class CustomAppraisalCycle(AppraisalCycle):
                 title=_("No Employees Selected"),
             )
 
-        if not all(appraisee.appraisal_template for appraisee in self.appraisees):
-            self.show_missing_template_message(raise_exception=True)
+        default_template = (
+            frappe.db.get_value("Appraisal Template", {"name": "Default Hidden Template"})
+            or frappe.db.get_value("Appraisal Template", {}, "name")
+        )
+        for appraisee in self.appraisees:
+            if not appraisee.appraisal_template:
+                appraisee.appraisal_template = default_template
 
         # Create appraisals setting each employee's legal company
         create_appraisals_for_multicompany_cycle(self, publish_progress=True)
         self.reload()
+
+    @frappe.whitelist()
+    def complete_cycle(self):
+        """
+        Allows HR to officially complete and close the cycle,
+        even if some employee appraisals remain in progress.
+        """
+        self.check_permission("write")
+        self.status = "Completed"
+        self.save()
+
+
+@frappe.whitelist()
+def get_cycle_stage_summary(cycle_name: str) -> dict:
+    """
+    Returns exact counts of employees assigned and in each step/state of the appraisal cycle.
+    """
+    appraisees_count = frappe.db.count("Appraisee", {"parent": cycle_name})
+    appraisals = frappe.get_all(
+        "Appraisal",
+        filters={"appraisal_cycle": cycle_name, "docstatus": ["!=", 2]},
+        fields=["name", "workflow_state"]
+    )
+
+    state_counts = {}
+    for a in appraisals:
+        st = a.workflow_state or "Pending"
+        state_counts[st] = state_counts.get(st, 0) + 1
+
+    # Stage 1: Objectives
+    obj_pending = (
+        state_counts.get("Pending", 0)
+        + state_counts.get("Objective Review Pending", 0)
+        + state_counts.get("Objectives Rejected", 0)
+    )
+    obj_approved = state_counts.get("Objectives Approved", 0)
+
+    # Stage 2: Mid-Term
+    mid_pending = (
+        state_counts.get("Mid-Term Review Pending", 0)
+        + state_counts.get("Mid-Term Rejected", 0)
+    )
+    mid_completed = state_counts.get("Mid-Term Completed", 0)
+
+    # Stage 3: Annual Review
+    annual_pending = (
+        state_counts.get("Pending Manager Review", 0)
+        + state_counts.get("Appraisal Rejected", 0)
+    )
+    completed = state_counts.get("Completed", 0)
+
+    # Unstarted (in appraisees list but no appraisal record created yet)
+    total_appraisals = len(appraisals)
+    not_created = max(0, appraisees_count - total_appraisals)
+
+    return {
+        "total": appraisees_count,
+        "appraisals_created": total_appraisals,
+        "obj_pending": obj_pending + not_created,
+        "obj_approved": obj_approved,
+        "mid_pending": mid_pending,
+        "mid_completed": mid_completed,
+        "annual_pending": annual_pending,
+        "completed": completed,
+    }
+
+
+@frappe.whitelist()
+def get_incomplete_appraisals(cycle_name: str) -> list:
+    """Returns appraisals in this cycle that are not yet Completed"""
+    return frappe.get_all(
+        "Appraisal",
+        filters={
+            "appraisal_cycle": cycle_name,
+            "workflow_state": ["!=", "Completed"],
+        },
+        fields=["name", "employee", "employee_name", "company", "workflow_state"],
+        order_by="employee_name asc",
+    )
 
 
 def create_appraisals_for_multicompany_cycle(
@@ -113,7 +317,29 @@ def create_appraisals_for_multicompany_cycle(
     count = 0
     total = len(appraisal_cycle.appraisees)
 
+    default_template = (
+        frappe.db.get_value("Appraisal Template", {"name": "Default Hidden Template"})
+        or frappe.db.get_value("Appraisal Template", {}, "name")
+    )
+
+    created_employees = []
+
     for employee in appraisal_cycle.appraisees:
+        if not employee.employee:
+            continue
+
+        # Check if appraisal already exists for this cycle to avoid duplicate errors
+        existing = frappe.db.exists(
+            "Appraisal",
+            {
+                "employee": employee.employee,
+                "appraisal_cycle": appraisal_cycle.name,
+                "docstatus": ["!=", 2],
+            },
+        )
+        if existing:
+            continue
+
         try:
             # Look up employee's actual legal company
             emp_company = (
@@ -122,11 +348,30 @@ def create_appraisals_for_multicompany_cycle(
                 or appraisal_cycle.company
             )
 
+            template = employee.appraisal_template or default_template
+            emp_name = employee.employee_name or frappe.db.get_value("Employee", employee.employee, "employee_name")
+            emp_mgr = getattr(employee, "custom_manager", None) or frappe.db.get_value("Employee", employee.employee, "reports_to")
+
+            if getattr(employee, "name", None):
+                updates = {}
+                if not getattr(employee, "custom_company", None):
+                    updates["custom_company"] = emp_company
+                if not getattr(employee, "custom_manager", None) and emp_mgr:
+                    updates["custom_manager"] = emp_mgr
+                if not employee.appraisal_template:
+                    updates["appraisal_template"] = template
+                if not employee.employee_name and emp_name:
+                    updates["employee_name"] = emp_name
+                if not getattr(employee, "custom_appraisal_status", None):
+                    updates["custom_appraisal_status"] = "Objectives Pending"
+                if updates:
+                    frappe.db.set_value("Appraisee", employee.name, updates)
+
             appraisal = frappe.get_doc(
                 {
                     "doctype": "Appraisal",
                     "company": emp_company,
-                    "appraisal_template": employee.appraisal_template,
+                    "appraisal_template": template,
                     "employee": employee.employee,
                     "appraisal_cycle": appraisal_cycle.name,
                 }
@@ -136,7 +381,9 @@ def create_appraisals_for_multicompany_cycle(
                 1 if appraisal_cycle.kra_evaluation_method == "Manual Rating" else 0
             )
             appraisal.set_kras_and_rating_criteria()
-            appraisal.insert()
+            appraisal.flags.ignore_permissions = True
+            appraisal.insert(ignore_permissions=True)
+            created_employees.append(emp_name or employee.employee)
 
             if publish_progress:
                 count += 1
@@ -146,3 +393,9 @@ def create_appraisals_for_multicompany_cycle(
         except frappe.DuplicateEntryError:
             # Appraisal already exists for this cycle/period
             pass
+
+    if created_employees and not publish_progress:
+        frappe.msgprint(
+            _("Appraisal document automatically created for newly added employee: {0}").format(", ".join(created_employees)),
+            alert=True,
+        )

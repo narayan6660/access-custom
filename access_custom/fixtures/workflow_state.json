@@ -714,15 +714,6 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
-  "modified": "2026-11-16 11:57:27.976197",
-  "name": "Mid-Term Completed",
-  "style": "Success",
-  "workflow_state_name": "Mid-Term Completed"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
-  "icon": "",
   "modified": "2026-06-26 13:48:03.689331",
   "name": "Objective Review Pending",
   "style": "",
@@ -741,10 +732,10 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
-  "modified": "2026-06-11 15:30:37.409536",
-  "name": "Pending Manager Review",
-  "style": "",
-  "workflow_state_name": "Pending Manager Review"
+  "modified": "2026-11-16 11:57:27.976197",
+  "name": "Mid-Term Completed",
+  "style": "Success",
+  "workflow_state_name": "Mid-Term Completed"
  },
  {
   "docstatus": 0,
@@ -754,6 +745,15 @@
   "name": "Pending",
   "style": "",
   "workflow_state_name": "Pending"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-06-11 15:30:37.409536",
+  "name": "Pending Manager Review",
+  "style": "",
+  "workflow_state_name": "Pending Manager Review"
  },
  {
   "docstatus": 0,

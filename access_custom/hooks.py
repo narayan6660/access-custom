@@ -323,6 +323,7 @@ auto_cancel_exempted_doctypes = ["Auto Repeat"]
 # ]
 fixtures = [
     # Customizations & Scripts
+    {"dt": "DocType", "filters": [["module", "=", "Access Custom"], ["custom", "=", 1]]},
     "Custom Field",
     "Property Setter",
     "Client Script",

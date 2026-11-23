@@ -59,6 +59,7 @@ frappe.ui.form.on("Employment Contract", {
         if (frm.page && frm.page.wrapper) $(frm.page.wrapper).addClass("employment-contract-wrapper");
 
         setup_leadership_queries(frm);
+        setup_status_indicator(frm);
         render_contract_progress_tracker(frm);
         setup_auto_expand_textareas(frm);
         apply_contract_approver_field_locking(frm);
@@ -1493,4 +1494,15 @@ function validate_pdf_attachment(frm, fieldname) {
         return false;
     }
     return true;
+}
+
+function setup_status_indicator(frm) {
+    let s = frm.doc.status || frm.doc.workflow_state || "Draft";
+    let color = "blue";
+    if (s === "Active" || s.includes("Approved")) color = "green";
+    else if (s.includes("Revision") || s.includes("Pending") || s.includes("Issued") || s.includes("Signature")) color = "orange";
+    else if (s.includes("Reject") || s === "Expired" || s === "Terminated") color = "red";
+    else if (s === "Draft") color = "gray";
+
+    frm.page.set_indicator(__(s), color);
 }

@@ -680,6 +680,8 @@ frappe.listview_settings["Employment Contract"] = {
         if (listview.render_header) {
             listview.render_header(true);
         }
+        render_employment_pipeline_cockpit(listview);
+        setup_company_filter_clear(listview, "requesting_organization", "Organizations");
     },
 
     get_indicator: function(doc) {
@@ -687,3 +689,91 @@ frappe.listview_settings["Employment Contract"] = {
         return [__(info.label), info.color, "status,=," + info.raw];
     }
 };
+
+function render_employment_pipeline_cockpit(listview) {
+    if (!listview.page) return;
+
+    let $wrapper = listview.page.wrapper.find(".employment-pipeline-cockpit");
+    if (!$wrapper.length) {
+        $wrapper = $('<div class="employment-pipeline-cockpit" style="margin: 10px 0 18px 0;"></div>');
+        let $target = listview.page.wrapper.find(".layout-main-section-wrapper");
+        if ($target.length) {
+            $wrapper.prependTo($target);
+        } else {
+            $wrapper.prependTo(listview.page.main);
+        }
+    }
+
+    frappe.call({
+        method: "access_custom.access_custom.doctype.employment_contract.employment_contract.get_employment_pipeline_stats",
+        callback: function(r) {
+            if (!r || !r.message) return;
+            let d = r.message;
+
+            let cards = [
+                { title: "CEO Approval", count: d.ceo_approval || 0, color: "#9333ea", bg: "#faf5ff", border: "#d8b4fe", filter: ["status", "in", ["Pending CEO Approval"]] },
+                { title: "HR Review", count: d.hr_review || 0, color: "#ea580c", bg: "#fff7ed", border: "#fed7aa", filter_special: "hr_review" },
+                { title: "To Be Issued", count: d.to_be_issued || 0, color: "#0284c7", bg: "#f0f9ff", border: "#bae6fd", filter_special: "to_be_issued" },
+                { title: "Awaiting Signature", count: d.awaiting_signature || 0, color: "#0d9488", bg: "#f0fdfa", border: "#99f6e4", filter_special: "awaiting_signature" },
+                { title: "Expiring in 30 Days", count: d.expiring_30 || 0, color: "#dc2626", bg: "#fef2f2", border: "#fecaca", filter_special: "exp30" },
+                { title: "Expiring in 90 Days", count: d.expiring_90 || 0, color: "#d97706", bg: "#fffbeb", border: "#fde68a", filter_special: "exp90" }
+            ];
+
+            let cards_html = cards.map(c => `
+                <div class="pipeline-kpi-card" data-title="${c.title}" style="flex: 1 1 150px; min-width: 140px; background: ${c.bg}; border: 1px solid ${c.border}; border-top: 3px solid ${c.color}; border-radius: 8px; padding: 10px 14px; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+                    <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.3px;">${c.title}</div>
+                    <div style="font-size: 22px; font-weight: 800; color: ${c.color}; margin-top: 4px;">${c.count}</div>
+                </div>
+            `).join("");
+
+            $wrapper.html(`
+                <div style="display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap;">
+                    ${cards_html}
+                </div>
+            `);
+
+            // Attach click event to filter listview
+            $wrapper.find(".pipeline-kpi-card").each(function(idx) {
+                let card = cards[idx];
+                $(this).hover(
+                    function() { $(this).css("transform", "translateY(-2px)"); },
+                    function() { $(this).css("transform", "translateY(0)"); }
+                );
+                $(this).on("click", function() {
+                    listview.filter_area.clear();
+                    if (card.filter_special === "hr_review") {
+                        listview.filter_area.add([
+                            ["Employment Contract", "status", "in", ["Pending HR Review", "Pending Final HR Review"], false]
+                        ]);
+                    } else if (card.filter_special === "to_be_issued") {
+                        listview.filter_area.add([
+                            ["Employment Contract", "status", "in", ["CEO Approved", "Approved for Issuance", "Contract Generated"], false]
+                        ]);
+                    } else if (card.filter_special === "awaiting_signature") {
+                        listview.filter_area.add([
+                            ["Employment Contract", "status", "in", ["Awaiting Employee Signature", "Contract Issued"], false]
+                        ]);
+                    } else if (card.filter) {
+                        listview.filter_area.add([
+                            ["Employment Contract", card.filter[0], card.filter[1], card.filter[2], false]
+                        ]);
+                    } else if (card.filter_special === "exp30") {
+                        let today = frappe.datetime.nowdate();
+                        let in30 = frappe.datetime.add_days(today, 30);
+                        listview.filter_area.add([
+                            ["Employment Contract", "status", "=", "Active", false],
+                            ["Employment Contract", "proposed_end_date", "between", [today, in30], false]
+                        ]);
+                    } else if (card.filter_special === "exp90") {
+                        let today = frappe.datetime.nowdate();
+                        let in90 = frappe.datetime.add_days(today, 90);
+                        listview.filter_area.add([
+                            ["Employment Contract", "status", "=", "Active", false],
+                            ["Employment Contract", "proposed_end_date", "between", [today, in90], false]
+                        ]);
+                    }
+                });
+            });
+        }
+    });
+}

@@ -325,6 +325,64 @@ def get_next_contract_number(company, request_date=None, docname=None):
 
 
 @frappe.whitelist()
+def get_employment_pipeline_stats():
+    from frappe.utils import nowdate, add_days
+    today = nowdate()
+    in_30 = add_days(today, 30)
+    in_90 = add_days(today, 90)
+
+    ceo_count = frappe.db.sql("""
+        SELECT COUNT(*) FROM `tabEmployment Contract`
+        WHERE workflow_state = 'Pending CEO Approval' OR status = 'Pending CEO Approval'
+    """)[0][0] or 0
+
+    hr_count = frappe.db.sql("""
+        SELECT COUNT(*) FROM `tabEmployment Contract`
+        WHERE workflow_state IN ('Pending HR Review', 'Pending Final HR Review')
+           OR status IN ('Pending HR Review', 'Pending Final HR Review')
+    """)[0][0] or 0
+
+    to_issue_count = frappe.db.sql("""
+        SELECT COUNT(*) FROM `tabEmployment Contract`
+        WHERE workflow_state IN ('CEO Approved', 'Approved for Issuance', 'Contract Generated')
+           OR status IN ('CEO Approved', 'Approved for Issuance', 'Contract Generated')
+    """)[0][0] or 0
+
+    awaiting_sign_count = frappe.db.sql("""
+        SELECT COUNT(*) FROM `tabEmployment Contract`
+        WHERE workflow_state IN ('Awaiting Employee Signature', 'Contract Issued')
+           OR status IN ('Awaiting Employee Signature', 'Contract Issued')
+    """)[0][0] or 0
+
+    exp_30_count = frappe.db.sql("""
+        SELECT COUNT(*) FROM `tabEmployment Contract`
+        WHERE status = 'Active'
+          AND (proposed_end_date IS NOT NULL AND proposed_end_date BETWEEN %(today)s AND %(in_30)s)
+    """, {"today": today, "in_30": in_30})[0][0] or 0
+
+    exp_90_count = frappe.db.sql("""
+        SELECT COUNT(*) FROM `tabEmployment Contract`
+        WHERE status = 'Active'
+          AND (proposed_end_date IS NOT NULL AND proposed_end_date BETWEEN %(today)s AND %(in_90)s)
+    """, {"today": today, "in_90": in_90})[0][0] or 0
+
+    active_count = frappe.db.sql("""
+        SELECT COUNT(*) FROM `tabEmployment Contract`
+        WHERE status = 'Active'
+    """)[0][0] or 0
+
+    return {
+        "ceo_approval": ceo_count,
+        "hr_review": hr_count,
+        "to_be_issued": to_issue_count,
+        "awaiting_signature": awaiting_sign_count,
+        "expiring_30": exp_30_count,
+        "expiring_90": exp_90_count,
+        "total_active": active_count
+    }
+
+
+@frappe.whitelist()
 def check_company_has_contract_template(company):
     if not company:
         return {"has_template": False, "template_name": None}

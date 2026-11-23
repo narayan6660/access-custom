@@ -295,6 +295,9 @@ class EmploymentContract(Document):
                     frappe.throw(frappe._("Only the Contract Manager or document creator can submit this contract for approval."))
 
                 self.team_lead_decision = "Pending"
+                self.hr_decision = "Pending"
+                self.ceo_decision = "Pending"
+                self.final_hr_decision = "Pending"
 
             elif old_state == "Pending Team Lead Approval":
                 is_tl = (self.team_lead_approver and user == self.team_lead_approver)

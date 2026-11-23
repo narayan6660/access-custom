@@ -1011,14 +1011,11 @@ function render_contract_progress_tracker(frm) {
         ];
 
         let current_state = frm.doc.workflow_state || frm.doc.status || "Draft";
-        let is_rejected = current_state.includes("Reject") || (frm.doc.status === "Rejected");
-        let is_revision = (current_state === "Returned for Revision") || (frm.doc.status === "Returned for Revision");
+        let is_rejected = (current_state === "Rejected") || current_state.includes("Reject");
+        let is_revision = (current_state === "Returned for Revision") || current_state.includes("Returned for Revision") || current_state.includes("Revision");
 
-        let rejected_stage = get_contract_rejection_stage(frm);
-        if (rejected_stage) is_rejected = true;
-
-        let revision_stage = get_contract_revision_stage(frm);
-        if (revision_stage && !is_rejected) is_revision = true;
+        let rejected_stage = is_rejected ? get_contract_rejection_stage(frm) : null;
+        let revision_stage = is_revision ? get_contract_revision_stage(frm) : null;
 
         let has_all_section_g = !!(
             frm.doc.sent_to_employee_date &&
@@ -1303,6 +1300,9 @@ function setup_workflow_action_buttons(frm) {
         if (is_cm_or_creator && frm.page) {
             frm.page.add_action_item(__("Resubmit to Team Lead"), function() {
                 frm.set_value("team_lead_decision", "Pending");
+                frm.set_value("hr_decision", "Pending");
+                frm.set_value("ceo_decision", "Pending");
+                frm.set_value("final_hr_decision", "Pending");
                 frm.set_value("status", "Pending Team Lead Approval");
                 if (frm.fields_dict["workflow_state"]) {
                     frm.set_value("workflow_state", "Pending Team Lead Approval");

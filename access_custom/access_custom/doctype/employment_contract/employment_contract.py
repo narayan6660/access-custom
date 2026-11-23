@@ -314,6 +314,21 @@ class EmploymentContract(Document):
                 if not is_ceo:
                     frappe.throw(frappe._("Only the assigned CEO Approver can approve, return, or reject at this stage."))
 
+            elif old_state == "CEO Approved" and state == "Pending Final HR Review":
+                is_cm = ("Contract Manager" in roles) or (self.owner == user) or is_admin
+                is_other = user in [self.team_lead_approver, getattr(self, "ceo_approver", None)]
+                if is_other and not is_admin and self.owner != user:
+                    frappe.throw(frappe._("Only the Contract Manager or document creator can send the contract to HR for Final Review."))
+                if not is_cm:
+                    frappe.throw(frappe._("Only the Contract Manager or document creator can send the contract to HR for Final Review."))
+
+            elif old_state == "Pending Final HR Review":
+                is_final_hr = (getattr(self, "final_hr_approver", None) and user == self.final_hr_approver) or \
+                              (self.hr_approver and user == self.hr_approver) or \
+                              ("HR Manager" in roles) or is_admin
+                if not is_final_hr:
+                    frappe.throw(frappe._("Only the assigned Final HR Approver or HR Manager can approve, return, or reject at this stage."))
+
     def validate_submission_requirements(self):
         if self.get("engagement_type") == "Close-ended" and not self.get("proposed_end_date"):
             frappe.throw(

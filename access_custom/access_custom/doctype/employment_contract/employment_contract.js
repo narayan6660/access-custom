@@ -61,6 +61,7 @@ frappe.ui.form.on("Employment Contract", {
         setup_leadership_queries(frm);
         setup_status_indicator(frm);
         render_contract_progress_tracker(frm);
+        render_contract_banners(frm);
         setup_auto_expand_textareas(frm);
         apply_contract_approver_field_locking(frm);
         align_contract_approver_rows(frm);
@@ -70,14 +71,23 @@ frappe.ui.form.on("Employment Contract", {
         setup_workflow_action_buttons(frm);
 
         setTimeout(() => {
+            render_contract_progress_tracker(frm);
+            render_contract_banners(frm);
+            setup_workflow_action_buttons(frm);
             apply_contract_approver_field_locking(frm);
             align_contract_approver_rows(frm);
         }, 80);
         setTimeout(() => {
+            render_contract_progress_tracker(frm);
+            render_contract_banners(frm);
+            setup_workflow_action_buttons(frm);
             apply_contract_approver_field_locking(frm);
             align_contract_approver_rows(frm);
         }, 250);
         setTimeout(() => {
+            render_contract_progress_tracker(frm);
+            render_contract_banners(frm);
+            setup_workflow_action_buttons(frm);
             apply_contract_approver_field_locking(frm);
             align_contract_approver_rows(frm);
         }, 600);
@@ -639,6 +649,16 @@ function apply_contract_approver_field_locking(frm) {
                 is_admin;
             if (!is_creator_or_cm) {
                 frm.set_read_only();
+            }
+        } else {
+            let is_in_approval = ["Pending Team Lead Approval", "Pending HR Review", "Pending CEO Approval", "Pending Final HR Review"].includes(state);
+            if (is_in_approval || state === "CEO Approved" || state === "Rejected") {
+                const editable_in_approval = ["team_lead_remarks", "hr_remarks", "ceo_remarks", "final_hr_remarks"];
+                (frm.fields || []).forEach(f => {
+                    if (f && f.df && f.df.fieldname && !editable_in_approval.includes(f.df.fieldname)) {
+                        frm.set_df_property(f.df.fieldname, "read_only", 1);
+                    }
+                });
             }
         }
     } catch (e) {
@@ -1379,14 +1399,48 @@ function setup_workflow_action_buttons(frm) {
 
             show_actions();
         }
-    } else if (state === "CEO Approved" || state === "Pending Final HR Review") {
+    } else if (state === "CEO Approved") {
+        let is_ceo = (frm.doc.ceo_approver && user === frm.doc.ceo_approver);
+        let is_lead = (frm.doc.team_lead_approver && user === frm.doc.team_lead_approver);
+        let is_hr = (frm.doc.hr_approver && user === frm.doc.hr_approver) || (frm.doc.final_hr_approver && user === frm.doc.final_hr_approver);
+        let is_cm_authorized = !is_ceo && !is_lead && !is_hr && is_cm_or_creator;
+
+        if (is_cm_authorized && frm.page) {
+            frm.page.add_action_item(__("Download Preview Form (PDF)"), function() {
+                download_contract_preview_pdf(frm);
+            });
+
+            frm.page.add_action_item(__("Send to HR Manager for Final Review"), function() {
+                trigger_send_to_final_hr(frm);
+            });
+
+            show_actions();
+        } else {
+            if (frm.page) {
+                frm.page.clear_actions_menu();
+                frm.page.hide_actions_menu();
+            }
+        }
+    } else if (state === "Pending Final HR Review") {
         let is_final_hr_authorized = is_admin || (frm.doc.final_hr_approver ? user === frm.doc.final_hr_approver : (frm.doc.hr_approver ? user === frm.doc.hr_approver : roles.includes("HR Manager")));
         if (is_final_hr_authorized && frm.page) {
             frm.page.add_action_item(__("Issue for Employee Signature"), function() {
                 let now_str = frappe.datetime.now_datetime();
                 frm.set_value("final_hr_decision", `Approved [${now_str}]`);
                 frm.set_value("status", "Awaiting Employee Signature");
-                frm.save();
+                if (frm.fields_dict["workflow_state"]) {
+                    frm.set_value("workflow_state", "Awaiting Employee Signature");
+                }
+                frm.save().then(() => {
+                    frappe.show_alert({
+                        message: __("Employment contract approved and issued for employee signature."),
+                        indicator: "green"
+                    });
+                });
+            });
+
+            frm.page.add_action_item(__("Return for Revision"), function() {
+                prompt_revision_reason(frm, "Final HR");
             });
 
             frm.page.add_action_item(__("Reject"), function() {
@@ -1394,6 +1448,11 @@ function setup_workflow_action_buttons(frm) {
             });
 
             show_actions();
+        } else {
+            if (frm.page) {
+                frm.page.clear_actions_menu();
+                frm.page.hide_actions_menu();
+            }
         }
     } else if (state === "Awaiting Employee Signature" || state === "Signed by Employee") {
         if ((is_admin || roles.includes("HR Manager")) && frm.page) {
@@ -1570,4 +1629,206 @@ function setup_status_indicator(frm) {
     else if (s === "Draft") color = "gray";
 
     frm.page.set_indicator(__(s), color);
+}
+
+function download_contract_preview_pdf(frm) {
+    let template_format = frm.doc.contract_template || "AQH Employment Contract Template";
+    let url = `/api/method/frappe.utils.print_format.download_pdf?doctype=Employment+Contract&name=${encodeURIComponent(frm.doc.name)}&format=${encodeURIComponent(template_format)}&no_letterhead=0`;
+    
+    frappe.show_alert({
+        message: __(`Downloading Agreement PDF (${frappe.utils.escape_html(template_format)})...`),
+        indicator: "blue"
+    }, 4);
+
+    fetch(url, {
+        headers: {
+            "X-Frappe-CSRF-Token": frappe.csrf_token || ""
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Server returned status ${response.status}`);
+        }
+        return response.blob();
+    })
+    .then(blob => {
+        let clean_name = (frm.doc.name || "Contract").replace(/[/\\?%*:|"<>]/g, "_");
+        let filename = `${clean_name}_${template_format}.pdf`;
+        let blobUrl = window.URL.createObjectURL(blob);
+        let link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => window.URL.revokeObjectURL(blobUrl), 2000);
+        frappe.show_alert({
+            message: __(`Downloaded ${filename} successfully.`),
+            indicator: "green"
+        }, 3);
+    })
+    .catch(err => {
+        console.warn("Direct blob download failed, falling back to window.open:", err);
+        window.open(url, "_blank");
+    });
+}
+
+function trigger_send_to_final_hr(frm) {
+    let hr_name = frm.doc.final_hr_approver || frm.doc.hr_approver || "Assigned HR Manager";
+    frappe.confirm(
+        __(`Are you sure you want to submit this contract to <b>${frappe.utils.escape_html(hr_name)}</b> for <b>Final HR Review</b>?`),
+        function() {
+            if (!frm.doc.final_hr_approver) {
+                frm.doc.final_hr_approver = frm.doc.hr_approver;
+            }
+            frm.set_value("status", "Pending Final HR Review");
+            if (frm.fields_dict["workflow_state"]) {
+                frm.set_value("workflow_state", "Pending Final HR Review");
+            }
+            frappe.dom.freeze(__("Submitting for Final HR Review..."));
+            frm.save().then(() => {
+                frappe.dom.unfreeze();
+                frappe.show_alert({
+                    message: __("Submitted for Final HR Review and notification sent to HR."),
+                    indicator: "green"
+                }, 5);
+                frm.reload_doc();
+            }).catch(e => {
+                frappe.dom.unfreeze();
+                frappe.msgprint(__("Error submitting for HR Review: ") + (e.message || e));
+            });
+        }
+    );
+}
+
+function render_contract_banners(frm) {
+    if (!frm || !frm.wrapper || frm.is_new()) return;
+
+    if (frm.dashboard && frm.dashboard.parent) {
+        frm.dashboard.clear_headline();
+        frm.dashboard.parent.find(".contract-rejection-banner, .contract-info-banner").remove();
+    }
+
+    let state = frm.doc.workflow_state || frm.doc.status || "Draft";
+
+    let rejected_stage = get_contract_rejection_stage(frm);
+    if (rejected_stage && (state === "Rejected" || state.includes("Reject"))) {
+        let banner_html = `
+        <div class="contract-rejection-banner" style="margin-bottom: 15px; padding: 14px 18px; background: #fef2f2; border: 1px solid #f87171; border-left: 6px solid #dc2626; border-radius: 8px; box-shadow: 0 1px 3px rgba(220, 38, 38, 0.08);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 15px; font-weight: 700; color: #dc2626; display: flex; align-items: center; gap: 6px;">
+                        <span>&#10007;</span> Employment Contract Rejected
+                    </span>
+                    <span class="badge" style="background: #dc2626; color: #ffffff; font-size: 11px; padding: 3px 8px; border-radius: 12px; font-weight: 600;">
+                        Rejected by ${rejected_stage.role}
+                    </span>
+                </div>
+                <span style="font-size: 12px; color: #64748b; font-weight: 500;">
+                    Action required: Review feedback and revise contract
+                </span>
+            </div>
+            <div style="font-size: 13px; color: #1e293b; line-height: 1.5; margin-bottom: 8px;">
+                <div><b>Approver:</b> ${frappe.utils.escape_html(rejected_stage.user || rejected_stage.role)}</div>
+                <div style="margin-top: 4px;"><b>Rejection Reason:</b> <span style="color: #b91c1c; font-weight: 600;">"${frappe.utils.escape_html(rejected_stage.review || 'No specific reason provided')}"</span></div>
+            </div>
+        </div>`;
+        if (frm.dashboard && frm.dashboard.parent) {
+            $(banner_html).prependTo(frm.dashboard.parent);
+            frm.dashboard.show();
+            frm.dashboard.parent.show();
+        }
+        return;
+    }
+
+    let revision_stage = get_contract_revision_stage(frm);
+    if (revision_stage && (state === "Returned for Revision" || state.includes("Returned for Revision"))) {
+        let banner_html = `
+        <div class="contract-rejection-banner" style="margin-bottom: 15px; padding: 14px 18px; background: #fffbeb; border: 1px solid #fde68a; border-left: 6px solid #d97706; border-radius: 8px; box-shadow: 0 1px 3px rgba(217, 119, 6, 0.08);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 15px; font-weight: 700; color: #d97706; display: flex; align-items: center; gap: 6px;">
+                        <span>&#8635;</span> Returned for Revision
+                    </span>
+                    <span class="badge" style="background: #d97706; color: #ffffff; font-size: 11px; padding: 3px 8px; border-radius: 12px; font-weight: 600;">
+                        Returned by ${revision_stage.role}
+                    </span>
+                </div>
+                <span style="font-size: 12px; color: #64748b; font-weight: 500;">
+                    Action required: Update contract and resubmit
+                </span>
+            </div>
+            <div style="font-size: 13px; color: #1e293b; line-height: 1.5; margin-bottom: 8px;">
+                <div><b>Approver:</b> ${frappe.utils.escape_html(revision_stage.user || revision_stage.role)}</div>
+                <div style="margin-top: 4px;"><b>Feedback / Reason:</b> <span style="color: #92400e; font-weight: 600;">"${frappe.utils.escape_html(revision_stage.review || 'Please revise and resubmit')}"</span></div>
+            </div>
+        </div>`;
+        if (frm.dashboard && frm.dashboard.parent) {
+            $(banner_html).prependTo(frm.dashboard.parent);
+            frm.dashboard.show();
+            frm.dashboard.parent.show();
+        }
+        return;
+    }
+
+    if (state === "CEO Approved") {
+        let current_user = frappe.session.user;
+        let is_ceo = (frm.doc.ceo_approver && current_user === frm.doc.ceo_approver);
+        let is_lead = (frm.doc.team_lead_approver && current_user === frm.doc.team_lead_approver);
+        let is_hr = (frm.doc.hr_approver && current_user === frm.doc.hr_approver) || (frm.doc.final_hr_approver && current_user === frm.doc.final_hr_approver);
+        let is_owner = (current_user === frm.doc.owner);
+        let has_cm_role = frappe.user_roles && (frappe.user_roles.includes("Contract Manager") || frappe.user_roles.includes("System Manager") || current_user === "Administrator");
+        let is_admin = (current_user === "Administrator" || (frappe.user_roles && frappe.user_roles.includes("System Manager")));
+        let is_cm_authorized = !is_ceo && !is_lead && !is_hr && (is_owner || has_cm_role || is_admin);
+
+        let action_buttons_html = "";
+        if (is_cm_authorized) {
+            action_buttons_html = `
+            <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;">
+                <button type="button" class="btn btn-xs btn-default btn-download-preview-pdf" style="font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
+                    <span>&#128196;</span> Download Preview Form (PDF)
+                </button>
+                <button type="button" class="btn btn-xs btn-primary btn-submit-to-final-hr" style="font-weight: 600; background: #0284c7; border-color: #0284c7; display: inline-flex; align-items: center; gap: 5px;">
+                    <span>&#10148;</span> Send to HR Manager for Final Review
+                </button>
+            </div>
+            `;
+        }
+
+        let banner_html = `
+        <div class="contract-info-banner" style="margin-bottom: 15px; padding: 14px 18px; background: #f0fdf4; border: 1px solid #86efac; border-left: 6px solid #16a34a; border-radius: 8px; box-shadow: 0 1px 3px rgba(22, 163, 74, 0.08);">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 15px; font-weight: 700; color: #16a34a; display: flex; align-items: center; gap: 6px;">
+                        <span>&#10003;</span> CEO Approved
+                    </span>
+                    <span class="badge" style="background: #16a34a; color: #ffffff; font-size: 11px; padding: 3px 8px; border-radius: 12px; font-weight: 600;">
+                        Ready for Final HR Review
+                    </span>
+                </div>
+            </div>
+            <div style="font-size: 13px; color: #1e293b; line-height: 1.5; margin-top: 6px;">
+                The CEO has formally approved this contract. ${is_cm_authorized ? '<b>Contract Manager:</b> Please download and review the agreement preview (verified up to CEO approval), then click <b>Send to HR Manager for Final Review</b> below.' : 'Awaiting Contract Manager to preview the form and submit to HR for Final Review.'}
+            </div>
+            ${action_buttons_html}
+        </div>`;
+
+        if (frm.dashboard && frm.dashboard.parent) {
+            let $b = $(banner_html).prependTo(frm.dashboard.parent);
+            if (is_cm_authorized) {
+                $b.find(".btn-download-preview-pdf").on("click", function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    download_contract_preview_pdf(frm);
+                });
+                $b.find(".btn-submit-to-final-hr").on("click", function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    trigger_send_to_final_hr(frm);
+                });
+            }
+            frm.dashboard.show();
+            frm.dashboard.parent.show();
+        }
+    }
 }

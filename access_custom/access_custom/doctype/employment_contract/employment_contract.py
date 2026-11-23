@@ -286,7 +286,17 @@ class EmploymentContract(Document):
 
         old_state = old_doc.status or old_doc.workflow_state or "Draft"
         if old_state != state:
-            if old_state == "Pending Team Lead Approval":
+            if old_state in ["Draft", "Returned for Revision"] and state == "Pending Team Lead Approval":
+                is_cm = ("Contract Manager" in roles) or (self.owner == user)
+                is_approver = user in [self.team_lead_approver, self.hr_approver, getattr(self, "ceo_approver", None), getattr(self, "final_hr_approver", None)]
+                if is_approver and self.owner != user:
+                    frappe.throw(frappe._("Approvers are not permitted to submit/resubmit a returned contract. This must be handled by the Contract Manager."))
+                if not is_cm:
+                    frappe.throw(frappe._("Only the Contract Manager or document creator can submit this contract for approval."))
+
+                self.team_lead_decision = "Pending"
+
+            elif old_state == "Pending Team Lead Approval":
                 is_tl = (self.team_lead_approver and user == self.team_lead_approver)
                 if not is_tl:
                     frappe.throw(frappe._("Only the assigned Team Lead can approve, return, or reject at this stage."))

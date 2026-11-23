@@ -632,6 +632,15 @@ function apply_contract_approver_field_locking(frm) {
                 }
             }
         });
+
+        if (state === "Draft" || state === "Returned for Revision" || state.includes("Returned for Revision")) {
+            let is_creator_or_cm = (user === frm.doc.owner) ||
+                (frappe.user_roles && (frappe.user_roles.includes("Contract Manager") || frappe.user_roles.includes("System Manager") || frappe.user_roles.includes("Administrator"))) ||
+                is_admin;
+            if (!is_creator_or_cm) {
+                frm.set_read_only();
+            }
+        }
     } catch (e) {
         console.error("Error in apply_contract_approver_field_locking:", e);
     }
@@ -1258,6 +1267,7 @@ function setup_workflow_action_buttons(frm) {
     let user = frappe.session.user;
     let roles = frappe.user_roles || [];
     let is_admin = roles.includes("Administrator") || roles.includes("System Manager");
+    let is_cm_or_creator = (user === frm.doc.owner) || roles.includes("Contract Manager") || is_admin;
 
     function show_actions() {
         if (frm.page) {
@@ -1271,9 +1281,9 @@ function setup_workflow_action_buttons(frm) {
         }
     }
 
-    if (state === "Draft" || state.includes("Returned for Revision")) {
-        // Single clean primary button labeled "Submit"
-        if (frm.page) {
+    if (state === "Draft") {
+        // Single clean primary button labeled "Submit", strictly for creator or Contract Manager
+        if (is_cm_or_creator && frm.page) {
             frm.page.set_primary_action(__("Submit"), function() {
                 frm.set_value("status", "Pending Team Lead Approval");
                 if (frm.fields_dict["workflow_state"]) {
@@ -1286,6 +1296,28 @@ function setup_workflow_action_buttons(frm) {
                     });
                 });
             });
+        }
+    } else if (state === "Returned for Revision" || state.includes("Returned for Revision")) {
+        // Strictly only Contract Manager or document creator can resubmit
+        // Show inside Actions dropdown button: "Resubmit to Team Lead"
+        if (is_cm_or_creator && frm.page) {
+            frm.page.add_action_item(__("Resubmit to Team Lead"), function() {
+                frm.set_value("team_lead_decision", "Pending");
+                frm.set_value("status", "Pending Team Lead Approval");
+                if (frm.fields_dict["workflow_state"]) {
+                    frm.set_value("workflow_state", "Pending Team Lead Approval");
+                }
+                frm.save().then(() => {
+                    frappe.show_alert({
+                        message: __("Employment Contract resubmitted to Team Lead for approval"),
+                        indicator: "green"
+                    });
+                });
+            });
+            show_actions();
+        } else {
+            // Other employees (Approvers like Team Lead, HR, CEO) cannot submit or edit
+            frm.set_read_only();
         }
     } else if (state === "Pending Team Lead Approval") {
         let is_tl_authorized = is_admin || (frm.doc.team_lead_approver ? user === frm.doc.team_lead_approver : roles.includes("Team Lead"));

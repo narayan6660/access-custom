@@ -658,6 +658,12 @@ frappe.listview_settings["Employment Contract"] = {
                 </div>
             `;
         };
+
+        listview.setup_columns();
+        if (listview.render_header) {
+            listview.render_header(true);
+        }
+        listview.render();
     },
 
     refresh: function(listview) {
@@ -667,6 +673,12 @@ frappe.listview_settings["Employment Contract"] = {
         }
         if (listview.$result) {
             listview.$result.addClass("employment-contract-custom-list-view");
+        }
+        if (listview.setup_columns) {
+            listview.setup_columns();
+        }
+        if (listview.render_header) {
+            listview.render_header(true);
         }
     },
 

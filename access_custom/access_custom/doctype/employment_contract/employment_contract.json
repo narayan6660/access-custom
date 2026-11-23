@@ -146,9 +146,10 @@
    "label": "Series",
    "no_copy": 1,
    "options": "EC-.YYYY.-.#####.\nEC-.#####.\n.#####.",
-   "reqd": 1,
+   "reqd": 0,
    "set_only_once": 1,
-   "hidden": 1
+   "hidden": 1,
+   "default": "EC-.YYYY.-.#####."
   },
   {
    "fieldname": "status",

@@ -1246,15 +1246,30 @@ function setup_leadership_queries(frm) {
 function setup_workflow_action_buttons(frm) {
     if (frm.is_new()) return;
 
-    // Remove any default Frappe primary submit action to eliminate duplicate buttons & "Permanently Submit" popup
+    // Remove any default Frappe primary submit action & clear custom actions
     if (frm.page) {
         frm.page.clear_primary_action();
+        frm.page.clear_custom_actions();
+        frm.page.clear_actions_menu();
+        frm.page.hide_actions_menu();
     }
 
     let state = frm.doc.status || "Draft";
     let user = frappe.session.user;
     let roles = frappe.user_roles || [];
     let is_admin = roles.includes("Administrator") || roles.includes("System Manager");
+
+    function show_actions() {
+        if (frm.page) {
+            frm.page.show_actions_menu();
+            if (frm.page.actions_btn_group) {
+                frm.page.actions_btn_group.removeClass("hide hidden-xl").show();
+            }
+            if (frm.page.actions && frm.page.actions.parent) {
+                frm.page.actions.parent().removeClass("hide hidden-xl").show();
+            }
+        }
+    }
 
     if (state === "Draft" || state.includes("Returned for Revision")) {
         // Single clean primary button labeled "Submit"
@@ -1274,75 +1289,83 @@ function setup_workflow_action_buttons(frm) {
         }
     } else if (state === "Pending Team Lead Approval") {
         let is_tl_authorized = is_admin || (frm.doc.team_lead_approver ? user === frm.doc.team_lead_approver : roles.includes("Team Lead"));
-        if (is_tl_authorized) {
-            frm.add_custom_button(__("Approve (Team Lead)"), function() {
+        if (is_tl_authorized && frm.page) {
+            frm.page.add_action_item(__("Approve (Team Lead)"), function() {
                 let now_str = frappe.datetime.now_datetime();
                 frm.set_value("team_lead_decision", `Approved [${now_str}]`);
                 frm.set_value("status", "Pending HR Review");
                 frm.save();
-            }).addClass("btn-success");
+            });
 
-            frm.add_custom_button(__("Return for Revision"), function() {
+            frm.page.add_action_item(__("Return for Revision"), function() {
                 prompt_revision_reason(frm, "Team Lead");
-            }).addClass("btn-warning");
+            });
 
-            frm.add_custom_button(__("Reject"), function() {
+            frm.page.add_action_item(__("Reject"), function() {
                 prompt_rejection_reason(frm, "Team Lead");
-            }).addClass("btn-danger");
+            });
+
+            show_actions();
         }
     } else if (state === "Pending HR Review") {
         let is_hr_authorized = is_admin || (frm.doc.hr_approver ? user === frm.doc.hr_approver : (roles.includes("HR Manager") || roles.includes("HR User")));
-        if (is_hr_authorized) {
-            frm.add_custom_button(__("Approve (HR Review)"), function() {
+        if (is_hr_authorized && frm.page) {
+            frm.page.add_action_item(__("Approve (HR Review)"), function() {
                 let now_str = frappe.datetime.now_datetime();
                 frm.set_value("hr_decision", `Approved [${now_str}]`);
                 frm.set_value("status", "Pending CEO Approval");
                 frm.save();
-            }).addClass("btn-success");
+            });
 
-            frm.add_custom_button(__("Return for Revision"), function() {
+            frm.page.add_action_item(__("Return for Revision"), function() {
                 prompt_revision_reason(frm, "HR Review");
-            }).addClass("btn-warning");
+            });
 
-            frm.add_custom_button(__("Reject"), function() {
+            frm.page.add_action_item(__("Reject"), function() {
                 prompt_rejection_reason(frm, "HR Review");
-            }).addClass("btn-danger");
+            });
+
+            show_actions();
         }
     } else if (state === "Pending CEO Approval") {
         let is_ceo_authorized = is_admin || (frm.doc.ceo_approver ? user === frm.doc.ceo_approver : roles.includes("CEO Approver"));
-        if (is_ceo_authorized) {
-            frm.add_custom_button(__("Approve (CEO)"), function() {
+        if (is_ceo_authorized && frm.page) {
+            frm.page.add_action_item(__("Approve (CEO)"), function() {
                 let now_str = frappe.datetime.now_datetime();
                 frm.set_value("ceo_decision", `Approved [${now_str}]`);
                 frm.set_value("status", "CEO Approved");
                 frm.save();
-            }).addClass("btn-success");
+            });
 
-            frm.add_custom_button(__("Return for Revision"), function() {
+            frm.page.add_action_item(__("Return for Revision"), function() {
                 prompt_revision_reason(frm, "CEO");
-            }).addClass("btn-warning");
+            });
 
-            frm.add_custom_button(__("Reject"), function() {
+            frm.page.add_action_item(__("Reject"), function() {
                 prompt_rejection_reason(frm, "CEO");
-            }).addClass("btn-danger");
+            });
+
+            show_actions();
         }
     } else if (state === "CEO Approved" || state === "Pending Final HR Review") {
         let is_final_hr_authorized = is_admin || (frm.doc.final_hr_approver ? user === frm.doc.final_hr_approver : (frm.doc.hr_approver ? user === frm.doc.hr_approver : roles.includes("HR Manager")));
-        if (is_final_hr_authorized) {
-            frm.add_custom_button(__("Issue for Employee Signature"), function() {
+        if (is_final_hr_authorized && frm.page) {
+            frm.page.add_action_item(__("Issue for Employee Signature"), function() {
                 let now_str = frappe.datetime.now_datetime();
                 frm.set_value("final_hr_decision", `Approved [${now_str}]`);
                 frm.set_value("status", "Awaiting Employee Signature");
                 frm.save();
-            }).addClass("btn-primary");
+            });
 
-            frm.add_custom_button(__("Reject"), function() {
+            frm.page.add_action_item(__("Reject"), function() {
                 prompt_rejection_reason(frm, "Final HR");
-            }).addClass("btn-danger");
+            });
+
+            show_actions();
         }
     } else if (state === "Awaiting Employee Signature" || state === "Signed by Employee") {
-        if (is_admin || roles.includes("HR Manager")) {
-            frm.add_custom_button(__("Countersign & Activate"), function() {
+        if ((is_admin || roles.includes("HR Manager")) && frm.page) {
+            frm.page.add_action_item(__("Countersign & Activate"), function() {
                 if (!frm.doc.employee_signed_contract) {
                     frappe.msgprint({
                         title: __("Missing Signed Contract"),
@@ -1353,19 +1376,25 @@ function setup_workflow_action_buttons(frm) {
                 }
                 frm.set_value("status", "Active");
                 frm.save();
-            }).addClass("btn-success");
+            });
+
+            show_actions();
         }
     } else if (state === "Rejected" && (is_admin || user === frm.doc.owner)) {
-        frm.add_custom_button(__("Reopen as Draft"), function() {
-            frappe.confirm(__("Are you sure you want to reopen this rejected contract as Draft?"), function() {
-                frm.set_value("status", "Draft");
-                frm.set_value("team_lead_decision", "Pending");
-                frm.set_value("hr_decision", "Pending");
-                frm.set_value("ceo_decision", "Pending");
-                frm.set_value("final_hr_decision", "Pending");
-                frm.save();
+        if (frm.page) {
+            frm.page.add_action_item(__("Reopen as Draft"), function() {
+                frappe.confirm(__("Are you sure you want to reopen this rejected contract as Draft?"), function() {
+                    frm.set_value("status", "Draft");
+                    frm.set_value("team_lead_decision", "Pending");
+                    frm.set_value("hr_decision", "Pending");
+                    frm.set_value("ceo_decision", "Pending");
+                    frm.set_value("final_hr_decision", "Pending");
+                    frm.save();
+                });
             });
-        }).addClass("btn-primary");
+
+            show_actions();
+        }
     }
 }
 

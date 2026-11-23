@@ -272,7 +272,34 @@ class EmploymentContract(Document):
                 )
 
     def validate_approver_permissions(self):
-        pass
+        state = self.status or self.workflow_state or "Draft"
+        user = frappe.session.user
+        roles = frappe.get_roles(user)
+        is_admin = user == "Administrator" or "System Manager" in roles
+
+        if self.is_new() or is_admin:
+            return
+
+        old_doc = self.get_doc_before_save()
+        if not old_doc:
+            return
+
+        old_state = old_doc.status or old_doc.workflow_state or "Draft"
+        if old_state != state:
+            if old_state == "Pending Team Lead Approval":
+                is_tl = (self.team_lead_approver and user == self.team_lead_approver)
+                if not is_tl:
+                    frappe.throw(frappe._("Only the assigned Team Lead can approve, return, or reject at this stage."))
+
+            elif old_state == "Pending HR Review":
+                is_hr = (self.hr_approver and user == self.hr_approver) or ("HR Manager" in roles)
+                if not is_hr:
+                    frappe.throw(frappe._("Only the assigned HR Approver can approve, return, or reject at this stage."))
+
+            elif old_state == "Pending CEO Approval":
+                is_ceo = (self.ceo_approver and user == self.ceo_approver) or ("CEO Approver" in roles)
+                if not is_ceo:
+                    frappe.throw(frappe._("Only the assigned CEO Approver can approve, return, or reject at this stage."))
 
     def validate_submission_requirements(self):
         if self.get("engagement_type") == "Close-ended" and not self.get("proposed_end_date"):

@@ -1273,7 +1273,8 @@ function setup_workflow_action_buttons(frm) {
             });
         }
     } else if (state === "Pending Team Lead Approval") {
-        if (is_admin || roles.includes("Team Lead") || user === frm.doc.team_lead_approver) {
+        let is_tl_authorized = is_admin || (frm.doc.team_lead_approver ? user === frm.doc.team_lead_approver : roles.includes("Team Lead"));
+        if (is_tl_authorized) {
             frm.add_custom_button(__("Approve (Team Lead)"), function() {
                 let now_str = frappe.datetime.now_datetime();
                 frm.set_value("team_lead_decision", `Approved [${now_str}]`);
@@ -1290,7 +1291,8 @@ function setup_workflow_action_buttons(frm) {
             }).addClass("btn-danger");
         }
     } else if (state === "Pending HR Review") {
-        if (is_admin || roles.includes("HR Manager") || user === frm.doc.hr_approver) {
+        let is_hr_authorized = is_admin || (frm.doc.hr_approver ? user === frm.doc.hr_approver : (roles.includes("HR Manager") || roles.includes("HR User")));
+        if (is_hr_authorized) {
             frm.add_custom_button(__("Approve (HR Review)"), function() {
                 let now_str = frappe.datetime.now_datetime();
                 frm.set_value("hr_decision", `Approved [${now_str}]`);
@@ -1307,7 +1309,8 @@ function setup_workflow_action_buttons(frm) {
             }).addClass("btn-danger");
         }
     } else if (state === "Pending CEO Approval") {
-        if (is_admin || roles.includes("CEO Approver") || user === frm.doc.ceo_approver) {
+        let is_ceo_authorized = is_admin || (frm.doc.ceo_approver ? user === frm.doc.ceo_approver : roles.includes("CEO Approver"));
+        if (is_ceo_authorized) {
             frm.add_custom_button(__("Approve (CEO)"), function() {
                 let now_str = frappe.datetime.now_datetime();
                 frm.set_value("ceo_decision", `Approved [${now_str}]`);
@@ -1324,7 +1327,8 @@ function setup_workflow_action_buttons(frm) {
             }).addClass("btn-danger");
         }
     } else if (state === "CEO Approved" || state === "Pending Final HR Review") {
-        if (is_admin || roles.includes("HR Manager") || user === frm.doc.final_hr_approver) {
+        let is_final_hr_authorized = is_admin || (frm.doc.final_hr_approver ? user === frm.doc.final_hr_approver : (frm.doc.hr_approver ? user === frm.doc.hr_approver : roles.includes("HR Manager")));
+        if (is_final_hr_authorized) {
             frm.add_custom_button(__("Issue for Employee Signature"), function() {
                 let now_str = frappe.datetime.now_datetime();
                 frm.set_value("final_hr_decision", `Approved [${now_str}]`);

@@ -227,10 +227,10 @@ class EmploymentContract(Document):
     def sync_workflow_status(self):
         wf = self.get("workflow_state")
         st = self.get("status")
-        if wf and st != wf:
-            self.status = wf
-        elif st and not wf:
+        if st and st != wf:
             self.workflow_state = st
+        elif wf and not st:
+            self.status = wf
 
     def validate_pdf_attachments(self):
         attachments_to_check = [

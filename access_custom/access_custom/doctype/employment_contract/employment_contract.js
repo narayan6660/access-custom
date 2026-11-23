@@ -1260,6 +1260,9 @@ function setup_workflow_action_buttons(frm) {
         if (frm.page) {
             frm.page.set_primary_action(__("Submit"), function() {
                 frm.set_value("status", "Pending Team Lead Approval");
+                if (frm.fields_dict["workflow_state"]) {
+                    frm.set_value("workflow_state", "Pending Team Lead Approval");
+                }
                 frm.save().then(() => {
                     frappe.show_alert({
                         message: __("Employment Contract submitted to Team Lead for approval"),

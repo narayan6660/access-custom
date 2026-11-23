@@ -8,6 +8,13 @@ from frappe.utils import add_days, add_months, add_years, getdate, nowdate
 
 
 class EmploymentContract(Document):
+    def autoname(self):
+        # Name format: <company_abbr>/EC/<YYMMDD>/<serial_number> (e.g. AHI/EC/261123/1)
+        company = self.requesting_organization or getattr(self, "organization", None)
+        if not company:
+            frappe.throw(frappe._("Please select Requesting Organization (Company) before saving the contract."))
+        self.name = generate_employment_contract_number(company, self.request_date or getattr(self, "creation", None))
+
     def validate(self):
         self.calculate_tenure_and_end_date()
         self.calculate_salary_breakup()
@@ -273,6 +280,48 @@ class EmploymentContract(Document):
                 frappe._("Proposed End Date is mandatory for Close-ended contracts."),
                 frappe.ValidationError
             )
+
+
+def generate_employment_contract_number(company, request_date=None, current_docname=None):
+    if not company:
+        return ""
+
+    abbr = frappe.db.get_value("Company", company, "abbr")
+    if not abbr:
+        abbr = company[:4].upper()
+
+    clean_abbr = abbr.replace("-IND", "").strip()
+
+    if not request_date:
+        request_date = nowdate()
+
+    date_obj = getdate(request_date)
+    yymmdd = date_obj.strftime("%y%m%d")
+
+    prefix = f"{clean_abbr}/EC/"
+    existing = frappe.db.sql("""
+        SELECT name FROM `tabEmployment Contract`
+        WHERE name LIKE %s OR name LIKE %s
+    """, (f"{prefix}%", f"{abbr}/EC/%"), as_dict=True)
+
+    max_serial = 0
+    for r in existing:
+        doc_name = (r.get("name") or "").strip()
+        if current_docname and doc_name == current_docname:
+            continue
+        parts = doc_name.split("/")
+        if len(parts) >= 4 and parts[-1].isdigit():
+            val = int(parts[-1])
+            if val > max_serial:
+                max_serial = val
+
+    next_serial = max_serial + 1
+    return f"{clean_abbr}/EC/{yymmdd}/{next_serial}"
+
+
+@frappe.whitelist()
+def get_next_contract_number(company, request_date=None, docname=None):
+    return generate_employment_contract_number(company, request_date, current_docname=docname)
 
 
 @frappe.whitelist()

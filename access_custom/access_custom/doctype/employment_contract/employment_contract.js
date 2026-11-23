@@ -1245,18 +1245,29 @@ function setup_leadership_queries(frm) {
 function setup_workflow_action_buttons(frm) {
     if (frm.is_new()) return;
 
+    // Remove any default Frappe primary submit action to eliminate duplicate buttons & "Permanently Submit" popup
+    if (frm.page) {
+        frm.page.clear_primary_action();
+    }
+
     let state = frm.doc.status || "Draft";
     let user = frappe.session.user;
     let roles = frappe.user_roles || [];
     let is_admin = roles.includes("Administrator") || roles.includes("System Manager");
 
     if (state === "Draft" || state.includes("Returned for Revision")) {
-        frm.add_custom_button(__("Submit for Approval"), function() {
-            frappe.confirm(__("Are you sure you want to submit this contract to Team Lead?"), function() {
+        // Single clean primary button labeled "Submit"
+        if (frm.page) {
+            frm.page.set_primary_action(__("Submit"), function() {
                 frm.set_value("status", "Pending Team Lead Approval");
-                frm.save();
+                frm.save().then(() => {
+                    frappe.show_alert({
+                        message: __("Employment Contract submitted to Team Lead for approval"),
+                        indicator: "green"
+                    });
+                });
             });
-        }).addClass("btn-primary");
+        }
     } else if (state === "Pending Team Lead Approval") {
         if (is_admin || roles.includes("Team Lead") || user === frm.doc.team_lead_approver) {
             frm.add_custom_button(__("Approve (Team Lead)"), function() {

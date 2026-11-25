@@ -216,7 +216,7 @@ function show_employee_leave_statement_dialog(employee) {
 				rows_html = d.statement.map(s => `
 					<tr style="border-bottom: 1px solid #e2e8f0;">
 						<td style="padding: 8px 10px; font-weight: 600; color: #1e293b;">${s.leave_type}</td>
-						<td style="padding: 8px 10px; text-align: right; font-family: monospace; color: #64748b;">${s.opening_balance.toFixed(2)}</td>
+						<td style="padding: 8px 10px; text-align: right; font-family: monospace; color: #475569; font-weight: 600;">${(s.policy_leaves ?? s.opening_balance ?? 0).toFixed(2)}</td>
 						<td style="padding: 8px 10px; text-align: right; font-family: monospace; color: #16a34a; font-weight: 600;">+${s.leaves_allocated.toFixed(2)}</td>
 						<td style="padding: 8px 10px; text-align: right; font-family: monospace; color: #dc2626; font-weight: 600;">−${s.leaves_taken.toFixed(2)}</td>
 						<td style="padding: 8px 10px; text-align: right; font-family: monospace; font-weight: 700; color: ${s.closing_balance > 0 ? '#16a34a' : (s.closing_balance < 0 ? '#dc2626' : '#64748b')}; font-size: 12.5px;">
@@ -277,7 +277,7 @@ function show_employee_leave_statement_dialog(employee) {
 					<div style="margin-bottom: 14px;">
 						<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
 							<div style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: #475569; letter-spacing: 0.5px;">
-								📊 2026 Leave Statement (Opening + Allocated − Taken = Closing)
+								📊 2026 Leave Statement (Policy Leaves • Allocated − Taken = Closing)
 							</div>
 						</div>
 						<div style="border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden;">
@@ -285,7 +285,7 @@ function show_employee_leave_statement_dialog(employee) {
 								<thead>
 									<tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; color: #475569; font-size: 11px; text-transform: uppercase;">
 										<th style="padding: 7px 10px; text-align: left;">Leave Type</th>
-										<th style="padding: 7px 10px; text-align: right;">Opening</th>
+										<th style="padding: 7px 10px; text-align: right; color: #475569;" title="Annual entitlement in Leave Policy">Policy Leaves</th>
 										<th style="padding: 7px 10px; text-align: right; color: #16a34a;">+ Allocated</th>
 										<th style="padding: 7px 10px; text-align: right; color: #dc2626;">− Taken</th>
 										<th style="padding: 7px 10px; text-align: right; font-weight: 700;">= Closing Balance</th>
@@ -297,7 +297,7 @@ function show_employee_leave_statement_dialog(employee) {
 								<tfoot>
 									<tr style="background: #f8fafc; border-top: 2px solid #e2e8f0; font-weight: 700; font-size: 11.5px;">
 										<td style="padding: 8px 10px; color: #334155;">TOTALS</td>
-										<td style="padding: 8px 10px; text-align: right; font-family: monospace;">${d.totals.opening.toFixed(2)}</td>
+										<td style="padding: 8px 10px; text-align: right; font-family: monospace; color: #475569; font-weight: 700;">${(d.totals.policy_leaves ?? d.totals.opening ?? 0).toFixed(2)}</td>
 										<td style="padding: 8px 10px; text-align: right; font-family: monospace; color: #16a34a;">+${d.totals.allocated.toFixed(2)}</td>
 										<td style="padding: 8px 10px; text-align: right; font-family: monospace; color: #dc2626;">−${d.totals.taken.toFixed(2)}</td>
 										<td style="padding: 8px 10px; text-align: right; font-family: monospace; color: ${d.totals.closing > 0 ? '#16a34a' : '#64748b'}; font-size: 13px;">

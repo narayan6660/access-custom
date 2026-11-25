@@ -62,7 +62,14 @@ def get_columns(leave_types):
 			"label": _("Employee Name"),
 			"fieldname": "employee_name",
 			"fieldtype": "Data",
-			"width": 240,
+			"width": 220,
+		},
+		{
+			"label": _("Company"),
+			"fieldname": "company",
+			"fieldtype": "Link",
+			"options": "Company",
+			"width": 180,
 		},
 		{
 			"label": _("Department"),
@@ -111,7 +118,7 @@ def get_data(filters, leave_types):
 	active_employees = frappe.get_list(
 		"Employee",
 		filters=conditions,
-		fields=["name", "employee_name", "department"],
+		fields=["name", "employee_name", "department", "company"],
 		order_by="employee_name asc",
 	)
 
@@ -122,6 +129,7 @@ def get_data(filters, leave_types):
 		row = {
 			"employee": employee.name,
 			"employee_name": employee.employee_name,
+			"company": employee.company,
 			"department": employee.department,
 		}
 		available_leave = get_leave_details(employee.name, as_of_date)

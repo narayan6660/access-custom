@@ -543,15 +543,6 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
-  "modified": "2026-10-09 11:18:39.075848",
-  "name": "Approved for Issuance",
-  "style": "",
-  "workflow_state_name": "Approved for Issuance"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
-  "icon": "",
   "modified": "2026-09-21 10:40:57.160243",
   "name": "CEO Closure",
   "style": "",
@@ -624,15 +615,6 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
-  "modified": "2026-06-18 12:55:10.348706",
-  "name": "Pending Team Lead Approval",
-  "style": "",
-  "workflow_state_name": "Pending Team Lead Approval"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
-  "icon": "",
   "modified": "2026-09-21 10:40:57.139676",
   "name": "Termination Under TL Review",
   "style": "",
@@ -687,15 +669,6 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
-  "modified": "2026-05-27 17:37:14.741433",
-  "name": "Draft",
-  "style": "Primary",
-  "workflow_state_name": "Draft"
- },
- {
-  "docstatus": 0,
-  "doctype": "Workflow State",
-  "icon": "",
   "modified": "2026-06-18 14:34:52.455199",
   "name": "Pending CEO Approval",
   "style": "",
@@ -714,6 +687,69 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
+  "modified": "2026-11-25 11:42:02.214107",
+  "name": "Awaiting Employee Signature",
+  "style": "",
+  "workflow_state_name": "Awaiting Employee Signature"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-11-25 11:42:02.338164",
+  "name": "Signed by Employee",
+  "style": "",
+  "workflow_state_name": "Signed by Employee"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-11-25 11:42:02.340930",
+  "name": "Contract Generated",
+  "style": "",
+  "workflow_state_name": "Contract Generated"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-11-25 11:42:02.342814",
+  "name": "Expired",
+  "style": "",
+  "workflow_state_name": "Expired"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-11-25 11:42:02.344774",
+  "name": "Returned for Revision (Team Lead)",
+  "style": "",
+  "workflow_state_name": "Returned for Revision (Team Lead)"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-11-25 11:42:02.346640",
+  "name": "Returned for Revision (HR)",
+  "style": "",
+  "workflow_state_name": "Returned for Revision (HR)"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-11-25 11:42:02.348359",
+  "name": "Returned for Revision (CEO)",
+  "style": "",
+  "workflow_state_name": "Returned for Revision (CEO)"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
   "modified": "2026-06-26 13:48:03.689331",
   "name": "Objective Review Pending",
   "style": "",
@@ -723,10 +759,37 @@
   "docstatus": 0,
   "doctype": "Workflow State",
   "icon": "",
+  "modified": "2026-10-09 11:18:39.075848",
+  "name": "Approved for Issuance",
+  "style": "",
+  "workflow_state_name": "Approved for Issuance"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-06-18 12:55:10.348706",
+  "name": "Pending Team Lead Approval",
+  "style": "",
+  "workflow_state_name": "Pending Team Lead Approval"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
   "modified": "2026-10-28 12:48:44.900968",
   "name": "Appraisal Rejected",
   "style": "",
   "workflow_state_name": "Appraisal Rejected"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Workflow State",
+  "icon": "",
+  "modified": "2026-05-27 17:37:14.741433",
+  "name": "Draft",
+  "style": "Primary",
+  "workflow_state_name": "Draft"
  },
  {
   "docstatus": 0,

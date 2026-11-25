@@ -25,6 +25,7 @@ class EmploymentContract(Document):
         self.sync_workflow_status()
         self.validate_pdf_attachments()
         self.validate_approver_permissions()
+        self.validate_section_g_permissions()
         self.validate_contact_details()
         self.validate_submission_requirements()
 
@@ -328,6 +329,37 @@ class EmploymentContract(Document):
                               ("HR Manager" in roles) or is_admin
                 if not is_final_hr:
                     frappe.throw(frappe._("Only the assigned Final HR Approver or HR Manager can approve, return, or reject at this stage."))
+
+    def validate_section_g_permissions(self):
+        section_g_fields = [
+            "employee_signed_contract", "employee_signed_date", "employee_received_date",
+            "final_executed_contract", "countersigned_date", "sent_to_employee_date"
+        ]
+        if self.is_new():
+            return
+
+        old_doc = self.get_doc_before_save()
+        if not old_doc:
+            return
+
+        user = frappe.session.user
+        roles = frappe.get_roles(user)
+        is_admin = (user == "Administrator") or ("System Manager" in roles)
+        is_cm = ("Contract Manager" in roles) or is_admin
+
+        # Check if any Section G field was modified
+        modified_fields = []
+        for fieldname in section_g_fields:
+            old_val = getattr(old_doc, fieldname, None)
+            new_val = getattr(self, fieldname, None)
+            if old_val != new_val:
+                modified_fields.append(fieldname)
+
+        if modified_fields and not is_cm:
+            frappe.throw(
+                frappe._("Permission Denied: Only the <b>Contract Manager</b> is authorized to fill fields or upload files in <b>Section G &mdash; Employee Signed Contract</b>."),
+                title=frappe._("Contract Manager Access Required")
+            )
 
     def validate_submission_requirements(self):
         if self.get("engagement_type") == "Close-ended" and not self.get("proposed_end_date"):

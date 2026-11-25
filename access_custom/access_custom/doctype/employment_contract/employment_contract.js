@@ -37,6 +37,9 @@ frappe.ui.form.on("Employment Contract", {
     final_executed_contract(frm) {
         validate_pdf_attachment(frm, "final_executed_contract");
     },
+    after_save(frm) {
+        setup_workflow_action_buttons(frm);
+    },
     onload(frm) {
         inject_employment_contract_styles();
         apply_section_visibility(frm);
@@ -519,6 +522,25 @@ function align_contract_approver_rows(frm) {
     });
 }
 
+function get_current_user_roles() {
+    let roles = (frappe.user_roles && Array.isArray(frappe.user_roles)) ? frappe.user_roles : [];
+    if (!roles.length && frappe.boot && frappe.boot.user && frappe.boot.user.roles) {
+        roles = frappe.boot.user.roles;
+    }
+    return roles;
+}
+
+function check_is_contract_manager(frm) {
+    let user = frappe.session.user;
+    let roles = get_current_user_roles();
+    let is_admin = (user === "Administrator") || roles.includes("Administrator") || roles.includes("System Manager");
+    if (is_admin) return true;
+    if (roles.includes("Contract Manager")) return true;
+    if (frm && frm.doc && frm.doc.owner && user === frm.doc.owner) return true;
+    if (frm && frm.doc && frm.doc.request_id && user === frm.doc.request_id) return true;
+    return false;
+}
+
 function apply_contract_approver_field_locking(frm) {
     if (!frm || !frm.doc) return;
 
@@ -659,6 +681,43 @@ function apply_contract_approver_field_locking(frm) {
                         frm.set_df_property(f.df.fieldname, "read_only", 1);
                     }
                 });
+            } else if (state === "Approved for Issuance" || state === "Contract Issued" || state === "Awaiting Employee Signature" || state === "Signed by Employee") {
+                let is_cm = check_is_contract_manager(frm);
+                const section_g_fields = [
+                    "employee_signed_contract", "employee_signed_date", "employee_received_date",
+                    "final_executed_contract", "countersigned_date", "sent_to_employee_date"
+                ];
+                (frm.fields || []).forEach(f => {
+                    if (f && f.df && f.df.fieldname) {
+                        if (section_g_fields.includes(f.df.fieldname)) {
+                            frm.set_df_property(f.df.fieldname, "read_only", is_cm ? 0 : 1);
+                        } else {
+                            frm.set_df_property(f.df.fieldname, "read_only", 1);
+                        }
+                    }
+                });
+
+                if (is_cm) {
+                    section_g_fields.forEach(fn => {
+                        frm.set_df_property(fn, "read_only", 0);
+                    });
+                    setTimeout(() => {
+                        let $sec_g = $(".form-section[data-fieldname='section_g']");
+                        $sec_g.find(".attached-file, .btn-attach, .btn-clear, .btn-reload, .file-input, .input-group-btn, .btn-browse").show();
+                        $sec_g.find("input, select, textarea, button").prop("disabled", false);
+                    }, 50);
+                } else {
+                    section_g_fields.forEach(fn => {
+                        frm.set_df_property(fn, "read_only", 1);
+                    });
+                    setTimeout(() => {
+                        let $sec_g = $(".form-section[data-fieldname='section_g']");
+                        $sec_g.find(".attached-file, .btn-attach, .btn-clear, .btn-reload, .file-input, .input-group-btn, .btn-browse").hide();
+                        $sec_g.find("input, select, textarea, button").not(".btn-default:contains('Comments')").prop("disabled", true);
+                    }, 50);
+                }
+            } else if (state === "Active") {
+                frm.set_read_only();
             }
         }
     } catch (e) {
@@ -1279,6 +1338,15 @@ function setup_workflow_action_buttons(frm) {
         frm.page.clear_actions_menu();
         frm.page.hide_actions_menu();
     }
+    // Strictly suppress any default Frappe 'Submit' button
+    if (frm.doc.status !== "Draft" && frm.doc.workflow_state !== "Draft") {
+        setTimeout(() => {
+            $(".page-actions .btn-primary:contains('Submit'), .page-actions button:contains('Submit')").hide();
+        }, 10);
+        setTimeout(() => {
+            $(".page-actions .btn-primary:contains('Submit'), .page-actions button:contains('Submit')").hide();
+        }, 100);
+    }
 
     let state = frm.doc.status || "Draft";
     let user = frappe.session.user;
@@ -1424,16 +1492,20 @@ function setup_workflow_action_buttons(frm) {
     } else if (state === "Pending Final HR Review") {
         let is_final_hr_authorized = is_admin || (frm.doc.final_hr_approver ? user === frm.doc.final_hr_approver : (frm.doc.hr_approver ? user === frm.doc.hr_approver : roles.includes("HR Manager")));
         if (is_final_hr_authorized && frm.page) {
-            frm.page.add_action_item(__("Issue for Employee Signature"), function() {
+            frm.page.add_action_item(__("Download Agreement Preview (PDF)"), function() {
+                download_contract_preview_pdf(frm);
+            });
+
+            frm.page.add_action_item(__("Approve"), function() {
                 let now_str = frappe.datetime.now_datetime();
                 frm.set_value("final_hr_decision", `Approved [${now_str}]`);
-                frm.set_value("status", "Awaiting Employee Signature");
+                frm.set_value("status", "Signed by Employee");
                 if (frm.fields_dict["workflow_state"]) {
-                    frm.set_value("workflow_state", "Awaiting Employee Signature");
+                    frm.set_value("workflow_state", "Signed by Employee");
                 }
                 frm.save().then(() => {
                     frappe.show_alert({
-                        message: __("Employment contract approved and issued for employee signature."),
+                        message: __("Employment contract approved by Final HR."),
                         indicator: "green"
                     });
                 });
@@ -1454,22 +1526,104 @@ function setup_workflow_action_buttons(frm) {
                 frm.page.hide_actions_menu();
             }
         }
-    } else if (state === "Awaiting Employee Signature" || state === "Signed by Employee") {
-        if ((is_admin || roles.includes("HR Manager")) && frm.page) {
+    } else if (state === "Approved for Issuance" || state === "Awaiting Employee Signature" || state === "Signed by Employee" || state === "Contract Issued") {
+        let is_cm = check_is_contract_manager(frm);
+        if (is_cm && frm.page) {
             frm.page.add_action_item(__("Countersign & Activate"), function() {
-                if (!frm.doc.employee_signed_contract) {
+                let missing = [];
+                if (!frm.doc.sent_to_employee_date) missing.push("Sent to Employee Date");
+                if (!frm.doc.employee_signed_contract) missing.push("Employee Signed Contract (PDF)");
+                if (!frm.doc.employee_signed_date) missing.push("Employee Signed Date");
+                if (!frm.doc.employee_received_date) missing.push("Employee Received Date");
+                if (!frm.doc.final_executed_contract) missing.push("Final Executed Contract (PDF)");
+                if (!frm.doc.countersigned_date) missing.push("Countersigned Date");
+
+                if (missing.length > 0) {
                     frappe.msgprint({
-                        title: __("Missing Signed Contract"),
-                        indicator: "red",
-                        message: __("Please upload the <b>Employee Signed Contract</b> in Section G before activating.")
+                        title: __("Section G Incomplete"),
+                        indicator: "orange",
+                        message: __("Please fill the following fields in <b>Section G &mdash; Employee Signed Contract</b> before activating:<br/><br/><ul><li>" + missing.join("</li><li>") + "</li></ul>")
                     });
                     return;
                 }
-                frm.set_value("status", "Active");
-                frm.save();
+
+                frappe.dom.freeze(__("Activating Employment Contract..."));
+                frm.save().then(() => {
+                    frappe.xcall("frappe.model.workflow.apply_workflow", {
+                        doc: frm.doc,
+                        action: "Execute Contract"
+                    }).then(doc => {
+                        frappe.model.sync(doc);
+                        frm.refresh();
+                        frappe.dom.unfreeze();
+                        frappe.show_alert({
+                            message: __("Employment Contract countersigned and activated successfully!"),
+                            indicator: "green"
+                        });
+                    }).catch(err => {
+                        frm.set_value("status", "Active");
+                        if (frm.fields_dict["workflow_state"]) {
+                            frm.set_value("workflow_state", "Active");
+                        }
+                        frm.save().then(() => {
+                            frm.refresh();
+                            frappe.dom.unfreeze();
+                            frappe.show_alert({
+                                message: __("Employment Contract countersigned and activated successfully!"),
+                                indicator: "green"
+                            });
+                        }).catch(() => {
+                            frappe.dom.unfreeze();
+                        });
+                    });
+                }).catch(() => {
+                    frappe.dom.unfreeze();
+                });
             });
 
-            show_actions();
+            // Dynamic Action / Save toggle:
+            // 1. When clean, show ONLY the Actions button (no Save button).
+            // 2. When Contract Manager changes any field in Section G, hide Actions and show the green Save button.
+            // 3. Once Save is clicked, it saves, hides Save, and restores the Actions button.
+            function sync_cm_action_save_buttons() {
+                if (frm.is_dirty()) {
+                    if (frm.page && frm.page.actions_btn_group) {
+                        frm.page.actions_btn_group.addClass("hide hidden-xl").hide();
+                    }
+                    if (frm.page && frm.page.actions && frm.page.actions.parent) {
+                        frm.page.actions.parent().addClass("hide hidden-xl").hide();
+                    }
+                    frm.enable_save();
+                } else {
+                    frm.page.clear_primary_action();
+                    show_actions();
+                }
+            }
+
+            sync_cm_action_save_buttons();
+
+            $(frm.wrapper).off("input.cm_save change.cm_save").on("input.cm_save change.cm_save", function() {
+                setTimeout(sync_cm_action_save_buttons, 60);
+            });
+        } else {
+            // Strictly hide all actions and buttons for HR or unauthorized users in Signed by Employee
+            if (frm.page) {
+                frm.page.clear_actions_menu();
+                frm.page.hide_actions_menu();
+                if (frm.page.actions_btn_group) {
+                    frm.page.actions_btn_group.addClass("hide hidden-xl").hide();
+                }
+                if (frm.page.actions && frm.page.actions.parent) {
+                    frm.page.actions.parent().addClass("hide hidden-xl").hide();
+                }
+                frm.page.clear_primary_action();
+            }
+            setTimeout(() => {
+                $(".page-actions .actions-btn-group, .page-actions [data-toggle='dropdown']:contains('Actions'), .page-actions button:contains('Actions'), .page-actions button:contains('Countersign')").hide();
+            }, 10);
+            setTimeout(() => {
+                $(".page-actions .actions-btn-group, .page-actions [data-toggle='dropdown']:contains('Actions'), .page-actions button:contains('Actions'), .page-actions button:contains('Countersign')").hide();
+            }, 150);
         }
     } else if (state === "Rejected" && (is_admin || user === frm.doc.owner)) {
         if (frm.page) {
@@ -1739,6 +1893,49 @@ function render_contract_banners(frm) {
             frm.dashboard.parent.show();
         }
         return;
+    }
+
+    if (state === "Approved for Issuance" || state === "Awaiting Employee Signature" || state === "Signed by Employee" || state === "Contract Issued") {
+        let is_cm = check_is_contract_manager(frm);
+        let has_all_section_g = !!(
+            frm.doc.sent_to_employee_date &&
+            frm.doc.employee_signed_contract &&
+            frm.doc.employee_signed_date &&
+            frm.doc.employee_received_date &&
+            frm.doc.final_executed_contract &&
+            frm.doc.countersigned_date
+        );
+
+        let banner_bg = has_all_section_g ? "#f0fdf4" : "#eff6ff";
+        let banner_border = has_all_section_g ? "#86efac" : "#93c5fd";
+        let accent_color = has_all_section_g ? "#16a34a" : "#2563eb";
+        let badge_text = has_all_section_g ? "Ready to Activate" : "Pending Section G Uploads";
+
+        let instruction = has_all_section_g ?
+            "All 6 Section G documents and dates have been verified. <b>Contract Manager:</b> You can now activate the contract by clicking <b>Actions &rarr; Countersign & Activate</b>." :
+            "Final HR Review has been approved. <b>Contract Manager:</b> Please upload the signed contract documents and fill in all dates in <b>Section G &mdash; Employee Signed Contract</b> below. Once all 6 fields are completed, click <b>Actions &rarr; Countersign & Activate</b>.";
+
+        let banner_html = `
+        <div class="contract-info-banner" style="margin-bottom: 15px; padding: 14px 18px; background: ${banner_bg}; border: 1px solid ${banner_border}; border-left: 6px solid ${accent_color}; border-radius: 8px; box-shadow: 0 1px 3px rgba(37, 99, 235, 0.08);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 15px; font-weight: 700; color: ${accent_color}; display: flex; align-items: center; gap: 6px;">
+                        <span>&#128221;</span> Signed Contract &mdash; Section G
+                    </span>
+                    <span class="badge" style="background: ${accent_color}; color: #ffffff; font-size: 11px; padding: 3px 8px; border-radius: 12px; font-weight: 600;">
+                        ${badge_text}
+                    </span>
+                </div>
+            </div>
+            <div style="font-size: 13px; color: #1e293b; line-height: 1.5;">
+                ${is_cm ? instruction : 'Final HR Review has been approved. The Contract Manager will upload the employee-signed contract in Section G and activate the agreement.'}
+            </div>
+        </div>`;
+        if (frm.dashboard && frm.dashboard.parent) {
+            $(banner_html).prependTo(frm.dashboard.parent);
+            frm.dashboard.show();
+            frm.dashboard.parent.show();
+        }
     }
 
     let revision_stage = get_contract_revision_stage(frm);

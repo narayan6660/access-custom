@@ -16,12 +16,13 @@ frappe.query_reports["Employee Leave Balance Summary"] = {
 			label: __("Company"),
 			fieldtype: "Link",
 			options: "Company",
-			reqd: 1,
+			reqd: 0,
 			default: frappe.defaults.get_user_default("Company") || frappe.defaults.get_default("company"),
 			on_change: function () {
 				frappe.query_report.refresh();
 			},
 		},
+
 		{
 			fieldname: "employee",
 			label: __("Employee"),
@@ -29,11 +30,11 @@ frappe.query_reports["Employee Leave Balance Summary"] = {
 			options: "Employee",
 			get_query: () => {
 				var company = frappe.query_report.get_filter_value("company");
-				return {
-					filters: {
-						company: company,
-					},
-				};
+				var filters = {};
+				if (company) {
+					filters.company = company;
+				}
+				return { filters: filters };
 			},
 		},
 		{
@@ -85,26 +86,103 @@ frappe.query_reports["Employee Leave Balance Summary"] = {
 	},
 
 	onload: function (report) {
-		// Widen Company filter box so full company names fit without cut-off
-		const widen_company_box = () => {
+
+				// Setup wide Company filter box and inside (X) clear icon
+		const setup_company_filter_ui = () => {
 			let comp = report.page.fields_dict && report.page.fields_dict["company"];
-			if (comp && comp.$wrapper) {
-				comp.$wrapper.removeClass("col-md-2").css({
-					"min-width": "320px",
-					"max-width": "420px",
-					"flex": "2"
+			if (!comp || !comp.$wrapper) return;
+
+			let $wrapper = comp.$wrapper;
+			$wrapper.removeClass("col-md-2").css({
+				"min-width": "360px",
+				"max-width": "460px",
+				"flex": "2"
+			});
+
+			let $input = comp.$input || $wrapper.find("input");
+			if (!$input || !$input.length) return;
+
+			let $container = $input.parent();
+			$container.css({ "position": "relative", "width": "100%" });
+
+			$input.css({
+				"font-size": "12px",
+				"font-weight": "500",
+				"padding-right": "32px",
+				"text-overflow": "ellipsis"
+			});
+
+			let $x_icon = $container.find(".company-clear-x-icon");
+			if (!$x_icon.length) {
+				$x_icon = $(`
+					<span class="company-clear-x-icon" title="Clear Company" style="
+						position: absolute;
+						right: 10px;
+						top: 50%;
+						transform: translateY(-50%);
+						width: 17px;
+						height: 17px;
+						display: none;
+						align-items: center;
+						justify-content: center;
+						border-radius: 50%;
+						background-color: #cbd5e1;
+						color: #ffffff;
+						font-size: 10px;
+						font-weight: 700;
+						cursor: pointer;
+						user-select: none;
+						z-index: 5;
+						transition: all 0.15s ease;
+					">✕</span>
+				`);
+
+				$x_icon.hover(
+					function() { $(this).css({ "background-color": "#ef4444", "transform": "translateY(-50%) scale(1.1)" }); },
+					function() { $(this).css({ "background-color": "#cbd5e1", "transform": "translateY(-50%) scale(1.0)" }); }
+				);
+
+				$x_icon.on("mousedown", function(e) {
+					e.preventDefault();
+					e.stopPropagation();
 				});
-				comp.$input && comp.$input.css({
-					"font-size": "12px",
-					"font-weight": "500"
+
+				$x_icon.on("click", function(e) {
+					e.preventDefault();
+					e.stopPropagation();
+					comp.set_value("");
+					$input.val("");
+					// Close awesomplete dropdown if open
+					if (comp.awesomplete) {
+						comp.awesomplete.close();
+					}
+					$input.blur();
+					frappe.query_report.refresh();
 				});
+
+				$container.append($x_icon);
 			}
+
+			const update_x_visibility = () => {
+				let val = comp.get_value() || $input.val();
+				if (val && String(val).trim().length > 0) {
+					$x_icon.css("display", "inline-flex");
+				} else {
+					$x_icon.hide();
+				}
+			};
+
+			$input.off("input.cx change.cx keyup.cx blur.cx").on("input.cx change.cx keyup.cx blur.cx", function() {
+				setTimeout(update_x_visibility, 50);
+			});
+			update_x_visibility();
 		};
 
-		widen_company_box();
-		setTimeout(widen_company_box, 100);
-		setTimeout(widen_company_box, 300);
-		setTimeout(widen_company_box, 600);
+		setup_company_filter_ui();
+		setTimeout(setup_company_filter_ui, 100);
+		setTimeout(setup_company_filter_ui, 300);
+		setTimeout(setup_company_filter_ui, 600);
+		setTimeout(setup_company_filter_ui, 1200);
 
 		// Event delegation for Statement click
 		report.page.wrapper.off("click.view_statement").on("click.view_statement", ".btn-view-statement", function (e) {

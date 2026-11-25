@@ -338,3 +338,52 @@ setInterval(patchGridRowForm, 300);
 	setTimeout(purgeStandardContract, 1500);
 	setInterval(purgeStandardContract, 3000);
 })();
+
+// ============================================================
+// ACCESS CUSTOM: Auto-select Employment Contract Print Template
+// ============================================================
+(function() {
+    function autoSelectEmploymentContractPrintFormat() {
+        var route = frappe.get_route ? frappe.get_route() : [];
+        if (!route || route[0] !== "print" || route[1] !== "Employment Contract" || !route[2]) return;
+
+        var docname = route.slice(2).join("/");
+        var $sidebar = $('.print-preview-sidebar');
+        var $selector = $sidebar.find('[data-fieldname="print_format"] input, select[data-fieldname="print_format"]');
+        
+        if ($selector.length) {
+            var cur_val = $selector.val();
+            if (!cur_val || cur_val === "Standard") {
+                frappe.db.get_value("Employment Contract", docname, ["contract_template", "requesting_organization"]).then(function(r) {
+                    if (r && r.message) {
+                        var fmt = r.message.contract_template;
+                        if (!fmt && r.message.requesting_organization) {
+                            var org = (r.message.requesting_organization || "").toLowerCase();
+                            if (org.indexOf("quality") !== -1 || org.indexOf("qha") !== -1) {
+                                fmt = "QHA Employment Contract Template";
+                            } else if (org.indexOf("liaison") !== -1 || org.indexOf("-lo") !== -1) {
+                                fmt = "AHI LO Employment Contract Template";
+                            } else if (org.indexOf("sea") !== -1 || org.indexOf("southeast") !== -1) {
+                                fmt = "AHI SEA Employment Contract Template";
+                            } else if (org.indexOf("usa") !== -1 || org.indexOf("united") !== -1) {
+                                fmt = "AHI USA Employment Contract Template";
+                            } else {
+                                fmt = "AQH Employment Contract Template";
+                            }
+                        }
+                        fmt = fmt || "AQH Employment Contract Template";
+                        if ($selector.val() !== fmt) {
+                            $selector.val(fmt).trigger("change");
+                        }
+                    }
+                });
+            }
+        }
+    }
+
+    $(document).on("app_ready page-change route-change", function() {
+        setTimeout(autoSelectEmploymentContractPrintFormat, 100);
+        setTimeout(autoSelectEmploymentContractPrintFormat, 400);
+        setTimeout(autoSelectEmploymentContractPrintFormat, 1000);
+    });
+})();
